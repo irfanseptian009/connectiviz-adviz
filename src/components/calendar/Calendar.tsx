@@ -121,7 +121,7 @@ const Calendar: React.FC = () => {
   };
 
   return (
-    <div className="rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="rounded-2xl border pallet p-10  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
         <FullCalendar
           ref={calendarRef}
@@ -183,7 +183,7 @@ const Calendar: React.FC = () => {
                 {Object.entries(calendarsEvents).map(([key, value]) => (
                   <div key={key} className="n-chk">
                     <div
-                      className={`form-check form-check-${value} form-check-inline`}
+                      className={`form-check  form-check-${value} form-check-inline`}
                     >
                       <label
                         className="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400"

@@ -7,16 +7,16 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "connectiviz",
+  title: "form layout | connectiviz",
   description:
-    "connectiviz by adviz",
+    "form layout for connectiviz by adviz",
 };
 
 export default function FormLayout() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Form Layout" />
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 ">
         <div className="space-y-5 sm:space-y-6">
           <BasicForm />
           <ExampleFormOne />

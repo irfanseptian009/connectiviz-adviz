@@ -1,13 +1,15 @@
 "use client";
-import React from "react";
+
 import ComponentCard from "../../common/ComponentCard";
-import Label from "../Label";
 import Input from "../input/InputField";
+import Label from "../Label";
 import { EnvelopeIcon } from "../../../icons";
 import PhoneInput from "../group-input/PhoneInput";
 
-export default function InputGroup() {
+
+export default function ContactInformation() {
   const countries = [
+    { code: "ID", label: "+62"},
     { code: "US", label: "+1" },
     { code: "GB", label: "+44" },
     { code: "CA", label: "+1" },
@@ -16,10 +18,11 @@ export default function InputGroup() {
   const handlePhoneNumberChange = (phoneNumber: string) => {
     console.log("Updated phone number:", phoneNumber);
   };
+
   return (
-    <ComponentCard title="Input Group">
-      <div className="space-y-6">
-        <div>
+    <ComponentCard title="Contact Information">
+     {/* Contact Information */}
+     <div>
           <Label>Email</Label>
           <div className="relative">
             <Input
@@ -37,7 +40,7 @@ export default function InputGroup() {
           <PhoneInput
             selectPosition="start"
             countries={countries}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+62 (555) 000-0000"
             onChange={handlePhoneNumberChange}
           />
         </div>{" "}
@@ -46,11 +49,37 @@ export default function InputGroup() {
           <PhoneInput
             selectPosition="end"
             countries={countries}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+62 (555) 000-0000"
             onChange={handlePhoneNumberChange}
           />
         </div>
-      </div>
+        <div>
+          <Label>Email Perusahaan</Label>
+          <Input type="email" />
+        </div>
+      
+        <div>
+          <Label>IG</Label>
+          <Input type="text" />
+        </div>
+        <div>
+          <Label>LinkedIn</Label>
+          <Input type="text" />
+        </div>
+
+        {/* Bank Information */}
+        <div>
+          <Label>Bank Rekening</Label>
+          <Input type="text" />
+        </div>
+        <div>
+          <Label>No Rekening</Label>
+          <Input type="text" />
+        </div>
+        <div>
+          <Label>Nama Rekening</Label>
+          <Input type="text" />
+        </div>
     </ComponentCard>
   );
 }

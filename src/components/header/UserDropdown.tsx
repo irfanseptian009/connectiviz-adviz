@@ -17,7 +17,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     setIsOpen(false);
   }
   return (
-    <div className="relative">
+    <div className="relative ">
       <button
         onClick={toggleDropdown} 
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
@@ -56,8 +56,9 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        className="absolute right-0 mt-[25px] nav  flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-7  shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
+        <div className="bg-blue-50 dark:bg-gray-800 p-3 rounded-xl border-e-2 border-2 border-blue-200 dark:border-gray-500 shadow-xl">
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
             Irfan Septian
@@ -165,6 +166,8 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
           </svg>
           Sign out
         </Link>
+        </div>
+      
       </Dropdown>
     </div>
   );

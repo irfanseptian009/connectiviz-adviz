@@ -30,100 +30,122 @@ const tableData: Order[] = [
   {
     id: 1,
     user: {
-      image: "/images/user/user-17.jfif",
-      name: "bagas",
-      role: "Web Designer",
+      image: "/images/user/user-18.jfif",
+      name: "Irfan",
+      role: "Software Developer",
     },
     Departement: "IT",
     team: {
       images: [
-        "/images/user/user-05.jpg",
-        "/images/user/user-06.jpg",
-        "/images/user/user-07.jpg",
+        "/images/user/user-09.jfif",
+        "/images/user/user-06.jfif",
+      
       ],
     },
-    Branch: "Central",
-    status: "Active",
+    Branch: "Arva",
+    status: "Probation",
   },
   {
     id: 2,
     user: {
-      image: "/images/user/user-18.jfif",
-      name: "budi",
-      role: "Project Manager",
+      image: "/images/user/user-14.jfif",
+      name: "rizni",
+      role: "Marketing",
     },
-    Departement: "Acounting",
+    Departement: "Marketing",
     team: {
       images:   [
-        "/images/user/user-05.jpg",
-        "/images/user/user-06.jpg",
+        "/images/user/user-05.jfif",
+       
       ],
     },
-    Branch: "Central",
+    Branch: "Arva",
     status: "Probation",
   },
   {
     id: 3,
     user: {
-      image: "/images/user/user-13.jfif",
-      name: "lakaka",
-      role: "Content Writing",
+      image: "/images/user/user-17.jfif",
+      name: "Tasya",
+      role: "Software Developer",
     },
-    Departement: "Marketing",
+    Departement: "IT",
     team: {
       images: [
-        "/images/user/user-05.jpg",
+        "/images/user/user-09.jfif",
+        "/images/user/user-06.jfif",
+       
       ],
     },
-    Branch: "Central",
+    Branch: "Arva",
     status: "Active",
   },
   {
     id: 4,
     user: {
-      image: "/images/user/user-08.jpg",
-      name: "Maradona primadona",
-      role: "Digital Marketer",
+      image: "/images/user/user-01.jfif",
+      name: "cornel",
+      role: "Acounting",
     },
-    Departement: "Marketing",
+    Departement: "Finance",
     team: {
       images: [
-        "/images/user/user-05.jpg",
-        "/images/user/user-06.jpg",
-        "/images/user/user-07.jpg",
+        "/images/user/user-05.jfif",
+        "/images/user/user-07.jfif",
+        "/images/user/user-08.jfif",
+     
+     
       ],
     },
-    Branch: "Central",
-    status: "Magang",
+    Branch: "Arva",
+    status: "active",
   },
   {
     id: 5,
     user: {
-      image: "/images/user/user-05.jpg",
-      name: "bang messi",
-      role: "Front-end Developer",
+      image: "/images/user/user-19.jfif",
+      name: "Asteria",
+      role: "Acounting Supervisor",
     },
-    Departement: "IT",
+    Departement: "Finance",
     team: {
       images: [
-        "/images/user/user-05.jpg",
-        "/images/user/user-06.jpg",
-        "/images/user/user-07.jpg",
+        "/images/user/user-02.jfif",
+        "/images/user/user-10.jfif",
+        "/images/user/user-08.jfif",
       ],
     },
-    Branch: "Central",
+    Branch: "Arva",
+    status: "Active",
+  },
+  {
+    id: 6,
+    user: {
+      image: "/images/user/user-16.jfif",
+      name: "Detania",
+      role: "Acounting",
+    },
+    Departement: "Finance",
+    team: {
+      images: [
+        "/images/user/user-08.jfif",
+        "/images/user/user-04.jfif",
+        "/images/user/user-10.jfif",
+      ],
+    },
+    Branch: "Arva",
     status: "Active",
   },
 ];
 
 export default function BasicTableOne() {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div className="overflow-hidden pallet p-4 rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1102px]">
+        <div className="min-w-[1102px] p-2">
           <Table>
             {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+            <TableHeader className="border-b  border-purple-300 dark:border-white/[2.05]">
               <TableRow>
                 <TableCell
                   isHeader
@@ -153,13 +175,13 @@ export default function BasicTableOne() {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Branch
+                  Location
                 </TableCell>
               </TableRow>
             </TableHeader>
 
             {/* Table Body */}
-            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            <TableBody className="divide-y divide-gray-300 dark:divide-white/[2.05]">
               {tableData.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">

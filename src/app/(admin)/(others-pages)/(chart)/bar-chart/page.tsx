@@ -5,9 +5,9 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "connectiviz",
+  title: "Bar chart | connectiviz",
   description:
-    "connectiviz by adviz",
+    "this bar chart for connectiviz by adviz",
 };
 
 export default function page() {

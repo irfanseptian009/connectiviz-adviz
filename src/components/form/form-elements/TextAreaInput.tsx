@@ -1,43 +1,62 @@
 "use client";
-import React, { useState } from "react";
+
 import ComponentCard from "../../common/ComponentCard";
-import TextArea from "../input/TextArea";
 import Label from "../Label";
+import Select from "../Select";
+import Input from "../input/InputField";
 
 export default function TextAreaInput() {
-  const [message, setMessage] = useState("");
-  const [messageTwo, setMessageTwo] = useState("");
+  
+  const educationOptions = [
+    { value: "s1", label: "S1" },
+    { value: "d3", label: "D3" },
+    { value: "sma", label: "SMA" },
+  ];
+
+  const universityTypeOptions = [
+    { value: "swasta", label: "Swasta" },
+    { value: "negeri", label: "Negeri" },
+  ];
+
+  const handleSelectChange = (value: string) => {
+    console.log("Selected value:", value);
+  };
+
   return (
     <ComponentCard title="Textarea input field">
-      <div className="space-y-6">
-        {/* Default TextArea */}
+        {/* Education Information */}
         <div>
-          <Label>Description</Label>
-          <TextArea
-            value={message}
-            onChange={(value) => setMessage(value)}
-            rows={6}
+          <Label>Pendidikan</Label>
+          <Select
+            options={educationOptions}
+            placeholder="Pilih Pendidikan Terakhir"
+            onChange={handleSelectChange}
           />
         </div>
-
-        {/* Disabled TextArea */}
         <div>
-          <Label>Description</Label>
-          <TextArea rows={6} disabled />
+          <Label>Fakultas</Label>
+          <Input type="text" />
         </div>
-
-        {/* Error TextArea */}
         <div>
-          <Label>Description</Label>
-          <TextArea
-            rows={6}
-            value={messageTwo}
-            error
-            onChange={(value) => setMessageTwo(value)}
-            hint="Please enter a valid message."
+          <Label>Jurusan</Label>
+          <Input type="text" />
+        </div>
+        <div>
+          <Label>Nama Universitas</Label>
+          <Input type="text" />
+        </div>
+        <div>
+          <Label>Swasta/Negeri</Label>
+          <Select
+            options={universityTypeOptions}
+            placeholder="Pilih Jenis Universitas"
+            onChange={handleSelectChange}
           />
         </div>
-      </div>
+        <div>
+          <Label>IPK</Label>
+          <Input type="number" step={0.01} />
+        </div>
     </ComponentCard>
   );
 }

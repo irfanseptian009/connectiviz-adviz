@@ -5,9 +5,9 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "connectiviz",
+  title: "line chart | connectiviz",
   description:
-    "This is connectiviz by adviz.",
+    "This is line chart for connectiviz by adviz.",
 };
 export default function LineChart() {
   return (

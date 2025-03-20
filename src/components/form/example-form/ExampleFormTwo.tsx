@@ -35,7 +35,7 @@ export default function ExampleFormTwo() {
     { value: "cate3", label: "Category 3" },
   ];
   const country = [
-    { value: "bd", label: "Bangladesh" },
+    { value: "id", label: "Indonesia" },
     { value: "usa", label: "United States" },
     { value: "canada", label: "Canada" },
   ];
