@@ -49,7 +49,7 @@ export default function PersonalInformation() {
   };
 
   return (
-    <ComponentCard className="shadow-xl" title="Personal Information">
+    <ComponentCard className="shadow-lg" title="Personal Information">
       <div className="space-y-6 ">
         {/* Personal Information */}
         <div>

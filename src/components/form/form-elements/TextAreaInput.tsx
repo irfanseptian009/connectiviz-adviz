@@ -23,7 +23,7 @@ export default function TextAreaInput() {
   };
 
   return (
-    <ComponentCard title="Textarea input field">
+    <ComponentCard className="shadow-lg" title="Textarea input field">
         {/* Education Information */}
         <div>
           <Label>Pendidikan</Label>

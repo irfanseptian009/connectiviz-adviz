@@ -28,7 +28,7 @@ export default function SelectInputs() {
   ];
 
   return (
-    <ComponentCard title="Select Inputs">
+    <ComponentCard title="Select Inputs" className="shadow-lg">
       <div className="space-y-6">
         <div>
           <Label>Select Input</Label>
