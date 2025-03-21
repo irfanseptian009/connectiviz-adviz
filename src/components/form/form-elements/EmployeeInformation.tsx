@@ -16,7 +16,7 @@ export default function EmployeeInformation() {
     console.log("Selected value:", value);
   };
   return (
-    <ComponentCard title="Employee Information">
+    <ComponentCard className="shadow-lg" title="Employee Information">
        {/* Employment Information */}
        <div>
           <Label>Jabatan</Label>

@@ -9,7 +9,7 @@ export default function IdentityDocument() {
 
 
   return (
-    <ComponentCard title="Identitiy Documents">
+    <ComponentCard className="shadow-lg" title="Identitiy Documents">
         {/* Identity Documents */}
         <div>
           <Label>No KTP</Label>

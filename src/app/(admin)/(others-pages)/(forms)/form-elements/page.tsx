@@ -19,14 +19,16 @@ export const metadata: Metadata = {
 
 export default function FormElements() {
   return (
-    <div>
+    <div className="nav p-10">     
       <PageBreadcrumb pageTitle="From Employee" />
-      <div className="grid grid-cols-1 nav p-10  gap-6 xl:grid-cols-2">
-        <div className="space-y-6">
+      <div className="">
+      <div className=" bg-blue-50 dark:bg-gray-900 rounded-t-[50px] rounded-b-xl">
+      <div className="h-20 rounded-t-[50px] opacity-50 bg-gradient-to-r from-[#EBB317] to-[#1D95D7]"></div>
+      <div className="grid grid-cols-1   p-5  gap-6 xl:grid-cols-2">
+      <div className="space-y-6">
       
           <PersonalInformation/>
           <DropzoneComponent />
-     
           <InputStates />
         </div>
         <div className="space-y-6 ">
@@ -38,6 +40,10 @@ export default function FormElements() {
           <ContactInformation />
        
         </div>
+   </div>
+     
+      </div>
+
       </div>
     </div>
   );

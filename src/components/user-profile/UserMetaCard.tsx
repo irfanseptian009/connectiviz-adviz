@@ -17,7 +17,7 @@ export default function UserMetaCard() {
   };
   return (
     <>
-      <div className="p-5 border shadow-md border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+      <div className="p-5 border-2  border-blue-200 shadow-md   bg-gradient-to-l from-[#EBB317]/50 to-[#1D95D7]/50  rounded-b-[10px] rounded-t-[35px] dark:border-gray-400 lg:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
@@ -33,11 +33,11 @@ export default function UserMetaCard() {
                 Irfan Septian
               </h4>
               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-200">
                   Software Developer
                 </p>
                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-200">
                   Jakarta, Indonesia
                 </p>
               </div>

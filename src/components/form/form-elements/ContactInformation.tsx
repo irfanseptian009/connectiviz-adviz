@@ -20,7 +20,7 @@ export default function ContactInformation() {
   };
 
   return (
-    <ComponentCard title="Contact Information">
+    <ComponentCard className="shadow-lg" title="Contact Information">
      {/* Contact Information */}
      <div>
           <Label>Email</Label>
