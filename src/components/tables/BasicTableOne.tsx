@@ -30,15 +30,15 @@ const tableData: Order[] = [
   {
     id: 1,
     user: {
-      image: "/images/user/user-18.jfif",
+      image: "/images/user/user-18.jpg",
       name: "Irfan",
       role: "Software Developer",
     },
     Departement: "IT",
     team: {
       images: [
-        "/images/user/user-09.jfif",
-        "/images/user/user-06.jfif",
+        "/images/user/user-09.jpg",
+        "/images/user/user-06.jpg",
       
       ],
     },
@@ -48,14 +48,14 @@ const tableData: Order[] = [
   {
     id: 2,
     user: {
-      image: "/images/user/user-14.jfif",
+      image: "/images/user/user-14.jpg",
       name: "rizni",
       role: "Marketing",
     },
     Departement: "Marketing",
     team: {
       images:   [
-        "/images/user/user-05.jfif",
+        "/images/user/user-05.jpg",
        
       ],
     },
@@ -65,15 +65,15 @@ const tableData: Order[] = [
   {
     id: 3,
     user: {
-      image: "/images/user/user-17.jfif",
+      image: "/images/user/user-17.jpg",
       name: "Tasya",
       role: "Software Developer",
     },
     Departement: "IT",
     team: {
       images: [
-        "/images/user/user-09.jfif",
-        "/images/user/user-06.jfif",
+        "/images/user/user-09.jpg",
+        "/images/user/user-06.jpg",
        
       ],
     },
@@ -83,16 +83,16 @@ const tableData: Order[] = [
   {
     id: 4,
     user: {
-      image: "/images/user/user-01.jfif",
+      image: "/images/user/user-01.jpg",
       name: "cornel",
       role: "Acounting",
     },
     Departement: "Finance",
     team: {
       images: [
-        "/images/user/user-05.jfif",
-        "/images/user/user-07.jfif",
-        "/images/user/user-08.jfif",
+        "/images/user/user-05.jpg",
+        "/images/user/user-07.jpg",
+        "/images/user/user-08.jpg",
      
      
       ],
@@ -103,16 +103,16 @@ const tableData: Order[] = [
   {
     id: 5,
     user: {
-      image: "/images/user/user-19.jfif",
+      image: "/images/user/user-19.jpg",
       name: "Asteria",
       role: "Acounting Supervisor",
     },
     Departement: "Finance",
     team: {
       images: [
-        "/images/user/user-02.jfif",
-        "/images/user/user-10.jfif",
-        "/images/user/user-08.jfif",
+        "/images/user/user-02.jpg",
+        "/images/user/user-10.jpg",
+        "/images/user/user-08.jpg",
       ],
     },
     Branch: "Arva",
@@ -121,16 +121,16 @@ const tableData: Order[] = [
   {
     id: 6,
     user: {
-      image: "/images/user/user-16.jfif",
+      image: "/images/user/user-16.jpg",
       name: "Detania",
       role: "Acounting",
     },
     Departement: "Finance",
     team: {
       images: [
-        "/images/user/user-08.jfif",
-        "/images/user/user-04.jfif",
-        "/images/user/user-10.jfif",
+        "/images/user/user-08.jpg",
+        "/images/user/user-04.jpg",
+        "/images/user/user-10.jpg",
       ],
     },
     Branch: "Arva",

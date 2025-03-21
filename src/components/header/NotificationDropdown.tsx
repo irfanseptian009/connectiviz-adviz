@@ -90,7 +90,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-17.jfif"
+                  src="/images/user/user-17.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -129,7 +129,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-14.jfif"
+                  src="/images/user/user-14.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -165,7 +165,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-18.jfif"
+                  src="/images/user/user-18.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -201,7 +201,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-19.jfif"
+                  src="/images/user/user-19.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -237,7 +237,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-01.jfif"
+                  src="/images/user/user-01.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -274,7 +274,7 @@ export default function NotificationDropdown() {
                 <Image
                   width={40}
                   height={40}
-                  src="/images/user/user-16.jfif"
+                  src="/images/user/user-16.jpg"
                   alt="User"
                   className="overflow-hidden rounded-full"
                 />
