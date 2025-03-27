@@ -41,7 +41,7 @@ const AppHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="mx-6  sticky z-50  ">
+    <header className="mx-6 z-50  sticky">
     <div className=" top-0 flex rounded-2xl h-16 md:h-20   w-full mt-2 nav  backdrop-blur-md border-b  border-blue-600/20 shadow-xl  dark:bg-gray-900/90 dark:border-gray-800/50">
       <div className="flex flex-col items-center  justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-4 py-3 border-b border-blue-600/20 dark:border-gray-800/50 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">

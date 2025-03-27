@@ -121,8 +121,8 @@ const Calendar: React.FC = () => {
   };
 
   return (
-    <div className="rounded-2xl border pallet p-10  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="custom-calendar">
+    <div className="rounded-2xl border nav  p-10  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="custom-calendar bg-white dark:bg-white/[0.10] rounded-xl dark:bg-gray-7-00">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

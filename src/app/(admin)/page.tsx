@@ -1,11 +1,10 @@
+
+import CardGate from "@/components/gate/CardGate";
 import type { Metadata } from "next";
-// import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
 import React from "react";
-// import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
-// import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
-// import StatisticsChart from "@/components/ecommerce/StatisticsChart";
-// import RecentOrders from "@/components/ecommerce/RecentOrders";
-// import DemographicCard from "@/components/ecommerce/DemographicCard";
+import carosel from "../../../public/images/carousel/carosel1.png"
+import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title:
@@ -13,42 +12,18 @@ export const metadata: Metadata = {
   description: "This is connectiviz",
 };
 
-export default function Ecommerce() {
+export default function Gate() {
   return (
-    // <div className="grid grid-cols-12 gap-4 md:gap-6">
-   <div>
-
-      <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <div className="mx-auto w-full max-w-[630px] text-center">
-          <h3 className="mb-4 font-semibold text-gray-800 text-theme-xl dark:text-white/90 sm:text-2xl">
-            Gate aplication Here
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-          this page will be present soon..
-          </p>
-        </div>
-      </div>
-      {/* <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics />
-
-        <MonthlySalesChart />
-      </div>
-
-      <div className="col-span-12 xl:col-span-5">
-        <MonthlyTarget />
-      </div>
-
-      <div className="col-span-12">
-        <StatisticsChart />
-      </div>
-
-      <div className="col-span-12 xl:col-span-5">
-        <DemographicCard />
-      </div>
-
-      <div className="col-span-12 xl:col-span-7">
-        <RecentOrders />
-      </div> */}
+    <div className=" flex flex-row gap-4 "> 
+   <div className="flex flex-col w-full">
+      <Image src={carosel} alt="carousel" className="h-56 w-full  justify-center rounded-4xl mb-8 shadow-xl border-4 border-orange-500 dark:border-gray-500/30" />
+   <div className="min-h-screen  w-full items-start rounded-2xl border pallet border-gray-200 bg-white py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
+   <div className="w-30 shadow-md hover:shadow-xl  transition-all duration-300 transform hover:-translate-y-3">
+   <Link href="/naruku"><CardGate/></Link>
+   </div> 
+          </div> 
+          </div>
+          <div className=" w-72 rounded-2xl bg-blue-500 dark:bg-slate-800"></div>
     </div>
   );
 }
