@@ -2,8 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { Dropdown } from "./../../ui/dropdown/Dropdown";
+import { DropdownItem } from './../../ui/dropdown/DropdownItem';
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,15 +24,15 @@ export default function NotificationDropdown() {
   return (
     <div className="relative ">
       <button
-        className="relative shadow-md nav dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-blue-50 border border-blue-200 rounded-xl hover:text-blue-700 h-11 w-11 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 dark:hover:text-white"
+        className="relative shadow-md  dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-orange-50 border border-orange-200 rounded-md hover:text-orange-700 h-11 w-11 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-900 dark:text-orange-400 dark:hover:bg-orange-800 dark:hover:text-white"
         onClick={handleClick}
       >
         <span
-          className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-blue-400 ${
+          className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 ${
             !notifying ? "hidden" : "flex"
           }`}
         >
-          <span className="absolute inline-flex w-full h-full bg-blue-400 rounded-full opacity-75 animate-ping"></span>
+          <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
         </span>
         <svg
           className="fill-current"
@@ -53,9 +53,9 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute  -right-[240px]  nav mt-[25px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
+        className="absolute  -right-[240px]   mt-[25px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
       >
-        <div className="flex items-center rounded-lg bg-blue-200/20 backdrop-blur-xl mb-2 p-1  justify-between  pb-3  border-b border-b-gray-400 dark:border-gray-700">
+        <div className="flex items-center rounded-lg bg-orange-200/20 backdrop-blur-xl mb-2 p-1  justify-between  pb-3  border-b border-b-gray-400 dark:border-gray-700">
           <h5 className="text-lg mt-1 ml-1    font-semibold text-gray-800 dark:text-gray-200">
             Notification
           </h5>
@@ -79,7 +79,7 @@ export default function NotificationDropdown() {
             </svg>
           </button>
         </div>
-        <ul className="flex flex-col bg-blue-50 dark:bg-gray-800   rounded-xl h-auto overflow-y-auto custom-scrollbar">
+        <ul className="flex flex-col bg-orange-50 dark:bg-gray-800   rounded-xl h-auto overflow-y-auto custom-scrollbar">
           {/* Example notification items */}
           <li>
             <DropdownItem

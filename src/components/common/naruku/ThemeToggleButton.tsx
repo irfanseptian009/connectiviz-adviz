@@ -1,5 +1,5 @@
 import React from "react";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "./../../../context/ThemeContext";
 
 export const ThemeToggleButton: React.FC = () => {
   const { toggleTheme } = useTheme();
@@ -7,7 +7,7 @@ export const ThemeToggleButton: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative shadow-md nav   flex items-center justify-center text-blue-500 transition-colors  border border-blue-200 rounded-lg hover:text-dark-900 h-11 w-11 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-800 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 dark:hover:text-white"
+      className="relative shadow-md flex items-center justify-center text-orange-500 transition-colors  border border-orange-200 rounded-md hover:text-dark-900 h-11 w-11 hover:bg-orange-100 hover:text-orange-700 dark:border-orange-800 dark:bg-orange-900 dark:text-orange-400 dark:hover:bg-orange-800 dark:hover:text-white"
     >
       <svg
         className="hidden dark:block"

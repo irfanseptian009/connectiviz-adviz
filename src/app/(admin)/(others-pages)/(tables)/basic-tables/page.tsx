@@ -17,8 +17,8 @@ export default function BasicTables() {
       <PageBreadcrumb pageTitle="Table" />
       <div className="space-y-6 pallet ">
         <ComponentCard title="Table Employee">
-          <BasicTableOne />
-        </ComponentCard>
+        <BasicTableOne />
+          </ComponentCard>
       </div>
     </div>
   );

@@ -29,7 +29,7 @@ const LoginPage = () => {
       <div className="w-full max-w-[600px] h-[500px] bg-custom-gradient mt-16 rounded-4xl ml-24 shadow-xl overflow-hidden relative">
         <div className="flex flex-col md:flex-row mt-4">
           {/* Left side - login form */}
-          <div className="ml-10 mt-10">
+          <div className="ml-10 mt-14">
            
             <div className="">
               <h2 className="text-gray-800 w-full text-3xl font-extralight mb-2">Let&lsquo;s Setup your Operating Agreement</h2>
@@ -83,11 +83,6 @@ const LoginPage = () => {
               >
                 Sign In
               </button>
-              
-              <div className="mt-2 text-center text-sm">
-                <span className="text-gray-600">Don&lsquo;t have an account? </span>
-                <a href="/signup" className="text-orange-500 hover:underline font-medium">Register Now</a>
-              </div>
             </form>
           </div>
           
