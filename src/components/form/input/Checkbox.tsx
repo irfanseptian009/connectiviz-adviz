@@ -11,6 +11,7 @@ interface CheckboxProps {
 
 const Checkbox: React.FC<CheckboxProps> = ({
   label,
+  
   checked,
   id,
   onChange,

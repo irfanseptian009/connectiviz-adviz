@@ -1,26 +1,59 @@
-import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import { Metadata } from "next";
-import React from "react";
+"use client"
 
-export const metadata: Metadata = {
-  title: "connectiviz",
-  description: "connectiviz by adviz",
-};
+import React from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
-export default function BlankPage() {
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export default function Home() {
+  // const [user, setUser] = useState<any>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+    } else {
+      axios.get('http://localhost:4000/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => setUsers(res.data))
+        .catch(err => {
+          console.error(err);
+          if (err.response?.status === 401) router.push('/login');
+        });
+    }
+  }, [router]);
+
   return (
-    <div>
-      <PageBreadcrumb pageTitle="Blank Page" />
-      <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <div className="mx-auto w-full max-w-[630px] text-center">
-          <h3 className="mb-4 font-semibold text-gray-800 text-theme-xl dark:text-white/90 sm:text-2xl">
-            Card Title Here
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-          this page will be present soon..
-          </p>
-        </div>
-      </div>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Daftar Karyawan</h1>
+      <table className="min-w-full bg-white border">
+        <thead>
+          <tr>
+            <th className="py-2 px-4 border">Nama</th>
+            <th className="py-2 px-4 border">Email</th>
+            <th className="py-2 px-4 border">Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(u => (
+            <tr key={u.id}>
+              <td className="py-2 px-4 border">{u.name}</td>
+              <td className="py-2 px-4 border">{u.email}</td>
+              <td className="py-2 px-4 border">{u.role}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
