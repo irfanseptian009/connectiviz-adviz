@@ -8,10 +8,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RiDeleteBin5Line, RiEditLine } from "react-icons/ri";
-import { Karyawan } from "@/types/karyawan";
+import { Employee } from "@/types/employee";
 
 type Props = {
-  data: Karyawan[];
+  data: Employee[];
   onView(id: number): void;
   onEdit(id: number): void;
   onDelete(id: number): void;
@@ -33,9 +33,9 @@ export default function EmployeeTable({
                 <TableCell className="p-2 border-b font-medium">Nama</TableCell>
                 <TableCell className="p-2 border-b font-medium">Email</TableCell>
                 <TableCell className="p-2 border-b font-medium">
-                  Jabatan
+                  role
                 </TableCell>
-                <TableCell className="p-2 border-b font-medium">Aksi</TableCell>
+                <TableCell className="p-2 border-b font-medium">Action</TableCell>
               </TableRow>
             </TableHeader>
 
@@ -51,14 +51,14 @@ export default function EmployeeTable({
                         onClick={() => onView(u.id)}
                         className="text-blue-500 dark:text-blue-300 hover:underline cursor-pointer font-medium"
                       >
-                        {u.name ?? "-"}
+                        {u.username ?? "-"}
                       </span>
                     </TableCell>
                     <TableCell className="p-2 border-b dark:border-gray-600 dark:text-gray-200">
                       {u.email ?? "-"}
                     </TableCell>
                     <TableCell className="p-2 border-b dark:border-gray-600 dark:text-gray-200">
-                      {u.jabatan ?? "-"}
+                      {u.role ?? "-"}
                     </TableCell>
                     <TableCell className="p-2 border-b dark:border-gray-600 flex gap-2">
                       <button

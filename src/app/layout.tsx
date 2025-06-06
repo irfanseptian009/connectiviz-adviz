@@ -1,39 +1,28 @@
-import { Outfit } from "next/font/google";
-import "./globals.css";
+// app/layout.tsx
+import './globals.css';
+import type { ReactNode } from 'react';
+import type { Metadata } from 'next';
+import { Outfit } from 'next/font/google';
+import { Providers } from './provider';   // ↱ 'use client' di file ini
 
-import { SidebarProvider } from "@/context/SidebarContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/components/auth/SignInForm";
-import { Toaster } from 'react-hot-toast';
-
+// ─── Google font ──────────────────────────────────────────────
 const outfit = Outfit({
-  variable: "--font-outfit-sans",
-  subsets: ["latin"],
+  subsets: ['latin'],
+  variable: '--font-outfit-sans',
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+// ─── Optional: SEO/default meta ───────────────────────────────
+export const metadata: Metadata = {
+  title: 'My App',
+  description: 'Awesome app built with Next.js 14',
+};
+
+// ─── Root layout (server component) ───────────────────────────
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${outfit.variable} dark:bg-black bg-orange-25`}>
-        <AuthProvider> 
-          <ThemeProvider>
-            <Toaster position="top-right"
-              // toastOptions={{
-              //   className: "",
-              //   duration: 5000,
-              //   style: {
-              //     background: "#363636",
-              //     color: "#fff",
-              //   },
-              // }}
-            />
-            <SidebarProvider>{children}</SidebarProvider>
-          </ThemeProvider>
-        </AuthProvider>
+    <html lang="en" className={outfit.variable}>
+      <body className="dark:bg-black bg-orange-25">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

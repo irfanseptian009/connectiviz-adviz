@@ -4,121 +4,131 @@ import React from "react";
 import { Tab } from "@headlessui/react";
 import { Modal } from "@/components/ui/modal";
 import { RiEditLine } from "react-icons/ri";
+import { Employee } from "@/types/employee";
+import {Props} from "@/types/props";
 
-export interface Karyawan {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  password?: string;
-  /* ... field lain persis seperti di halaman utama … */
-  [key: string]: string | number | undefined;
-}
 
-interface Props {
-  isOpen: boolean;
-  onClose(): void;
-  editData: Karyawan | null;
-  setEditData(data: Karyawan | null): void;
-  formError: Record<string, string>;
-  setFormError(err: Record<string, string>): void;
-  handleSave(): Promise<void>;
-  selectedTab: number;
-  setSelectedTab(idx: number): void;
-}
-
+// Dropdown options for select fields
 const dropdownOptions: Record<string, string[]> = {
-  jk: ["L", "P"],
-  role: ["SUPER_ADMIN", "ADMIN", "MANAGER", "EMPLOYEE"],
-  statusMenikah: ["Belum Menikah", "Menikah", "Cerai"],
-  statusKerja: ["Tetap", "Kontrak", "Outsourcing"],
-  golDarah: ["A", "B", "AB", "O"],
-  kategoriPph: ["A", "B", "C"],
-  agama: ["Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"],
-  pendidikan: ["SMA/SMK", "D3", "S1", "S2", "S3"],
-  swastaNegeri: ["Swasta", "Negeri"],
-  statusPtkp: [
-    "TK/0",
-    "TK/1",
-    "TK/2",
-    "TK/3",
-    "K/0",
-    "K/1",
-    "K/2",
-    "K/3",
-  ],
+  role: ["SUPER_ADMIN", "ADMIN", "EMPLOYEE"],
+  gender: ["MALE", "FEMALE"],
+  maritalStatus: ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'],
+  bloodType:['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+  lastEducation: ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'],
+  ptkpStatus:['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3'],
+  // Add more if needed
 };
 
 const tabs = [
-  { label: "Akun & Role", fields: ["name", "email", "role", "password"] },
   {
-    label: "Data Pribadi",
+    label: "Account & Role",
+    fields: ["username", "email", "role",]
+  },
+  {
+    label: "Personal Data",
     fields: [
-      "namaLengkap",
-      "namaPanggilan",
-      "namaPerusahaan",
-      "jk",
-      "employeeId",
-      "tempatLahir",
-      "tanggalLahir",
-      "noTelp",
-      "golDarah",
-      "statusMenikah",
-      "agama",
-    ],
+      "fullName",
+      "nationalId",
+      "address",
+      "placeOfBirth",
+      "dateOfBirth",
+      "gender",
+      "phoneNumber",
+      "officeEmail",
+      "divisionId"
+    ]
   },
   {
-    label: "Pekerjaan & Pendidikan",
+    label: "Family Data",
     fields: [
-      "jabatan",
-      "statusKerja",
-      "tanggalMasuk",
-      "pendidikan",
-      "fakultas",
-      "jurusan",
-      "universitas",
-      "swastaNegeri",
-      "ipk",
-    ],
+      "motherName",
+      "fatherName",
+      "maritalStatus",
+      "spouseName",
+      "childrenNames"
+    ]
   },
   {
-    label: "Alamat & Dokumen",
-    fields: ["domisili", "alamatDomisili", "alamatKtp", "noKtp", "noKk"],
-  },
-  {
-    label: "BPJS & Pajak",
-    fields: ["bpjsTk", "bpjsKes", "statusPtkp", "kategoriPph", "npwp"],
-  },
-  { label: "Asuransi", fields: ["kartuAsuransi", "memberNumber", "noPolis"] },
-  {
-    label: "Kontak & Sosial",
+    label: "Education",
     fields: [
-      "emailPribadi",
-      "emailPerusahaan",
-      "kontakDaruratNama",
-      "kontakDaruratHubungan",
-      "kontakDaruratHp",
-      "ig",
+      "lastEducation",
+      "schoolName",
+      "major",
+      "yearStart",
+      "yearGraduate"
+    ]
+  },
+  {
+    label: "Documents",
+    fields: [
+      "identityCard",
+      "taxNumber",
+      "drivingLicense",
+      "bpjsHealth",
+      "bpjsEmployment",
+      "insuranceCompany",
+      "insuranceNumber",
+      "policyNumber",
+      "ptkpStatus"
+    ]
+  },
+  {
+    label: "Emergency Contact",
+    fields: [
+      "emergencyContactName",
+      "emergencyContactRelation",
+      "emergencyContactPhone"
+    ]
+  },
+  {
+    label: "Bank",
+    fields: [
+      "bankName",
+      "bankAccountNumber",
+      "bankAccountName"
+    ]
+  },
+  {
+    label: "Social Media",
+    fields: [
+      "instagram",
+      "facebook",
+      "twitter",
       "linkedin",
-    ],
+      "tiktok"
+    ]
   },
-  { label: "Bank", fields: ["bank", "noRekening", "namaRekening"] },
+  {
+    label: "Health",
+    fields: [
+      "bloodType",
+      "medicalHistory",
+      "allergies",
+      "height",
+      "weight"
+    ]
+  }
 ];
 
+// Label formatter
 const formatLabel = (field: string) =>
-  field
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (s) => s.toUpperCase())
-    .trim();
+  field.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase()).trim();
 
+// Field type getter
 const getFieldType = (field: string) => {
-  if (field.toLowerCase().includes("tanggal")) return "date";
+  if (field.toLowerCase().includes("date")) return "date";
   if (field.toLowerCase().includes("email")) return "email";
   if (field === "password") return "password";
-  if (field === "ipk" || field.toLowerCase().includes("no")) return "text";
+  if (
+    ["yearStart", "yearGraduate", "height", "weight", "divisionId"].includes(
+      field
+    )
+  )
+    return "number";
   return "text";
 };
 
+// Select component
 const SelectField = ({
   label,
   name,
@@ -126,7 +136,7 @@ const SelectField = ({
   required,
   value,
   onChange,
-  error,
+  error
 }: {
   label: string;
   name: string;
@@ -143,13 +153,13 @@ const SelectField = ({
     <select
       name={name}
       value={value || ""}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={e => onChange(e.target.value)}
       className={`rounded border ${
         error ? "border-red-500" : "dark:border-gray-600"
       } dark:bg-gray-800 dark:text-white bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400`}
     >
-      <option value="">Pilih {label}</option>
-      {options.map((opt) => (
+      <option value="">Select {label}</option>
+      {options.map(opt => (
         <option key={opt} value={opt}>
           {opt}
         </option>
@@ -158,6 +168,78 @@ const SelectField = ({
     {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
   </div>
 );
+
+// Special for childrenNames
+const ChildrenNamesField = ({
+  value,
+  onChange,
+  error,
+}: {
+  value?: string[];
+  onChange(val: string[]): void;
+  error?: string;
+}) => {
+  const values = value && value.length > 0 ? value : [""];
+
+  const handleChange = (idx: number, newVal: string) => {
+    const updated = [...values];
+    updated[idx] = newVal;
+    onChange(updated);
+  };
+
+  const handleAdd = () => {
+    onChange([...values, ""]);
+  };
+
+  const handleRemove = (idx: number) => {
+    const updated = values.filter((_, i) => i !== idx);
+    onChange(updated.length === 0 ? [""] : updated);
+  };
+
+  return (
+    <div className="flex flex-col text-sm">
+      <label className="font-medium text-gray-700 dark:text-gray-400 mb-1">
+        Children Names
+      </label>
+      {values.map((val, idx) => (
+        <div className="flex gap-2 mb-2" key={idx}>
+          <input
+            type="text"
+            name={`childrenNames_${idx}`}
+            value={val}
+            onChange={e => handleChange(idx, e.target.value)}
+            placeholder={`Child ${idx + 1} name`}
+            className={`rounded border ${
+              error ? "border-red-500" : "dark:border-gray-600"
+            } dark:bg-gray-800  dark:text-white bg-gray-50 px-3 py-2 text-sm flex-col`}
+          />
+          {values.length > 1 && (
+            <button
+              type="button"
+              className="bg-red-500/30 text-white px-2  rounded"
+              onClick={() => handleRemove(idx)}
+              tabIndex={-1}
+            >
+              -
+            </button>
+          )}
+          {idx === values.length - 1 && (
+            <button
+              type="button"
+              className="bg-blue-500/30 text-white px-2 rounded"
+              onClick={handleAdd}
+              tabIndex={-1}
+            >
+              +
+            </button>
+          )}
+        </div>
+      ))}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
+
 
 export default function EditEmployeeModal({
   isOpen,
@@ -168,10 +250,9 @@ export default function EditEmployeeModal({
   setFormError,
   handleSave,
   selectedTab,
-  setSelectedTab,
+  setSelectedTab
 }: Props) {
-  /* ----------- change handler (menghapus error field saat diedit) -------- */
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof Employee, value: Employee[keyof Employee]) => {
     if (!editData) return;
     setEditData({ ...editData, [field]: value });
     if (formError[field]) {
@@ -183,13 +264,19 @@ export default function EditEmployeeModal({
 
   if (!editData) return null;
 
+  
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="p-0 mx-auto w-full max-w-4xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      className="p-0 mx-auto w-full max-w-4xl"
+    >
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
         {/* === HEADER === */}
         <div className="bg-gradient-to-r from-[#EBB317]/50 to-[#1D95D7]/50 m-2 rounded-t-xl p-4">
           <h2 className="text-lg font-semibold text-white dark:text-gray-200 flex items-center">
-            <RiEditLine className="mr-2" /> Edit Data Karyawan
+            <RiEditLine className="mr-2" /> Edit Employee Data
           </h2>
         </div>
 
@@ -199,7 +286,7 @@ export default function EditEmployeeModal({
             {/* tab header */}
             <div className="mb-4">
               <Tab.List className="flex space-x-1 p-2 bg-blue-50 dark:bg-gray-700 rounded-md overflow-x-scroll">
-                {tabs.map((tab) => (
+                {tabs.map(tab => (
                   <Tab
                     key={tab.label}
                     className={({ selected }) =>
@@ -212,8 +299,10 @@ export default function EditEmployeeModal({
                   >
                     {tab.label}
                     {formError &&
-                      tab.fields.some((f) => !!formError[f]) && (
-                        <span className="ml-1 text-red-500 dark:text-red-300">•</span>
+                      tab.fields.some(f => !!formError[f]) && (
+                        <span className="ml-1 text-red-500 dark:text-red-300">
+                          •
+                        </span>
                       )}
                   </Tab>
                 ))}
@@ -222,13 +311,26 @@ export default function EditEmployeeModal({
 
             {/* tab panels */}
             <Tab.Panels className="mt-4 max-h-[60vh] overflow-y-auto px-1">
-              {tabs.map((tab) => (
+              {tabs.map(tab => (
                 <Tab.Panel
                   key={tab.label}
                   className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 rounded-lg"
                 >
-                  {tab.fields.map((field) => {
-                    const isRequired = ["name", "email", "role"].includes(field);
+                  {tab.fields.map(field => {
+                    const isRequired = ["username", "email", "role"].includes(
+                      field
+                    );
+
+                    if (field === "childrenNames") {
+                      return (
+                        <ChildrenNamesField
+                          key={field}
+                          value={editData[field] as string[]}
+                          onChange={val => handleInputChange(field, val)}
+                          error={formError[field]}
+                        />
+                      );
+                    }
 
                     if (dropdownOptions[field]) {
                       return (
@@ -238,44 +340,38 @@ export default function EditEmployeeModal({
                           name={field}
                           options={dropdownOptions[field]}
                           required={isRequired}
-                          value={editData[field] as string | undefined}
-                          onChange={(val) => handleInputChange(field, val)}
+                          value={editData[field] as string}
+                          onChange={val => handleInputChange(field, val)}
                           error={formError[field]}
                         />
                       );
                     }
 
-                    if (field === "password") {
-                      return (
-                        <div className="flex flex-col text-sm" key={field}>
-                          <label className="font-medium text-gray-700 dark:text-gray-200 mb-1">
-                            Password (Kosongkan jika tidak diubah)
-                          </label>
-                          <input
-                            type="password"
-                            name={field}
-                            value={(editData[field] as string) || ""}
-                            onChange={(e) => handleInputChange(field, e.target.value)}
-                            className="rounded border dark:text-white text-black dark:border-gray-600 dark:bg-gray-800 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-                          />
-                        </div>
-                      );
-                    }
-
-                    /* ---- default input ---- */
+                   
                     return (
                       <div className="flex flex-col text-sm" key={field}>
                         <label className="font-medium text-gray-400 mb-1">
-                          {formatLabel(field)}{" "}
-                          {isRequired && <span className="text-red-500">*</span>}
+                          {formatLabel(field)}
+                          {isRequired && (
+                            <span className="text-red-500">*</span>
+                          )}
                         </label>
                         <input
                           type={getFieldType(field)}
                           name={field}
-                          value={(editData[field] as string) || ""}
-                          onChange={(e) => handleInputChange(field, e.target.value)}
+                          value={
+                            editData[field] !== undefined &&
+                            editData[field] !== null
+                              ? String(editData[field])
+                              : ""
+                          }
+                          onChange={e =>
+                            handleInputChange(field, e.target.value)
+                          }
                           className={`rounded border ${
-                            formError[field] ? "border-red-500" : "dark:border-gray-600"
+                            formError[field]
+                              ? "border-red-500"
+                              : "dark:border-gray-600"
                           } dark:bg-gray-800 bg-gray-50 px-3 py-2 dark:text-white text-black text-sm focus:outline-none focus:ring-1 focus:ring-blue-400`}
                         />
                         {formError[field] && (
@@ -297,13 +393,13 @@ export default function EditEmployeeModal({
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              Batal
+              Cancel
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 shadow-xl bg-blue-800/50 text-white rounded-md text-sm hover:bg-blue-800 transition-colors"
             >
-              Simpan Perubahan
+              Save Changes
             </button>
           </div>
         </div>

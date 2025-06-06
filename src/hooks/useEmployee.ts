@@ -6,12 +6,13 @@ import {
   getEmployee,
   updateEmployee,
   deleteEmployee,
+  createEmployee
 } from "../services/employee";
-import { Karyawan } from "../types/karyawan";
+import { Employee } from "../types/employee";
 import toast from "react-hot-toast";
 
-export function useKaryawan() {
-  const [list, setList] = useState<Karyawan[]>([]);
+export function useEmployee() {
+  const [list, setList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
@@ -31,15 +32,15 @@ export function useKaryawan() {
     return data;
   };
 
-  const save = async (id: number, payload: Karyawan) => {
+  const save = async (id: number, payload: Employee) => {
     await updateEmployee(id, payload);
-    toast.success("Data berhasil diperbarui");
+    toast.success("Data successfully updated");
     fetchAll();
   };
 
   const remove = async (id: number) => {
     await deleteEmployee(id);
-    toast.success("Data berhasil dihapus");
+    toast.success("Data successfully deleted");
     fetchAll();
   };
 
@@ -47,5 +48,21 @@ export function useKaryawan() {
     fetchAll();
   }, [fetchAll]);
 
-  return { list, loading, fetchById, save, remove };
+  const create = async (payload: Employee) => {
+    try {
+      const response = await createEmployee(payload);
+      toast.success("Data berhasil ditambahkan");
+      fetchAll();
+      return response;
+    } catch (err: any) {
+      // Handle validation errors from backend
+      if (err.response?.data?.errors) {
+        const validationErrors = err.response.data.errors;
+        throw { validationErrors, message: "Validation failed" };
+      }
+      throw err;
+    }
+  };
+
+  return { list, loading, fetchById, save, remove, create };
 }

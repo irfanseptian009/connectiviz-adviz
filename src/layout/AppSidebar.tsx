@@ -33,16 +33,7 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [{ name: "Application", path: "/", pro: false }],
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+
   {
     name: "Forms",
     icon: <ListIcon />,
@@ -61,6 +52,7 @@ const navItems: NavItem[] = [
       { name: "404 Error", path: "/error-404", pro: false },
     ],
   },
+  
 ];
 
 const othersItems: NavItem[] = [
@@ -72,6 +64,7 @@ const othersItems: NavItem[] = [
     ],
   },
   {
+    
     icon: <BoxCubeIcon />,
     name: "Article",
     subItems: [
@@ -85,6 +78,16 @@ const othersItems: NavItem[] = [
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
     ],
+  },
+    {
+    icon: <CalenderIcon />,
+    name: "Calendar",
+    path: "/calendar",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "User Profile",
+    path: "/profile",
   },
 ];
 
@@ -163,7 +166,7 @@ const AppSidebar: React.FC = () => {
               className={`flex items-center rounded-lg px-1 py-2.5 w-full text-sm transition-all duration-200
                 ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "bg-white/10 font-light text-black dark:bg-gray-800/60"
+                    ? "bg-white/10 font-light text-black dark:text-blue-300 dark:bg-gray-800/60"
                     : "text-gray-800 dark:text-gray-300 hover:bg-gray-800/10 dark:hover:bg-gray-200/30"
                 }
                 ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-between"}
@@ -174,7 +177,7 @@ const AppSidebar: React.FC = () => {
                   className={`flex items-center justify-center w-6 h-6 ${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? "text-gray-800 dark:text-white"
-                      : "text-orange-800 dark:text-gray-300"
+                      : "text-orange-800 dark:text-blue-300"
                   }`}
                 >
                   {nav.icon}
@@ -243,7 +246,7 @@ const AppSidebar: React.FC = () => {
                       className={`flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200
                         ${
                           isActive(subItem.path)
-                            ? "bg-blue-500/10 font-medium text-black dark:bg-gray-800/10 dark:text-white"
+                            ? "bg-blue-500/10 font-medium text-black dark:bg-gray-100/10 dark:text-white "
                             : "text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-600/30"
                         }
                       `}
@@ -323,7 +326,7 @@ const AppSidebar: React.FC = () => {
           <div>
             <h2
               className={`text-xs font-semibold uppercase tracking-wider 
-                text-blue-900 dark:text-gray-400 mb-3 
+                text-blue-900 dark:text-gray-500 mb-3 
                 ${!isExpanded && !isHovered ? "text-center" : "px-3"}`}
             >
               {isExpanded || isHovered || isMobileOpen ? "Menu" : "•••"}
@@ -334,7 +337,7 @@ const AppSidebar: React.FC = () => {
           <div>
             <h2
               className={`text-xs font-semibold uppercase tracking-wider 
-                text-blue-200 dark:text-gray-400 mb-3 
+                text-blue-200 dark:text-gray-500 mb-4 mt-4 
                 ${!isExpanded && !isHovered ? "text-center" : "px-3"}`}
             >
               {isExpanded || isHovered || isMobileOpen ? "Others" : "•••"}

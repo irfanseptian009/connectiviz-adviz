@@ -11,7 +11,7 @@ import { withAuth } from "@/components/auth/SignInForm";
 
 // export const metadata: Metadata = {
 //   title: "Connectiviz",
-//   description: "This is connectiviz",
+//   description: "This is a Connectiviz admin page.",
 // };
 
 function Gate() {
