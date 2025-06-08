@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "@/components/auth/SignInForm"; 
+import { getToken } from "./token"; 
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL

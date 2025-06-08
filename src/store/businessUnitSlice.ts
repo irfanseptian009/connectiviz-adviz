@@ -6,6 +6,19 @@ export interface BusinessUnit {
   name: string;
 }
 
+interface BusinessUnitState {
+  list: BusinessUnit[];
+  loading: boolean;
+  error?: string;
+}
+
+const initialState: BusinessUnitState = {
+  list: [],
+  loading: false,
+  error: undefined,
+};
+
+// Fetch all business units
 export const fetchBusinessUnits = createAsyncThunk(
   "businessUnit/fetchAll",
   async () => {
@@ -14,6 +27,7 @@ export const fetchBusinessUnits = createAsyncThunk(
   }
 );
 
+// Create new business unit
 export const createBusinessUnit = createAsyncThunk(
   "businessUnit/create",
   async (payload: { name: string }) => {
@@ -24,17 +38,38 @@ export const createBusinessUnit = createAsyncThunk(
 
 const businessUnitSlice = createSlice({
   name: "businessUnit",
-  initialState: { list: [] as BusinessUnit[], loading: false },
+  initialState,
   reducers: {},
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
+      .addCase(fetchBusinessUnits.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
       .addCase(fetchBusinessUnits.fulfilled, (state, action) => {
         state.list = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchBusinessUnits.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(createBusinessUnit.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
       })
       .addCase(createBusinessUnit.fulfilled, (state, action) => {
-        state.list.push(action.payload);
+        // Optional: check duplicate by id
+        if (!state.list.find((bu) => bu.id === action.payload.id)) {
+          state.list.push(action.payload);
+        }
+        state.loading = false;
+      })
+      .addCase(createBusinessUnit.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
-  }
+  },
 });
 
 export default businessUnitSlice.reducer;

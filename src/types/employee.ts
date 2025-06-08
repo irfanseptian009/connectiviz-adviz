@@ -1,6 +1,19 @@
-export interface Employee {
+export enum Role {
+  SUPER_ADMIN = "SUPER_ADMIN",
+  ADMIN = "ADMIN",
+  EMPLOYEE = "EMPLOYEE",
+}
+
+export interface NonFormalEducation {
+  name: string;
+  institution: string;
+  year: number;
+  description?: string;
+}
+
+export interface User {
   id: number;
-  role: 'SUPER_ADMIN' | 'ADMIN' | 'EMPLOYEE';
+  role?: Role;
   email: string;
   password?: string;
   username: string;
@@ -12,34 +25,26 @@ export interface Employee {
   gender?: string;
   phoneNumber?: string;
   officeEmail?: string;
-
   // Relation
   divisionId?: number;
   businessUnitId?: number;
-
   // Job data
-  jobTitle?: string;
+  position?: string;         
   jobLevel?: string;
-
   // Family data
   motherName?: string;
   fatherName?: string;
   maritalStatus?: string;
   spouseName?: string;
   childrenNames?: string[];
-
   // Education
   lastEducation?: string;
-  schoolName?: string;
-  major?: string;
-  yearGraduate?: number;
-
+  facultyName?: string;
+  graduationYear?: number;     
+  majorName?: string;
+  gpa?: number;
   // Non-formal education
-  nonFormalEducationNames: string[];
-  nonFormalInstitutions: string[];
-  nonFormalYears: number[];
-  nonFormalDescriptions: string[];
-
+  nonFormalEducations?: NonFormalEducation[];
   // Documents
   identityCard?: string;
   taxNumber?: string;
@@ -50,33 +55,26 @@ export interface Employee {
   insuranceNumber?: string;
   policyNumber?: string;
   ptkpStatus?: string;
-
   // Emergency Contact
   emergencyContactName?: string;
   emergencyContactRelation?: string;
   emergencyContactPhone?: string;
-
   // Bank
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountName?: string;
-
   // Social Media
   instagram?: string;
   facebook?: string;
   twitter?: string;
   linkedin?: string;
   tiktok?: string;
-
   // Health
   bloodType?: string;
   medicalHistory?: string;
   allergies?: string;
   height?: number;
   weight?: number;
-
   createdAt?: string;
   updatedAt?: string;
-
-  [key: string]: string | number | string[] | number[] | undefined;
 }

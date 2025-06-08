@@ -5,7 +5,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 import { store } from '@/store';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { SidebarProvider } from '@/context/SidebarContext';
-import { AuthProvider } from '@/components/auth/SignInForm';
+import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
 export function Providers({ children }: { children: ReactNode }) {

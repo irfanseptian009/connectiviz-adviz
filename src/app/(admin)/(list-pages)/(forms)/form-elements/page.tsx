@@ -1,7 +1,6 @@
 import EmployeeManagementCreateForm from "@/components/EmployeeForm/EmployeeManagementCreateForm.tsx";
 
 
-
 export default function CreateUserPage() {
   return (
     <main className="p-6">
@@ -10,3 +9,4 @@ export default function CreateUserPage() {
     </main>
   );
 }
+

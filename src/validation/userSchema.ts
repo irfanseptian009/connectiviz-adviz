@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const nonFormalEducationSchema = z.object({
+  name: z.string(),
+  institution: z.string(),
+  year: z.coerce.number(),
+  description: z.string().optional(),
+});
+
 export const userSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -9,20 +16,29 @@ export const userSchema = z.object({
   address: z.string().optional(),
   placeOfBirth: z.string().optional(),
   dateOfBirth: z.string().optional(),
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
+  gender: z.string().optional(),
   phoneNumber: z.string().optional(),
   officeEmail: z.string().optional(),
 
   position: z.string().optional(),
   jobLevel: z.string().optional(),
 
-  divisionId: z.string().optional(),
+  divisionId: z.union([z.string(), z.number()]).optional(),
 
   motherName: z.string().optional(),
   fatherName: z.string().optional(),
   maritalStatus: z.string().optional(),
   spouseName: z.string().optional(),
   childrenNames: z.array(z.string()).optional(),
+
+  lastEducation: z.string().optional(),
+  facultyName: z.string().optional(),
+  graduationYear: z.coerce.number().optional(),
+  majorName: z.string().optional(),
+  gpa: z.string().optional(),
+
+  // Non formal educations
+  nonFormalEducations: z.array(nonFormalEducationSchema).optional(),
 
   identityCard: z.string().optional(),
   taxNumber: z.string().optional(),
@@ -54,9 +70,5 @@ export const userSchema = z.object({
   height: z.coerce.number().optional(),
   weight: z.coerce.number().optional(),
 });
+
 export type UserFormType = z.infer<typeof userSchema>;
-export const nonFormalEducations = z.object({
-  name: z.string(),
-  institution: z.string(),
-  year: z.string(),
-});
