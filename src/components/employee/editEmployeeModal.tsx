@@ -4,7 +4,7 @@ import React from "react";
 import { Tab } from "@headlessui/react";
 import { Modal } from "@/components/ui/modal";
 import { RiEditLine } from "react-icons/ri";
-import { Employee } from "@/types/employee";
+import { User } from "@/types/employee";
 import {Props} from "@/types/props";
 
 
@@ -252,7 +252,7 @@ export default function EditEmployeeModal({
   selectedTab,
   setSelectedTab
 }: Props) {
-  const handleInputChange = (field: keyof Employee, value: Employee[keyof Employee]) => {
+  const handleInputChange = (field: keyof User, value: User[keyof User]) => {
     if (!editData) return;
     setEditData({ ...editData, [field]: value });
     if (formError[field]) {
@@ -276,7 +276,7 @@ export default function EditEmployeeModal({
         {/* === HEADER === */}
         <div className="bg-gradient-to-r from-[#EBB317]/50 to-[#1D95D7]/50 m-2 rounded-t-xl p-4">
           <h2 className="text-lg font-semibold text-white dark:text-gray-200 flex items-center">
-            <RiEditLine className="mr-2" /> Edit Employee Data
+            <RiEditLine className="mr-2" /> Edit User Data
           </h2>
         </div>
 

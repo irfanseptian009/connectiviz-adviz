@@ -6,7 +6,7 @@ import React from "react";
 import carosel from "../../../public/images/carousel/carosel1.png";
 import Image from "next/image";
 import Link from "next/link";
-import { withAuth } from "@/components/auth/SignInForm"; 
+import { withAuth } from "@/context/AuthContext"; 
 // import { Metadata } from "next";
 
 // export const metadata: Metadata = {

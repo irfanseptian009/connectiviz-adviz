@@ -5,7 +5,7 @@ import { EyeCloseIcon, EyeIcon } from '@/icons';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useAuth } from '../../components/auth/SignInForm';
+import { useAuth } from '@/context/AuthContext';
 import img from '../../../public/images/logo/bgLogin.png';
 import connectivizLogo from '../../../public/images/logo/logo-connectiviz.png';
 import profileImg from '../../../public/images/icons/image.png';

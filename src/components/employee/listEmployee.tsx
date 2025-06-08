@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { withAuth } from "@/components/auth/SignInForm";
+import { withAuth } from "@/context/AuthContext";
 import { useEmployee } from "@/hooks/useEmployee";
 import EmployeeTable from "@/components/tables/employeeTable";
 import EditEmployeeModal from "@/components/employee/editEmployeeModal";
 import DeleteConfirmModal from "@/components/employee/deleteConfirmModal";
-import { Employee } from "@/types/employee";
+import { User } from "@/types/employee";
 import { employeeSchema } from "@/schemas/employee";
 
 function ListEmpolyee() {
@@ -17,7 +17,7 @@ function ListEmpolyee() {
   const [page, setPage] = useState(1);
   const limit = 10;
   const [isEditOpen, setEditOpen] = useState(false);
-  const [editData, setEditData] = useState<Employee | null>(null);
+  const [editData, setEditData] = useState<User | null>(null);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [selectedTab, setSelectedTab] = useState(0);
   const [deleteId, setDeleteId] = useState<number | null>(null);

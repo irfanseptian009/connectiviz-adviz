@@ -9,7 +9,7 @@ import DemographicCard from "@/components/gate/DemographicCard";
 import { Metrics } from "@/components/gate/Metrics";
 import AttendantOverview from "@/components/gate/AttendantOverview";
 import VerticalPerformance from "@/components/gate/VerticalPerformance";
-import { withAuth } from "@/components/auth/SignInForm";
+import { withAuth } from "@/context/AuthContext";
 
 // export const metadata: Metadata = {
 //   title:

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useAuth, withAuth } from '@/components/auth/SignInForm';
+import { useAuth, withAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 
 function DetailKaryawanPage() {
