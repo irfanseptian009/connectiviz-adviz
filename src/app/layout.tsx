@@ -3,7 +3,11 @@ import './globals.css';
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
-import { Providers } from './provider';   // ↱ 'use client' di file ini
+import { Providers } from './provider'; 
+import "primereact/resources/themes/lara-light-indigo/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
+
 
 // ─── Google font ──────────────────────────────────────────────
 const outfit = Outfit({

@@ -4,23 +4,28 @@ export interface DivisionOption {
   label: string;
 }
 
-interface DivisionTree {
+export interface DivisionTree {
   id: number;
   name: string;
   subDivisions?: DivisionTree[];
 }
 
-export function divisionTreeToOptions(tree: DivisionTree[], prefix = ""): DivisionOption[] {
+export function divisionTreeToOptions(tree?: DivisionTree[], prefix = ""): DivisionOption[] {
+  if (!Array.isArray(tree)) return [];
+
   let result: DivisionOption[] = [];
-  for (const div of tree) {
+
+  for (const division of tree) {
     result.push({
-      id: div.id,
-      name: div.name,
-      label: prefix + div.name,
+      id: division.id,
+      name: division.name,
+      label: prefix + division.name,
     });
-    if (div.subDivisions && div.subDivisions.length > 0) {
-      result = result.concat(divisionTreeToOptions(div.subDivisions, prefix + "— "));
+
+    if (Array.isArray(division.subDivisions)) {
+      result = result.concat(divisionTreeToOptions(division.subDivisions, prefix + "— "));
     }
   }
+
   return result;
 }

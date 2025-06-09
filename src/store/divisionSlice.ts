@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/lib/api";
 
+/* ─── Model ───────────────────────────────────────────────────── */
 export interface Division {
   id: number;
   name: string;
@@ -9,11 +10,12 @@ export interface Division {
   subDivisions?: Division[];
 }
 
+/* ─── Async Thunks ────────────────────────────────────────────── */
 export const fetchDivisionTree = createAsyncThunk(
   "division/fetchTree",
   async (businessUnitId: number) => {
     const { data } = await api.get<Division[]>(`/divisions/tree/${businessUnitId}`);
-    return data;
+    return { businessUnitId, tree: data };
   }
 );
 
@@ -25,18 +27,50 @@ export const createDivision = createAsyncThunk(
   }
 );
 
+/* ─── Slice ───────────────────────────────────────────────────── */
+interface DivisionState {
+  list: Division[];
+  tree: Record<number, Division[]>; 
+  loading: boolean;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
+}
+
+const initialState: DivisionState = {
+  list: [],
+  tree: {}, 
+  loading: false,
+  status: 'idle',
+  error: null,
+};
+
 const divisionSlice = createSlice({
   name: "division",
-  initialState: { list: [] as Division[], tree: [] as Division[] },
+  initialState,
   reducers: {},
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchDivisionTree.fulfilled, (state, action) => {
-        state.tree = action.payload;
+      .addCase(fetchDivisionTree.pending, (state) => {
+        state.loading = true;
+        state.status = 'loading';
       })
+        .addCase(fetchDivisionTree.fulfilled, (state, action) => {
+  const { businessUnitId, tree } = action.payload;
+  state.loading = false;
+  state.status = 'succeeded';
+  state.tree[businessUnitId] = tree;
+})
+
+      .addCase(fetchDivisionTree.rejected, (state, action) => {
+        state.loading = false;
+        state.status = 'failed';
+        state.error = action.error.message ?? "Unknown error";
+      })
+
       .addCase(createDivision.fulfilled, (state, action) => {
         state.list.push(action.payload);
       });
   }
 });
+
 export default divisionSlice.reducer;

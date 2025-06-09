@@ -56,7 +56,8 @@ import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
 import BusinessUnitModal from "./BusinessUnitModal";
 import DivisionModal from "./DivisionModal";
 import UserSelectModal from "./UserSelectModal";
-import { withAuth } from "../auth/SignInForm";
+import { withAuth } from "@/context/AuthContext";
+import { assignUserToDivision } from "@/store/userSlice";
 
 
 
@@ -67,11 +68,18 @@ const EmployeeManagementCreateForm = () => {
   const businessUnits = useSelector(
     (state: RootState) => state.businessUnit.list
   );
-  const divisionTree = useSelector((state: RootState) => state.division.tree);
+ 
+
 
   /* Local State*/
   const [selectedBusinessUnit, setSelectedBusinessUnit] =
     useState<number | null>(null);
+
+   const divisionTree = useSelector((state: RootState) =>
+  selectedBusinessUnit !== null
+    ? state.division.tree[selectedBusinessUnit] || []
+    : []
+);
   const [selectedDivisionId, setSelectedDivisionId] =
     useState<number | null>(null);
   const [selectedJobLevel, setSelectedJobLevel] = useState<string | null>(
@@ -120,6 +128,7 @@ const EmployeeManagementCreateForm = () => {
   }, [dispatch, selectedBusinessUnit]);
 
   const divisionOptions = divisionTreeToOptions(divisionTree);
+
   const handleAddNonFormalEducation = (education: NonFormalEducation) => {
     setNonFormalEducations((prev) => [...prev, education]);
   };
@@ -184,42 +193,47 @@ const EmployeeManagementCreateForm = () => {
 
   /* Form Submit */
   const onSubmit = async (data: UserFormType) => {
-    let dateOfBirthISO: string | undefined;
-    if (data.dateOfBirth) {
-      dateOfBirthISO =
-        data.dateOfBirth.length === 10
-          ? data.dateOfBirth + "T00:00:00.000Z"
-          : data.dateOfBirth;
-    }
+  let dateOfBirthISO: string | undefined;
+  if (data.dateOfBirth) {
+    dateOfBirthISO =
+      data.dateOfBirth.length === 10
+        ? data.dateOfBirth + "T00:00:00.000Z"
+        : data.dateOfBirth;
+  }
 
-    const validNonFormalEducations = nonFormalEducations
-      .filter((edu) => edu.year !== undefined)
-      .map((edu) => ({ ...edu, year: edu.year! }));
+  const validNonFormalEducations = nonFormalEducations
+    .filter((edu) => edu.year !== undefined)
+    .map((edu) => ({ ...edu, year: edu.year! }));
 
-    const payload = {
-      ...data,
-      dateOfBirth: dateOfBirthISO ?? undefined,
-      nonFormalEducations: validNonFormalEducations,
-      gpa: data.gpa ? Number(data.gpa) : undefined,
-      graduationYear:
-        data.graduationYear !== undefined && data.graduationYear !== null
-          ? Number(data.graduationYear)
-          : undefined,
-      divisionId: data.divisionId ? parseInt(String(data.divisionId)) : undefined,
-    };
-
-    try {
-      await dispatch(createUser(payload)).unwrap();
-      toast.success("User created!");
-      reset();
-      setNonFormalEducations([]);
-      setSelectedDivisionId(null);
-      setActiveSection("auth");
-    } catch (err) {
-      const error = err as Error & { response?: { data: string } };
-      toast.error("Failed to create user! " + error.message);
-    }
+  const payload = {
+    ...data,
+    dateOfBirth: dateOfBirthISO ?? undefined,
+    nonFormalEducations: validNonFormalEducations,
+    gpa: data.gpa ? String(data.gpa) : undefined,
+    graduationYear:
+      data.graduationYear !== undefined && data.graduationYear !== null
+        ? Number(data.graduationYear)
+        : undefined,
+    divisionId: data.divisionId ? parseInt(String(data.divisionId)) : undefined,
   };
+
+  try {
+    const newUser = await dispatch(createUser(payload)).unwrap();
+
+    if (newUser?.id && payload.divisionId) {
+      await dispatch(assignUserToDivision({ userId: newUser.id, divisionId: payload.divisionId }));
+    }
+
+    toast.success("User created and assigned to division!");
+    reset();
+    setNonFormalEducations([]);
+    setSelectedDivisionId(null);
+    setActiveSection("auth");
+  } catch (err) {
+    const error = err as Error & { response?: { data: string } };
+    toast.error("Failed to create user! " + error.message);
+  }
+};
 
   const FormSection = ({
     title,

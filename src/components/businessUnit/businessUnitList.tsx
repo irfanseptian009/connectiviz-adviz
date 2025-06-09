@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useBusinessUnit } from "@/hooks/useBusinessUnit";
-import { useDivision } from "@/hooks/useDivision";
-import { useEmployee } from "@/hooks/useEmployee";
+import React, { useState, useEffect, FC } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store";
+import { fetchBusinessUnits } from "@/store/businessUnitSlice";
+import { fetchDivisionTree } from "@/store/divisionSlice";
+import { fetchUsers } from "@/store/userSlice";
 import { FiChevronRight, FiUsers, FiBriefcase, FiGrid, FiUser } from "react-icons/fi";
 
-// Updated type definitions to match Prisma schema
+// Type definitions
 interface User {
   id: number;
   username: string;
@@ -28,69 +30,87 @@ interface Division {
   name: string;
   businessUnitId: number;
   parentId?: number | null;
+  subDivisions?: Division[];
 }
 
+interface BusinessUnit {
+  id: number;
+  name: string;
+}
 
+// Constants
+const ROLE_COLORS = {
+  SUPER_ADMIN: {
+    gradient: 'bg-gradient-to-br from-red-400 to-red-600',
+    badge: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
+  },
+  ADMIN: {
+    gradient: 'bg-gradient-to-br from-yellow-400 to-orange-500',
+    badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200'
+  },
+  EMPLOYEE: {
+    gradient: 'bg-gradient-to-br from-blue-400 to-purple-500',
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
+  }
+} as const;
 
-export default function BusinessUnitList() {
-  const { list: businessUnits, loading: loadingBU } = useBusinessUnit();
-  const { list: divisions, loading: loadingDiv } = useDivision();
-  const { list: employees, loading: loadingEmp } = useEmployee();
+const LEVEL_COLORS = {
+  0: {
+    text: 'text-green-700 dark:text-green-300',
+    icon: 'text-green-500',
+    badge: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
+  },
+  1: {
+    text: 'text-orange-700 dark:text-orange-300',
+    icon: 'text-orange-500',
+    badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200'
+  },
+  default: {
+    text: 'text-purple-700 dark:text-purple-300',
+    icon: 'text-purple-500',
+    badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200'
+  }
+} as const;
 
-  // State untuk expand/collapse pada setiap level
+const BusinessUnitList: FC = () => {
+  // Redux hooks
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
+  const divisionTree = useSelector((state: RootState) => state.division.tree);
+  const users = useSelector((state: RootState) => state.user.list);
+  
+  const isLoadingBU = useSelector((state: RootState) => state.businessUnit.loading);
+  const isLoadingDiv = useSelector((state: RootState) => state.division.loading);
+  const isLoadingUsers = useSelector((state: RootState) => state.user.loading);
+  
+  const userStatus = useSelector((state: RootState) => state.user.status || 'idle');
+  const divisionStatus = useSelector((state: RootState) => state.division.status || 'idle');
+
+  // Local state
   const [openBU, setOpenBU] = useState<number | null>(null);
   const [openDivisions, setOpenDivisions] = useState<Set<number>>(new Set());
 
-  // Debug: Log untuk melihat struktur data
+  // Effects
   useEffect(() => {
-    console.log("=== DEBUG DATA ===");
-    console.log("Loading states:", { loadingBU, loadingDiv, loadingEmp });
-    
-    if (!loadingBU && businessUnits.length > 0) {
-      console.log("Business Units:", businessUnits);
+    if (businessUnits.length === 0) {
+      dispatch(fetchBusinessUnits());
     }
-    
-    if (!loadingDiv && divisions.length > 0) {
-      console.log("Divisions:", divisions);
-      console.log("Division IDs:", divisions.map(d => ({ 
-        id: d.id, 
-        name: d.name, 
-        businessUnitId: d.businessUnitId,
-        parentId: d.parentId 
-      })));
+    if (userStatus === 'idle') {
+      dispatch(fetchUsers());
     }
-    
-    if (!loadingEmp) {
-      console.log("Users/Employees:", employees);
-      console.log("Users count:", employees.length);
-      if (employees.length > 0) {
-        console.log("User sample:", employees[0]);
-        console.log("User divisionIds:", employees.map(e => ({ 
-          id: e.id, 
-          username: e.username, 
-          fullName: e.fullName,
-          divisionId: e.divisionId,
-          divisionIdType: typeof e.divisionId
-        })));
-      }
-    }
-    
-    // Check mapping between divisions and users
-    if (!loadingDiv && !loadingEmp && divisions.length > 0 && employees.length > 0) {
-      console.log("=== DIVISION-USER MAPPING ===");
-      divisions.forEach(div => {
-        const usersInDiv = employees.filter(user => 
-          user.divisionId !== null && 
-          user.divisionId !== undefined && 
-          Number(user.divisionId) === Number(div.id)
-        );
-        console.log(`Division ${div.id} (${div.name}):`, usersInDiv.length, "users", usersInDiv.map(u => ({ id: u.id, username: u.username, fullName: u.fullName })));
+  }, [businessUnits.length, userStatus, dispatch]);
+
+  useEffect(() => {
+    if (businessUnits.length > 0 && divisionStatus === 'idle') {
+      businessUnits.forEach((bu) => {
+        dispatch(fetchDivisionTree(bu.id));
       });
     }
-  }, [businessUnits, divisions, employees, loadingBU, loadingDiv, loadingEmp]);
+  }, [businessUnits, divisionStatus, dispatch]);
 
-  // Helper function untuk toggle division
-  const toggleDivision = (divisionId: number) => {
+  // Helper functions
+  const toggleDivision = (divisionId: number): void => {
     const newOpenDivisions = new Set(openDivisions);
     if (newOpenDivisions.has(divisionId)) {
       newOpenDivisions.delete(divisionId);
@@ -100,24 +120,33 @@ export default function BusinessUnitList() {
     setOpenDivisions(newOpenDivisions);
   };
 
-  // Helper function untuk mendapatkan subdivisions
-  const getSubDivisions = (parentId: number) => {
-    return divisions.filter((div) => div.parentId === parentId);
+  const getAllDivisions = (): Division[] => {
+    const allDivisions: Division[] = [];
+    
+    const flattenDivisions = (divisions: Division[]): Division[] => {
+      let result: Division[] = [];
+      divisions.forEach(division => {
+        result.push(division);
+        if (division.subDivisions && division.subDivisions.length > 0) {
+          result = result.concat(flattenDivisions(division.subDivisions));
+        }
+      });
+      return result;
+    };
+
+    Object.values(divisionTree).forEach((businessUnitDivisions) => {
+      allDivisions.push(...flattenDivisions(businessUnitDivisions));
+    });
+    
+    return allDivisions;
   };
 
-  // Helper function untuk mendapatkan root divisions (tidak punya parent)
-  const getRootDivisions = (businessUnitId: number) => {
-    return divisions.filter((div) => 
-      div.businessUnitId === businessUnitId && 
-      (div.parentId === null || div.parentId === undefined)
-    );
+  const getRootDivisions = (businessUnitId: number): Division[] => {
+    return divisionTree[businessUnitId] || [];
   };
 
-  // Helper function untuk mendapatkan users dalam division - FIXED
   const getUsersInDivision = (divisionId: number): User[] => {
-    console.log(`Looking for users in division ${divisionId}`);
-    const usersInDiv = employees.filter((user) => {
-      // Convert both to numbers for proper comparison
+    return users.filter((user) => {
       const userDivisionId = user.divisionId;
       const targetDivisionId = Number(divisionId);
       
@@ -127,25 +156,25 @@ export default function BusinessUnitList() {
       
       return Number(userDivisionId) === targetDivisionId;
     });
-    
-    console.log(`Found ${usersInDiv.length} users in division ${divisionId}:`, 
-      usersInDiv.map(u => ({ id: u.id, username: u.username, fullName: u.fullName })));
-    return usersInDiv;
   };
 
-  // Helper function untuk menghitung total users secara rekursif
   const getTotalUsersRecursive = (divisionId: number): number => {
     const directUsers = getUsersInDivision(divisionId).length;
-    const subDivisions = getSubDivisions(divisionId);
-    const subDivisionUsers = subDivisions.reduce((total, subDiv) => {
+    const allDivisions = getAllDivisions();
+    const division = allDivisions.find(d => d.id === divisionId);
+    
+    if (!division || !division.subDivisions) {
+      return directUsers;
+    }
+    
+    const subDivisionUsers = division.subDivisions.reduce((total, subDiv) => {
       return total + getTotalUsersRecursive(subDiv.id);
     }, 0);
+    
     return directUsers + subDivisionUsers;
   };
 
-  // Function untuk mendapatkan nama yang akan ditampilkan
   const getUserDisplayName = (user: User): string => {
-    // Prioritas: fullName -> username -> fallback
     if (user.fullName && user.fullName.trim()) {
       return user.fullName;
     }
@@ -155,32 +184,107 @@ export default function BusinessUnitList() {
     return `User #${user.id}`;
   };
 
-  // Function untuk mendapatkan inisial nama
   const getUserInitial = (user: User): string => {
     const displayName = getUserDisplayName(user);
     return displayName.charAt(0).toUpperCase();
   };
 
-  // Function untuk format role display
   const formatRole = (role: string): string => {
     return role.replace('_', ' ');
   };
 
-  // Recursive component untuk render division tree
-  const renderDivisionTree = (division: Division, level: number = 0) => {
-    const subDivisions = getSubDivisions(division.id);
+  const getLevelColors = (level: number) => {
+    if (level === 0) return LEVEL_COLORS[0];
+    if (level === 1) return LEVEL_COLORS[1];
+    return LEVEL_COLORS.default;
+  };
+
+  const getRoleColors = (role: User['role']) => {
+    return ROLE_COLORS[role];
+  };
+
+  // Components
+  const StatCard: FC<{
+    icon: React.ReactNode;
+    label: string;
+    value: number;
+    color: string;
+  }> = ({ icon, label, value, color }) => (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</span>
+      </div>
+      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+    </div>
+  );
+
+  const UserCard: FC<{ user: User; showDivisionInfo?: boolean }> = ({ 
+    user, 
+    showDivisionInfo = false 
+  }) => {
+    const roleColors = getRoleColors(user.role);
+    
+    return (
+      <li className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+        <div className="flex-shrink-0">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${roleColors.gradient}`}>
+            <span className="text-white text-xs font-semibold">
+              {getUserInitial(user)}
+            </span>
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+              {getUserDisplayName(user)}
+            </p>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${roleColors.badge}`}>
+              {formatRole(user.role)}
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+            @{user.username} • {user.email}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {user.phoneNumber && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                📞 {user.phoneNumber}
+              </span>
+            )}
+            {user.officeEmail && user.officeEmail !== user.email && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                📧 {user.officeEmail}
+              </span>
+            )}
+          </div>
+          {showDivisionInfo && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Division ID: {user.divisionId} | User ID: {user.id}
+            </p>
+          )}
+        </div>
+        <div className="flex-shrink-0">
+          <FiUser className="text-gray-400" size={16} />
+        </div>
+      </li>
+    );
+  };
+
+  const renderDivisionTree = (division: Division, level: number = 0): React.ReactNode => {
+    const subDivisions = division.subDivisions || [];
     const directUsers = getUsersInDivision(division.id);
     const totalUsers = getTotalUsersRecursive(division.id);
     const isOpen = openDivisions.has(division.id);
     const hasChildren = subDivisions.length > 0 || directUsers.length > 0;
-
-    const marginLeft = level * 6; // 24px per level (ml-6)
+    const colors = getLevelColors(level);
+    const marginLeft = level * 24;
 
     return (
       <li key={division.id}>
         <div
-          className={`flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800/30 transition-all duration-200 rounded-lg mx-2`}
-          style={{ marginLeft: `${marginLeft * 4}px` }}
+          className="flex items-center justify-between p-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800/30 transition-all duration-200 rounded-lg mx-2"
+          style={{ marginLeft: `${marginLeft}px` }}
           onClick={() => hasChildren && toggleDivision(division.id)}
         >
           <div className="flex items-center gap-3">
@@ -194,17 +298,9 @@ export default function BusinessUnitList() {
             ) : (
               <div className="w-4 h-4" />
             )}
-            <FiGrid className={`${
-              level === 0 ? 'text-green-500' : 
-              level === 1 ? 'text-orange-500' : 
-              'text-purple-500'
-            }`} size={16} />
+            <FiGrid className={colors.icon} size={16} />
             <div>
-              <span className={`font-medium ${
-                level === 0 ? 'text-green-700 dark:text-green-300' : 
-                level === 1 ? 'text-orange-700 dark:text-orange-300' : 
-                'text-purple-700 dark:text-purple-300'
-              }`}>
+              <span className={`font-medium ${colors.text}`}>
                 {division.name}
               </span>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -218,11 +314,7 @@ export default function BusinessUnitList() {
           
           <div className="flex items-center gap-2">
             {subDivisions.length > 0 && (
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                level === 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' :
-                level === 1 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200' :
-                'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200'
-              }`}>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.badge}`}>
                 {subDivisions.length} sub
               </span>
             )}
@@ -234,20 +326,19 @@ export default function BusinessUnitList() {
           </div>
         </div>
 
-        {/* Render subdivisions and users */}
         {isOpen && hasChildren && (
           <div>
-            {/* Render subdivisions first */}
             {subDivisions.length > 0 && (
               <ul className="space-y-1">
                 {subDivisions.map((subDiv) => renderDivisionTree(subDiv, level + 1))}
               </ul>
             )}
             
-            {/* Render direct users */}
             {directUsers.length > 0 && (
-              <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mx-2 mt-2`}
-                   style={{ marginLeft: `${(level + 1) * 24}px` }}>
+              <div 
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mx-2 mt-2"
+                style={{ marginLeft: `${(level + 1) * 24}px` }}
+              >
                 <div className="p-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                     👥 {directUsers.length} User{directUsers.length !== 1 ? 's' : ''} in {division.name}
@@ -255,57 +346,7 @@ export default function BusinessUnitList() {
                 </div>
                 <ul className="divide-y divide-gray-100 dark:divide-gray-700">
                   {directUsers.map((user) => (
-                    <li
-                      key={user.id}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
-                    >
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          user.role === 'SUPER_ADMIN' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                          user.role === 'ADMIN' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
-                          'bg-gradient-to-br from-blue-400 to-purple-500'
-                        }`}>
-                          <span className="text-white text-xs font-semibold">
-                            {getUserInitial(user)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {getUserDisplayName(user)}
-                          </p>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                            user.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' :
-                            user.role === 'ADMIN' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200' :
-                            'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
-                          }`}>
-                            {formatRole(user.role)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          @{user.username} • {user.email}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {user.phoneNumber && (
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                              📞 {user.phoneNumber}
-                            </span>
-                          )}
-                          {user.officeEmail && user.officeEmail !== user.email && (
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                              📧 {user.officeEmail}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          Division ID: {user.divisionId} | User ID: {user.id}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <FiUser className="text-gray-400" size={16} />
-                      </div>
-                    </li>
+                    <UserCard key={user.id} user={user} showDivisionInfo />
                   ))}
                 </ul>
               </div>
@@ -317,11 +358,13 @@ export default function BusinessUnitList() {
   };
 
   // Loading state
-  if (loadingBU || loadingDiv || loadingEmp) {
+  if (isLoadingBU || isLoadingDiv || isLoadingUsers) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4" />
-        <p className="text-gray-600 dark:text-gray-300 animate-pulse">Loading organizational structure...</p>
+        <p className="text-gray-600 dark:text-gray-300 animate-pulse">
+          Loading organizational structure...
+        </p>
       </div>
     );
   }
@@ -341,10 +384,11 @@ export default function BusinessUnitList() {
     );
   }
 
-  // Calculate total statistics
-  const totalDivisions = divisions.length;
-  const totalUsers = employees.length;
-  const assignedUsers = employees.filter(user => 
+  // Calculate statistics
+  const allDivisions = getAllDivisions();
+  const totalDivisions = allDivisions.length;
+  const totalUsers = users.length;
+  const assignedUsers = users.filter(user => 
     user.divisionId !== null && user.divisionId !== undefined
   ).length;
   const unassignedUsers = totalUsers - assignedUsers;
@@ -359,37 +403,30 @@ export default function BusinessUnitList() {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <FiBriefcase className="text-blue-500" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Business Units</span>
-            </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{businessUnits.length}</p>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <FiGrid className="text-green-500" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Divisions</span>
-            </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{totalDivisions}</p>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <FiUsers className="text-purple-500" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Users</span>
-            </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalUsers}</p>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <FiUser className="text-orange-500" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Unassigned</span>
-            </div>
-            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{unassignedUsers}</p>
-          </div>
+          <StatCard
+            icon={<FiBriefcase className="text-blue-500" />}
+            label="Business Units"
+            value={businessUnits.length}
+            color="text-blue-600 dark:text-blue-400"
+          />
+          <StatCard
+            icon={<FiGrid className="text-green-500" />}
+            label="Divisions"
+            value={totalDivisions}
+            color="text-green-600 dark:text-green-400"
+          />
+          <StatCard
+            icon={<FiUsers className="text-purple-500" />}
+            label="Total Users"
+            value={totalUsers}
+            color="text-purple-600 dark:text-purple-400"
+          />
+          <StatCard
+            icon={<FiUser className="text-orange-500" />}
+            label="Unassigned"
+            value={unassignedUsers}
+            color="text-orange-600 dark:text-orange-400"
+          />
         </div>
       </div>
 
@@ -398,9 +435,10 @@ export default function BusinessUnitList() {
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {businessUnits.map((bu, index) => {
             const rootDivisions = getRootDivisions(bu.id);
-            const totalBUUsers = divisions
-              .filter(div => div.businessUnitId === bu.id)
-              .reduce((total, div) => total + getTotalUsersRecursive(div.id), 0);
+            const businessUnitDivisions = divisionTree[bu.id] || [];
+            const totalBUUsers = businessUnitDivisions.reduce((total, div) => {
+              return total + getTotalUsersRecursive(div.id);
+            }, 0);
 
             return (
               <li key={bu.id} className={index === 0 ? "" : "border-t border-gray-200 dark:border-gray-700"}>
@@ -438,7 +476,6 @@ export default function BusinessUnitList() {
                   </div>
                 </div>
 
-                {/* Division Tree */}
                 {openBU === bu.id && (
                   <div className="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 pb-4">
                     {rootDivisions.length === 0 ? (
@@ -476,50 +513,47 @@ export default function BusinessUnitList() {
           
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {employees
+              {users
                 .filter(user => user.divisionId === null || user.divisionId === undefined)
-                .map(user => (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-150"
-                  >
-                    <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        user.role === 'SUPER_ADMIN' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                        user.role === 'ADMIN' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
-                        'bg-gradient-to-br from-blue-400 to-purple-500'
-                      }`}>
-                        <span className="text-white text-sm font-semibold">
-                          {getUserInitial(user)}
-                        </span>
+                .map(user => {
+                  const roleColors = getRoleColors(user.role);
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-150"
+                    >
+                      <div className="flex-shrink-0">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${roleColors.gradient}`}>
+                          <span className="text-white text-sm font-semibold">
+                            {getUserInitial(user)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {getUserDisplayName(user)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {getUserDisplayName(user)}
+                          </p>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${roleColors.badge}`}>
+                            {formatRole(user.role)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          @{user.username} • {user.email}
                         </p>
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                          user.role === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' :
-                          user.role === 'ADMIN' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200' :
-                          'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
-                        }`}>
-                          {formatRole(user.role)}
-                        </span>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                          User ID: {user.id}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                        @{user.username} • {user.email}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">
-                        User ID: {user.id}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default BusinessUnitList;

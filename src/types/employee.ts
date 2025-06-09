@@ -42,7 +42,7 @@ export interface User {
   facultyName?: string;
   graduationYear?: number;     
   majorName?: string;
-  gpa?: number;
+  gpa?: string;
   // Non-formal education
   nonFormalEducations?: NonFormalEducation[];
   // Documents
@@ -78,3 +78,20 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface Employee {
+  id: number;
+  fullName: string;
+  position: string;
+  division?: Division;
+  photoUrl?: string;
+  supervisorId?: number;
+  subordinates?: Employee[];
+}
+
+export interface Division {
+  id: number;
+  name: string;
+  subDivisions?: Division[];
+}
+

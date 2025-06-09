@@ -1,4 +1,4 @@
-import EmployeeManagementCreateForm from "@/components/EmployeeForm/EmployeeManagementCreateForm.tsx";
+import EmployeeManagementCreateForm from "@/components/EmployeeForm/EmployeeManagementCreateForm";
 
 
 export default function CreateUserPage() {

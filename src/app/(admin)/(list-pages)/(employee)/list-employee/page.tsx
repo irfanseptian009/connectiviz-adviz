@@ -14,7 +14,7 @@ import {
 import ListEmployee from "@/components/employee/listEmployee";
 import BusinessUnitList from "@/components/businessUnit/businessUnitList";
 import DivisionList from "@/components/division/divisionList";
-import OrganizationList from "@/components/organization/organizationList";
+import EmployeeOrganization from "@/components/organization/EmployeeOrganization";
 
 export default function EmployeePage() {
   const { list: employees, loading: loadingEmp } = useEmployee();
@@ -123,7 +123,7 @@ export default function EmployeePage() {
           {showComponent === "employee" && <ListEmployee />}
           {showComponent === "businessUnit" && <BusinessUnitList />}
           {showComponent === "division" && <DivisionList />}
-          {showComponent === "organization" && <OrganizationList />}
+          {showComponent === "organization" && <EmployeeOrganization />}
         </div>
 
         {/* Footer */}

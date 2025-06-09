@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 export const withAuth = <P extends object>(
   Component: React.ComponentType<P>
 ) => {
-  return function ProtectedPage(props: P) {
+  return function ProtectedPage(User: P) {
     const { token } = useAuth();
     const [ready, setReady] = useState(false);
 
@@ -85,6 +85,6 @@ export const withAuth = <P extends object>(
       return null;
     }
 
-    return React.createElement(Component, props);
+    return <Component {...User} />;
   };
 };
