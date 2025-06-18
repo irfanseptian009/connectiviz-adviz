@@ -118,7 +118,6 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        {/* Dinamis: Tampilkan komponen berdasarkan card yang dipilih */}
         <div className="mt-8">
           {showComponent === "employee" && <ListEmployee />}
           {showComponent === "businessUnit" && <BusinessUnitList />}

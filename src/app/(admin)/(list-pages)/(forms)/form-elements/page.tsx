@@ -22,6 +22,13 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Plus,
   User,
   Shield,
@@ -50,13 +57,221 @@ import {
 import { createUser } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
-import BusinessUnitModal from "@/components/employeeForm/BusinessUnitModal";
-import DivisionModal from "@/components/employeeForm/DivisionModal";
-import NonFormalEducationArray from "@/components/employeeForm/NonFormalEducationArray";
-import UserSelectModal from "@/components/employeeForm/UserSelectModal";
 import { withAuth } from "@/context/AuthContext";
-import { assignUserToDivision } from "@/store/userSlice";
+import { assignUserToDivision, fetchUsers } from "@/store/userSlice";
 
+
+function BusinessUnitModal({ open, onOpenChange, onCreate }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreate: (name: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const handleCreate = async () => {
+    if (!name) return;
+    setLoading(true);
+    await onCreate(name);
+    setName("");
+    setLoading(false);
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Business Unit</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Label>Name</Label>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Business Unit Name" autoFocus />
+        </div>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
+          <Button onClick={handleCreate} disabled={!name || loading} type="button">
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// DivisionModal
+function DivisionModal({ open, onOpenChange, businessUnits, onCreate }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  businessUnits: { id: number; name: string }[];
+  onCreate: (name: string, businessUnitId: number, parentId: number) => void;
+}) {
+  const dispatch = useDispatch<AppDispatch>();
+  const [name, setName] = useState("");
+  const [businessUnitId, setBusinessUnitId] = useState("");
+  const [parentId, setParentId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const divisionTree = useSelector((state: RootState) => businessUnitId ? state.division.tree[Number(businessUnitId)] || [] : []);
+  const parentDivisionOptions = divisionTreeToOptions(divisionTree);
+  useEffect(() => {
+    if (businessUnitId) {
+      dispatch(fetchDivisionTree(Number(businessUnitId)));
+    }
+  }, [dispatch, businessUnitId]);
+  const handleCreate = async () => {
+    if (!name || !businessUnitId) return;
+    setLoading(true);
+    try {
+      await onCreate(name, Number(businessUnitId), parentId && parentId !== "-" ? Number(parentId) : -1);
+      toast.success("Division created!");
+      setName("");
+      setBusinessUnitId("");
+      setParentId("");
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Division</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Label>Name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Division Name" autoFocus />
+          <Label>Business Unit</Label>
+          <Select value={businessUnitId} onValueChange={setBusinessUnitId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Business Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {businessUnits.map((bu) => (
+                <SelectItem key={bu.id} value={String(bu.id)}>
+                  {bu.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {businessUnitId && (
+            <>
+              <Label>Parent Division (optional, hierarchical)</Label>
+              <Select value={parentId} onValueChange={setParentId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="No Parent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="-">None</SelectItem>
+                  {parentDivisionOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={String(opt.id)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+        </div>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
+          <Button onClick={handleCreate} disabled={!name || !businessUnitId || loading} type="button">
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// NonFormalEducationArray
+function NonFormalEducationArray({ educations, onAdd }: {
+  educations: NonFormalEducation[];
+  onAdd: (education: NonFormalEducation) => void;
+}) {
+  const [education, setEducation] = useState({ name: "", institution: "", year: 0, description: "" });
+  const handleAdd = () => {
+    if (!education.name || !education.institution) return;
+    onAdd({ ...education, year: education.year ? Number(education.year) : 0 });
+    setEducation({ name: "", institution: "", year: 0, description: "" });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-4 gap-4  items-end">
+        <div ><Label className="mb-2 ">Name</Label><Input value={education.name} onChange={e => setEducation(ed => ({ ...ed, name: e.target.value }))} placeholder="Course Name" /></div>
+        <div><Label className="mb-2">Institution</Label><Input value={education.institution} onChange={e => setEducation(ed => ({ ...ed, institution: e.target.value }))} placeholder="Institution" /></div>
+        <div><Label className="mb-2">Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : 0 }))} placeholder="Year" /></div>
+        <div><Label className="mb-2">Description</Label><Input value={education.description || ""} onChange={e => setEducation(ed => ({ ...ed, description: e.target.value }))} placeholder="Desc (optional)" /></div>
+        <Button type="button" className="col-span-4 mt-4 dark:bg-slate-700 dark:text-white" onClick={handleAdd}>Add</Button>
+      </div>
+      <div className="space-y-2">
+        {educations.map((edu, i) => (
+          <Card key={i} className="p-3 bg-muted">
+            <div className="flex gap-4 ">
+              <span className="font-semibold">{edu.name}</span> – {edu.institution} {edu.year ? <span>({edu.year})</span> : null}
+              {edu.description ? <span className="ml-2 italic text-sm">{edu.description}</span> : null}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// UserSelectModal
+function UserSelectModal({ open, onOpenChange, divisionId }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  divisionId: number | null;
+}) {
+  const dispatch = useDispatch<AppDispatch>();
+  const users = useSelector((state: RootState) => state.user.list);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  useEffect(() => {
+    if (open) dispatch(fetchUsers());
+    if (!open) setSelectedUserIds([]);
+  }, [open, dispatch]);
+  const handleToggle = (id: number) => {
+    setSelectedUserIds((ids) =>
+      ids.includes(id) ? ids.filter((uid) => uid !== id) : [...ids, id]
+    );
+  };
+  const handleAssign = async () => {
+    if (!divisionId || selectedUserIds.length === 0) return;
+    // For simplicity, just use assignUserToDivision for each user
+    for (const userId of selectedUserIds) {
+      await dispatch(assignUserToDivision({ userId, divisionId }));
+    }
+    toast.success("Users assigned to division!");
+    setSelectedUserIds([]);
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Assign Users to Division</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {users.length === 0 && <div className="text-muted-foreground text-sm">No users available.</div>}
+          {users.map((user) => (
+            <label key={user.id} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted">
+              <input
+                type="checkbox"
+                checked={selectedUserIds.includes(user.id)}
+                onChange={() => handleToggle(user.id)}
+                className="accent-primary"
+              />
+              <span>{user.fullName || user.username} <span className="ml-1 text-xs text-muted-foreground">({user.email})</span></span>
+            </label>
+          ))}
+        </div>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
+          <Button onClick={handleAssign} disabled={selectedUserIds.length === 0} type="button">Assign</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const EmployeeManagementCreateForm = () => {
   const dispatch = useDispatch<AppDispatch>();
