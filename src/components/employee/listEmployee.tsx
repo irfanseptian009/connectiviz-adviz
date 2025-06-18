@@ -13,6 +13,11 @@ import DeleteConfirmModal from "@/components/employee/deleteConfirmModal";
 import { employeeUpdateSchema } from "@/schemas/employeeUpdateSchema";
 import { User } from "@/types/employee";
 import { normalizeEmployee } from "@/utils/normalizationEmployee";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Users, UserPlus, Filter, Download, RefreshCw } from "lucide-react";
 
 function ListEmployee() {
   const router = useRouter();
@@ -34,7 +39,20 @@ function ListEmployee() {
 
 
 
-  const handleView = (id: number) => router.push(`/detail-employee?id=${id}`);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await dispatch(fetchUsers());
+    setIsRefreshing(false);
+    toast.success("Data refreshed successfully!");
+  };
+
+  const handleView = (id: number) => {
+    // Add a subtle visual feedback
+    toast.success("Opening employee details...", { duration: 1000 });
+    router.push(`/detail-employee?id=${id}`);
+  };
 
   const openEdit = (id: number) => {
     const user = list.find((u) => u.id === id);
@@ -104,68 +122,188 @@ const handleSave = async () => {
 
   const totalPages = Math.ceil(filtered.length / limit);
   const paginated = filtered.slice((page - 1) * limit, page * limit);
-
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
-        Employee List
-      </h1>
-
-      {status === "loading" ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin h-10 w-10 border-b-2 border-blue-500 rounded-full" />
-        </div>
-      ) : (
-        <>
-          <div className="mb-6 flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Search name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="px-4 py-2 border dark:text-gray-100 dark:bg-gray-700 rounded-lg w-full sm:w-96 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
-            />
-          </div>
-
-          <EmployeeTable
-            data={paginated.map(user => ({
-              ...user,
-              fullName: user.fullName || '',
-              position: user.position || '',
-            }))}
-            onView={handleView}
-            onEdit={openEdit}
-            onDelete={(id) => setDeleteId(id)}
-          />
-
-          <div className="flex flex-col sm:flex-row justify-between items-center mt-6 text-sm gap-2">
-            <p className="text-gray-500 dark:text-gray-400">
-              Showing {paginated.length} of {filtered.length} employees
-            </p>
-
-            <div className="flex gap-2 items-center">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg disabled:opacity-50"
+    <div className="space-y-6">
+      {/* Header Section */}
+      <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                  Employee Management
+                </CardTitle>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Manage and view all employee information
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm">
+                {filtered.length} Total
+              </Badge>
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+                className="gap-2"
               >
-                Prev
-              </button>
-              <span className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg font-semibold">
-                {page} / {totalPages || 1}
-              </span>
-              <button
-                disabled={page === totalPages || !totalPages}
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg disabled:opacity-50"
-              >
-                Next
-              </button>
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
           </div>
+        </CardHeader>
+      </Card>
+
+      {/* Search and Actions Section */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search by name or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+              <Button
+  size="sm"
+  className="gap-2 bg-blue-600 hover:bg-blue-700"
+  onClick={() => router.push("/form-elements")}
+>
+  <UserPlus className="h-4 w-4" />
+  Add Employee
+</Button>
+
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Loading State */}
+      {status === "loading" ? (
+        <Card>
+          <CardContent className="p-12">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="relative">
+                <div className="animate-spin h-12 w-12 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  Loading employees...
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Please wait while we fetch the data
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Employee Table */}
+          <Card>
+            <CardContent className="p-0">
+              <EmployeeTable
+                data={paginated.map(user => ({
+                  ...user,
+                  fullName: user.fullName || '',
+                  position: user.position || '',
+                }))}
+                onView={handleView}
+                onEdit={openEdit}
+                onDelete={(id) => setDeleteId(id)}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Pagination */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing <span className="font-semibold">{paginated.length}</span> of{" "}
+                  <span className="font-semibold">{filtered.length}</span> employees
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                    variant="outline"
+                    size="sm"
+                    className="min-w-20"
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <Button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          variant={page === pageNum ? "default" : "outline"}
+                          size="sm"
+                          className="w-10 h-10"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                    {totalPages > 5 && (
+                      <>
+                        <span className="px-2 text-gray-400">...</span>
+                        <Button
+                          onClick={() => setPage(totalPages)}
+                          variant={page === totalPages ? "default" : "outline"}
+                          size="sm"
+                          className="w-10 h-10"
+                        >
+                          {totalPages}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  <Button
+                    disabled={page === totalPages || !totalPages}
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                    variant="outline"
+                    size="sm"
+                    className="min-w-20"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
 
+      {/* Modals */}
       <EditEmployeeModal
         isOpen={isEditOpen}
         onClose={() => setEditOpen(false)}
@@ -184,7 +322,7 @@ const handleSave = async () => {
         onConfirm={() => handleDelete(deleteId!)}
         userName={getUserName(deleteId)}
       />
-    </>
+    </div>
   );
 }
 
