@@ -50,7 +50,10 @@ import {
 import { createUser } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
-import {BusinessUnitModal, DivisionModal, NonFormalEducationArray, UserSelectModal} from "@/components/employeeForm";
+import BusinessUnitModal from "@/components/employeeForm/BusinessUnitModal";
+import DivisionModal from "@/components/employeeForm/DivisionModal";
+import NonFormalEducationArray from "@/components/employeeForm/NonFormalEducationArray";
+import UserSelectModal from "@/components/employeeForm/UserSelectModal";
 import { withAuth } from "@/context/AuthContext";
 import { assignUserToDivision } from "@/store/userSlice";
 
