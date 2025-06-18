@@ -15,7 +15,7 @@ const NarukuHeader: React.FC = () => {
     <header className="mx-6 z-50  sticky">
     <div className=" top-0 flex rounded-2xl h-16 md:h-20   w-full mt-2 ">
       <div className="flex flex-col items-center  justify-betwen grow lg:flex-row  lg:px-6">
-        <div className="flex flex-row h-10 item-center"><p className="text-lg font-extralight dark:text-gray-300">Naruku</p> <span className="text-2xl text-orange-500 ml-5">|</span> <p className="w-92 ml-5 text-xl dark:text-gray-200">Good Morning tasya 🌻</p></div>
+        <div className="flex flex-row h-10 item-center"><p className="text-lg font-extralight dark:text-gray-300">Naruku</p> <span className="text-2xl text-orange-500 ml-5">|</span> <p className="w-92 ml-5 text-xl dark:text-gray-200">Good Morning Irfan</p></div>
        
         <div className="flex items-center justify-end w-full gap-2 px-4 py-3 border-b border-orange-600/20 dark:border-gray-800/50 sm:gap-4 lg:justify-end lg:border-b-0 lg:px-0 lg:py-4">
           <div className="hidden lg:block item-end ">
