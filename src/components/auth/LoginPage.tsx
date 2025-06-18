@@ -23,7 +23,7 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('http://localhost:4000/auth/login', {
+      const res = await axios.post('https://connectiviz-be.vercel.app/api/auth/login', {
         email,
         password,
       });
