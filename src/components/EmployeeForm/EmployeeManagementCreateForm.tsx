@@ -37,17 +37,11 @@ import {
   Briefcase,
   LucideIcon,
 } from "lucide-react";
-import NonFormalEducationArray, {
-  NonFormalEducation,
-} from "@/components/employeeForm/NonFormalEducationArray";
+import NonFormalEducationArray from "@/components/employeeForm/NonFormalEducationArray";
+import { NonFormalEducation } from "@/types/employee";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import {
-  createBusinessUnit,
-
-
-  fetchBusinessUnits,
-} from "@/store/businessUnitSlice";
+import {createBusinessUnit,fetchBusinessUnits,} from "@/store/businessUnitSlice";
 import {
   createDivision,
   fetchDivisionTree,

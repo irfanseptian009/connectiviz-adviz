@@ -107,3 +107,10 @@ export interface EditEmployeeModalProps {
   selectedTab: number;
   setSelectedTab: (tab: number) => void;
 }
+
+export interface NonFormalEducation {
+  name: string;
+  institution: string;
+  year: number;
+  description?: string;
+}

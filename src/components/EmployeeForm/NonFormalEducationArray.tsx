@@ -3,13 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { NonFormalEducation } from "@/types/employee";
 
-export interface NonFormalEducation {
-  name: string;
-  institution: string;
-  year?: number;
-  description?: string;
-}
+
 
 interface Props {
   educations: NonFormalEducation[];
@@ -17,22 +13,22 @@ interface Props {
 }
 
 const NonFormalEducationArray: React.FC<Props> = ({ educations, onAdd }) => {
-  const [education, setEducation] = useState<NonFormalEducation>({ name: "", institution: "" });
+  const [education, setEducation] = useState<NonFormalEducation>({ name: "", institution: "", year: 0 });
 
   const handleAdd = () => {
     if (!education.name || !education.institution) return;
     onAdd({
       ...education,
-      year: education.year ? Number(education.year) : undefined,
+      year: education.year ? Number(education.year) : 0,
     });
-    setEducation({ name: "", institution: "" });
+    setEducation({ name: "", institution: "", year: 0 });
   };
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4  items-end">
         <div ><Label className="mb-2 ">Name</Label><Input value={education.name} onChange={e => setEducation(ed => ({ ...ed, name: e.target.value }))} placeholder="Course Name" /></div>
         <div><Label className="mb-2">Institution</Label><Input value={education.institution} onChange={e => setEducation(ed => ({ ...ed, institution: e.target.value }))} placeholder="Institution" /></div>
-        <div><Label className="mb-2">Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Year" /></div>
+        <div><Label className="mb-2">Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : 0 }))} placeholder="Year" /></div>
         <div><Label className="mb-2">Description</Label><Input value={education.description || ""} onChange={e => setEducation(ed => ({ ...ed, description: e.target.value }))} placeholder="Desc (optional)" /></div>
         <Button type="button" className="col-span-4 mt-4 dark:bg-slate-700 dark:text-white" onClick={handleAdd}>Add</Button>
       </div>
