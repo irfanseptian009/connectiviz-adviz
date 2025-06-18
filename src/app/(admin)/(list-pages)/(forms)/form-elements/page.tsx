@@ -38,7 +38,7 @@ import {
   Briefcase,
   LucideIcon,
 } from "lucide-react";
-import NonFormalEducationArray from "@/components/employeeForm/NonFormalEducationArray";
+import NonFormalEducationArray from "../../../../../components/employeeForm/NonFormalEducationArray";
 import { NonFormalEducation } from "@/types/employee";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
@@ -50,9 +50,9 @@ import {
 import { createUser } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
-import BusinessUnitModal from "@/components/employeeForm/BusinessUnitModal";
-import DivisionModal from "@/components/employeeForm/DivisionModal";
-import UserSelectModal from "@/components/employeeForm/UserSelectModal";
+import BusinessUnitModal from "../../../../../components/employeeForm/BusinessUnitModal";
+import DivisionModal from "../../../../../components/employeeForm/DivisionModal";
+import UserSelectModal from "../../../../../components/employeeForm/UserSelectModal";
 import { withAuth } from "@/context/AuthContext";
 import { assignUserToDivision } from "@/store/userSlice";
 
