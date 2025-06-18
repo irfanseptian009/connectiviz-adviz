@@ -1,409 +1,505 @@
 "use client";
 
-import React from "react";
-import { Tab } from "@headlessui/react";
-import { Modal } from "@/components/ui/modal";
-import { RiEditLine } from "react-icons/ri";
-import { User } from "@/types/employee";
-import {Props} from "@/types/props";
-
-
-// Dropdown options for select fields
-const dropdownOptions: Record<string, string[]> = {
-  role: ["SUPER_ADMIN", "ADMIN", "EMPLOYEE"],
-  gender: ["MALE", "FEMALE"],
-  maritalStatus: ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'],
-  bloodType:['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-  lastEducation: ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'],
-  ptkpStatus:['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3'],
-  // Add more if needed
-};
-
-const tabs = [
-  {
-    label: "Account & Role",
-    fields: ["username", "email", "role",]
-  },
-  {
-    label: "Personal Data",
-    fields: [
-      "fullName",
-      "nationalId",
-      "address",
-      "placeOfBirth",
-      "dateOfBirth",
-      "gender",
-      "phoneNumber",
-      "officeEmail",
-      "divisionId"
-    ]
-  },
-  {
-    label: "Family Data",
-    fields: [
-      "motherName",
-      "fatherName",
-      "maritalStatus",
-      "spouseName",
-      "childrenNames"
-    ]
-  },
-  {
-    label: "Education",
-    fields: [
-      "lastEducation",
-      "schoolName",
-      "major",
-      "yearStart",
-      "yearGraduate"
-    ]
-  },
-  {
-    label: "Documents",
-    fields: [
-      "identityCard",
-      "taxNumber",
-      "drivingLicense",
-      "bpjsHealth",
-      "bpjsEmployment",
-      "insuranceCompany",
-      "insuranceNumber",
-      "policyNumber",
-      "ptkpStatus"
-    ]
-  },
-  {
-    label: "Emergency Contact",
-    fields: [
-      "emergencyContactName",
-      "emergencyContactRelation",
-      "emergencyContactPhone"
-    ]
-  },
-  {
-    label: "Bank",
-    fields: [
-      "bankName",
-      "bankAccountNumber",
-      "bankAccountName"
-    ]
-  },
-  {
-    label: "Social Media",
-    fields: [
-      "instagram",
-      "facebook",
-      "twitter",
-      "linkedin",
-      "tiktok"
-    ]
-  },
-  {
-    label: "Health",
-    fields: [
-      "bloodType",
-      "medicalHistory",
-      "allergies",
-      "height",
-      "weight"
-    ]
-  }
-];
-
-// Label formatter
-const formatLabel = (field: string) =>
-  field.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase()).trim();
-
-// Field type getter
-const getFieldType = (field: string) => {
-  if (field.toLowerCase().includes("date")) return "date";
-  if (field.toLowerCase().includes("email")) return "email";
-  if (field === "password") return "password";
-  if (
-    ["yearStart", "yearGraduate", "height", "weight", "divisionId"].includes(
-      field
-    )
-  )
-    return "number";
-  return "text";
-};
-
-// Select component
-const SelectField = ({
-  label,
-  name,
-  options,
-  required,
-  value,
-  onChange,
-  error
-}: {
-  label: string;
-  name: string;
-  options: string[];
-  required?: boolean;
-  value?: string;
-  onChange(val: string): void;
-  error?: string;
-}) => (
-  <div className="flex flex-col text-sm">
-    <label className="font-medium text-gray-700 dark:text-gray-400 mb-1">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <select
-      name={name}
-      value={value || ""}
-      onChange={e => onChange(e.target.value)}
-      className={`rounded border ${
-        error ? "border-red-500" : "dark:border-gray-600"
-      } dark:bg-gray-800 dark:text-white bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400`}
-    >
-      <option value="">Select {label}</option>
-      {options.map(opt => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-  </div>
-);
-
-// Special for childrenNames
-const ChildrenNamesField = ({
-  value,
-  onChange,
-  error,
-}: {
-  value?: string[];
-  onChange(val: string[]): void;
-  error?: string;
-}) => {
-  const values = value && value.length > 0 ? value : [""];
-
-  const handleChange = (idx: number, newVal: string) => {
-    const updated = [...values];
-    updated[idx] = newVal;
-    onChange(updated);
-  };
-
-  const handleAdd = () => {
-    onChange([...values, ""]);
-  };
-
-  const handleRemove = (idx: number) => {
-    const updated = values.filter((_, i) => i !== idx);
-    onChange(updated.length === 0 ? [""] : updated);
-  };
-
-  return (
-    <div className="flex flex-col text-sm">
-      <label className="font-medium text-gray-700 dark:text-gray-400 mb-1">
-        Children Names
-      </label>
-      {values.map((val, idx) => (
-        <div className="flex gap-2 mb-2" key={idx}>
-          <input
-            type="text"
-            name={`childrenNames_${idx}`}
-            value={val}
-            onChange={e => handleChange(idx, e.target.value)}
-            placeholder={`Child ${idx + 1} name`}
-            className={`rounded border ${
-              error ? "border-red-500" : "dark:border-gray-600"
-            } dark:bg-gray-800  dark:text-white bg-gray-50 px-3 py-2 text-sm flex-col`}
-          />
-          {values.length > 1 && (
-            <button
-              type="button"
-              className="bg-red-500/30 text-white px-2  rounded"
-              onClick={() => handleRemove(idx)}
-              tabIndex={-1}
-            >
-              -
-            </button>
-          )}
-          {idx === values.length - 1 && (
-            <button
-              type="button"
-              className="bg-blue-500/30 text-white px-2 rounded"
-              onClick={handleAdd}
-              tabIndex={-1}
-            >
-              +
-            </button>
-          )}
-        </div>
-      ))}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
-};
-
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/store";
+import { User, NonFormalEducation, EditEmployeeModalProps } from "@/types/employee";
+import { fetchDivisionTree } from "@/store/divisionSlice";
+import { fetchBusinessUnits } from "@/store/businessUnitSlice";
 
 export default function EditEmployeeModal({
   isOpen,
   onClose,
   editData,
   setEditData,
-  formError,
-  setFormError,
   handleSave,
-  selectedTab,
-  setSelectedTab
-}: Props) {
-  const handleInputChange = (field: keyof User, value: User[keyof User]) => {
-    if (!editData) return;
-    setEditData({ ...editData, [field]: value });
-    if (formError[field]) {
-      const clone = { ...formError };
-      delete clone[field];
-      setFormError(clone);
+}: EditEmployeeModalProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
+  const divisionTree = useSelector((state: RootState) => state.division.tree);
+  const [activeTab, setActiveTab] = useState("biodata");
+  const [selectedBUId, setSelectedBUId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (businessUnits.length === 0) {
+      dispatch(fetchBusinessUnits());
+    }
+  }, [dispatch, businessUnits.length]);
+
+  useEffect(() => {
+    if (editData?.divisionId && businessUnits.length > 0) {
+      const foundBU = businessUnits.find((bu) => {
+        const divisions = divisionTree[bu.id] || [];
+        return divisions.some((div) => div.id === editData.divisionId);
+      });
+      
+      if (foundBU) {
+        setSelectedBUId(foundBU.id);
+        if (!divisionTree[foundBU.id]) {
+          dispatch(fetchDivisionTree(foundBU.id));
+        }
+      }
+    }
+  }, [editData?.divisionId, businessUnits, divisionTree, dispatch]);
+
+  const handleChange = (field: keyof User, value: string | number | Date | null) => {
+    setEditData({ ...editData!, [field]: value });
+  };
+
+  const handleArrayChange = (field: keyof User, index: number, value: string) => {
+    const currentArray = (editData?.[field] as string[]) || [];
+    const newArray = [...currentArray];
+    newArray[index] = value;
+    setEditData({ ...editData!, [field]: newArray });
+  };
+
+  const addArrayItem = (field: keyof User) => {
+    const currentArray = (editData?.[field] as string[]) || [];
+    setEditData({ ...editData!, [field]: [...currentArray, ''] });
+  };
+
+  const removeArrayItem = (field: keyof User, index: number) => {
+    const currentArray = (editData?.[field] as string[]) || [];
+    const newArray = currentArray.filter((_, i) => i !== index);
+    setEditData({ ...editData!, [field]: newArray });
+  };
+
+  const handleBusinessUnitChange = (buId: string) => {
+    const businessUnitId = Number(buId);
+    setSelectedBUId(businessUnitId);
+    
+    handleChange("divisionId", null);
+    
+    if (businessUnitId && !divisionTree[businessUnitId]) {
+      dispatch(fetchDivisionTree(businessUnitId));
     }
   };
 
+  const handleNFChange = (index: number, field: keyof NonFormalEducation, value: string | number) => {
+    const list = [...(editData?.nonFormalEducations || [])];
+    list[index] = { ...list[index], [field]: value };
+    setEditData({ ...editData!, nonFormalEducations: list });
+  };
+
+  const addNF = () => {
+    const updated = [...(editData?.nonFormalEducations || []), { name: '', institution: '', year: 0, description: '' }];
+    setEditData({ ...editData!, nonFormalEducations: updated });
+  };
+
+  const removeNF = (index: number) => {
+    const updated = editData!.nonFormalEducations?.filter((_, i) => i !== index) || [];
+    setEditData({ ...editData!, nonFormalEducations: updated });
+  };
+
+  // Get current divisions based on selected business unit
+  const currentDivisions = selectedBUId ? divisionTree[selectedBUId] || [] : [];
+
   if (!editData) return null;
 
-  
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      className="p-0 mx-auto w-full max-w-4xl"
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-        {/* === HEADER === */}
-        <div className="bg-gradient-to-r from-[#EBB317]/50 to-[#1D95D7]/50 m-2 rounded-t-xl p-4">
-          <h2 className="text-lg font-semibold text-white dark:text-gray-200 flex items-center">
-            <RiEditLine className="mr-2" /> Edit User Data
-          </h2>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Edit Employee</DialogTitle>
+        </DialogHeader>
 
-        {/* === BODY === */}
-        <div className="p-5">
-          <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-            {/* tab header */}
-            <div className="mb-4">
-              <Tab.List className="flex space-x-1 p-2 bg-blue-50 dark:bg-gray-700 rounded-md overflow-x-scroll">
-                {tabs.map(tab => (
-                  <Tab
-                    key={tab.label}
-                    className={({ selected }) =>
-                      `px-3 py-2 rounded-md m-2 shadow-md dark:shadow-md dark:shadow-blue-600 text-sm font-medium transition-colors whitespace-nowrap ${
-                        selected
-                          ? "dark:bg-blue-600 bg-orange-500/50 text-white shadow-md"
-                          : "text-gray-700 dark:bg-slate-600 bg-gray-200 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                      }`
-                    }
-                  >
-                    {tab.label}
-                    {formError &&
-                      tab.fields.some(f => !!formError[f]) && (
-                        <span className="ml-1 text-red-500 dark:text-red-300">
-                          •
-                        </span>
-                      )}
-                  </Tab>
-                ))}
-              </Tab.List>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid grid-cols-7 w-full">
+            <TabsTrigger value="biodata">Data Diri</TabsTrigger>
+            <TabsTrigger value="family">Keluarga</TabsTrigger>
+            <TabsTrigger value="education">Pendidikan</TabsTrigger>
+            <TabsTrigger value="documents">Dokumen</TabsTrigger>
+            <TabsTrigger value="contact">Kontak</TabsTrigger>
+            <TabsTrigger value="social">Sosial</TabsTrigger>
+            <TabsTrigger value="health">Kesehatan</TabsTrigger>
+          </TabsList>
+
+          {/* Data Diri Tab */}
+          <TabsContent value="biodata" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.username || ""} 
+                onChange={(e) => handleChange("username", e.target.value)} 
+                placeholder="Username" 
+              />
+              <Input 
+                value={editData.email || ""} 
+                onChange={(e) => handleChange("email", e.target.value)} 
+                placeholder="Email" 
+                type="email"
+              />
+              <Input 
+                value={editData.officeEmail || ""} 
+                onChange={(e) => handleChange("officeEmail", e.target.value)} 
+                placeholder="Email Kantor" 
+                type="email"
+              />
+              <Input 
+                value={editData.nationalId || ""} 
+                onChange={(e) => handleChange("nationalId", e.target.value)} 
+                placeholder="NIK" 
+              />
+              <Input 
+                value={editData.fullName || ""} 
+                onChange={(e) => handleChange("fullName", e.target.value)} 
+                placeholder="Nama Lengkap" 
+              />
+              <Input 
+                value={editData.phoneNumber || ""} 
+                onChange={(e) => handleChange("phoneNumber", e.target.value)} 
+                placeholder="No HP" 
+              />
+              <Input 
+                value={editData.placeOfBirth || ""} 
+                onChange={(e) => handleChange("placeOfBirth", e.target.value)} 
+                placeholder="Tempat Lahir" 
+              />
+              <Input 
+                type="date"
+                value={editData.dateOfBirth ? new Date(editData.dateOfBirth).toISOString().split('T')[0] : ""} 
+                onChange={(e) => handleChange("dateOfBirth", new Date(e.target.value))} 
+                placeholder="Tanggal Lahir" 
+              />
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.gender || ""}
+                onChange={(e) => handleChange("gender", e.target.value)}
+              >
+                <option value="">Pilih Jenis Kelamin</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.role || "EMPLOYEE"}
+                onChange={(e) => handleChange("role", e.target.value)}
+              >
+                <option value="EMPLOYEE">Employee</option>
+                <option value="ADMIN">Admin</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
+              </select>
+            </div>
+            <Textarea 
+              value={editData.address || ""} 
+              onChange={(e) => handleChange("address", e.target.value)} 
+              placeholder="Alamat" 
+            />
+            
+            {/* Position & Job Level */}
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.position || ""} 
+                onChange={(e) => handleChange("position", e.target.value)} 
+                placeholder="Jabatan" 
+              />
+              <Input 
+                value={editData.jobLevel || ""} 
+                onChange={(e) => handleChange("jobLevel", e.target.value)} 
+                placeholder="Level Jabatan" 
+              />
             </div>
 
-            {/* tab panels */}
-            <Tab.Panels className="mt-4 max-h-[60vh] overflow-y-auto px-1">
-              {tabs.map(tab => (
-                <Tab.Panel
-                  key={tab.label}
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 rounded-lg"
-                >
-                  {tab.fields.map(field => {
-                    const isRequired = ["username", "email", "role"].includes(
-                      field
-                    );
+            {/* Business Unit & Division Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={selectedBUId || ""}
+                onChange={(e) => handleBusinessUnitChange(e.target.value)}
+              >
+                <option value="">Pilih Business Unit</option>
+                {businessUnits.map((bu) => (
+                  <option key={bu.id} value={bu.id}>{bu.name}</option>
+                ))}
+              </select>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.divisionId || ""}
+                onChange={(e) => handleChange("divisionId", Number(e.target.value))}
+                disabled={!selectedBUId}
+              >
+                <option value="">Pilih Divisi</option>
+                {currentDivisions.map((div) => (
+                  <option key={div.id} value={div.id}>{div.name}</option>
+                ))}
+              </select>
+            </div>
+          </TabsContent>
 
-                    if (field === "childrenNames") {
-                      return (
-                        <ChildrenNamesField
-                          key={field}
-                          value={editData[field] as string[]}
-                          onChange={val => handleInputChange(field, val)}
-                          error={formError[field]}
-                        />
-                      );
-                    }
-
-                    if (dropdownOptions[field]) {
-                      return (
-                        <SelectField
-                          key={field}
-                          label={formatLabel(field)}
-                          name={field}
-                          options={dropdownOptions[field]}
-                          required={isRequired}
-                          value={editData[field] as string}
-                          onChange={val => handleInputChange(field, val)}
-                          error={formError[field]}
-                        />
-                      );
-                    }
-
-                   
-                    return (
-                      <div className="flex flex-col text-sm" key={field}>
-                        <label className="font-medium text-gray-400 mb-1">
-                          {formatLabel(field)}
-                          {isRequired && (
-                            <span className="text-red-500">*</span>
-                          )}
-                        </label>
-                        <input
-                          type={getFieldType(field)}
-                          name={field}
-                          value={
-                            editData[field] !== undefined &&
-                            editData[field] !== null
-                              ? String(editData[field])
-                              : ""
-                          }
-                          onChange={e =>
-                            handleInputChange(field, e.target.value)
-                          }
-                          className={`rounded border ${
-                            formError[field]
-                              ? "border-red-500"
-                              : "dark:border-gray-600"
-                          } dark:bg-gray-800 bg-gray-50 px-3 py-2 dark:text-white text-black text-sm focus:outline-none focus:ring-1 focus:ring-blue-400`}
-                        />
-                        {formError[field] && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {formError[field]}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </Tab.Panel>
+          {/* Family Tab */}
+          <TabsContent value="family" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.motherName || ""} 
+                onChange={(e) => handleChange("motherName", e.target.value)} 
+                placeholder="Nama Ibu" 
+              />
+              <Input 
+                value={editData.fatherName || ""} 
+                onChange={(e) => handleChange("fatherName", e.target.value)} 
+                placeholder="Nama Ayah" 
+              />
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.maritalStatus || ""}
+                onChange={(e) => handleChange("maritalStatus", e.target.value)}
+              >
+                <option value="">Status Pernikahan</option>
+                <option value="Belum Menikah">Belum Menikah</option>
+                <option value="Menikah">Menikah</option>
+                <option value="Cerai">Cerai</option>
+                <option value="Janda/Duda">Janda/Duda</option>
+              </select>
+              <Input 
+                value={editData.spouseName || ""} 
+                onChange={(e) => handleChange("spouseName", e.target.value)} 
+                placeholder="Nama Pasangan" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">Nama Anak-anak</h4>
+              {(editData.childrenNames || []).map((child, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input 
+                    value={child} 
+                    onChange={(e) => handleArrayChange("childrenNames", i, e.target.value)} 
+                    placeholder={`Nama Anak ${i + 1}`} 
+                  />
+                  <Button variant="destructive" onClick={() => removeArrayItem("childrenNames", i)}>
+                    Hapus
+                  </Button>
+                </div>
               ))}
-            </Tab.Panels>
-          </Tab.Group>
+              <Button onClick={() => addArrayItem("childrenNames")}>Tambah Anak</Button>
+            </div>
+          </TabsContent>
 
-          {/* footer */}
-          <div className="mt-6 flex justify-end gap-3 border-t dark:border-gray-600 pt-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 shadow-xl bg-blue-800/50 text-white rounded-md text-sm hover:bg-blue-800 transition-colors"
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
+          {/* Education Tab */}
+          <TabsContent value="education" className="space-y-4">
+            <h3 className="text-lg font-semibold">Pendidikan Formal</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.lastEducation || ""} 
+                onChange={(e) => handleChange("lastEducation", e.target.value)} 
+                placeholder="Pendidikan Terakhir" 
+              />
+              <Input 
+                value={editData.facultyName || ""} 
+                onChange={(e) => handleChange("facultyName", e.target.value)} 
+                placeholder="Fakultas" 
+              />
+              <Input 
+                value={editData.majorName || ""} 
+                onChange={(e) => handleChange("majorName", e.target.value)} 
+                placeholder="Jurusan" 
+              />
+              <Input 
+                type="number"
+                value={editData.graduationYear || ""} 
+                onChange={(e) => handleChange("graduationYear", Number(e.target.value))} 
+                placeholder="Tahun Lulus" 
+              />
+              <Input 
+                type="number"
+                step="0.01"
+                value={editData.gpa || ""} 
+                onChange={(e) => handleChange("gpa", Number(e.target.value))} 
+                placeholder="IPK" 
+              />
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold">Pendidikan Non Formal</h4>
+              {(editData.nonFormalEducations || []).map((edu, i) => (
+                <div key={i} className="space-y-2 border rounded p-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder="Nama Pendidikan" value={edu.name} onChange={(e) => handleNFChange(i, 'name', e.target.value)} />
+                    <Input placeholder="Lembaga" value={edu.institution} onChange={(e) => handleNFChange(i, 'institution', e.target.value)} />
+                    <Input placeholder="Tahun" type="number" value={edu.year || ''} onChange={(e) => handleNFChange(i, 'year', Number(e.target.value))} />
+                  </div>
+                  <Textarea placeholder="Deskripsi" value={edu.description || ''} onChange={(e) => handleNFChange(i, 'description', e.target.value)} />
+                  <Button variant="destructive" onClick={() => removeNF(i)}>Hapus</Button>
+                </div>
+              ))}
+              <Button onClick={addNF}>Tambah Pendidikan Non Formal</Button>
+            </div>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.identityCard || ""} 
+                onChange={(e) => handleChange("identityCard", e.target.value)} 
+                placeholder="KTP" 
+              />
+              <Input 
+                value={editData.taxNumber || ""} 
+                onChange={(e) => handleChange("taxNumber", e.target.value)} 
+                placeholder="NPWP" 
+              />
+              <Input 
+                value={editData.drivingLicense || ""} 
+                onChange={(e) => handleChange("drivingLicense", e.target.value)} 
+                placeholder="SIM" 
+              />
+              <Input 
+                value={editData.bpjsHealth || ""} 
+                onChange={(e) => handleChange("bpjsHealth", e.target.value)} 
+                placeholder="BPJS Kesehatan" 
+              />
+              <Input 
+                value={editData.bpjsEmployment || ""} 
+                onChange={(e) => handleChange("bpjsEmployment", e.target.value)} 
+                placeholder="BPJS Ketenagakerjaan" 
+              />
+              <Input 
+                value={editData.insuranceCompany || ""} 
+                onChange={(e) => handleChange("insuranceCompany", e.target.value)} 
+                placeholder="Perusahaan Asuransi" 
+              />
+              <Input 
+                value={editData.insuranceNumber || ""} 
+                onChange={(e) => handleChange("insuranceNumber", e.target.value)} 
+                placeholder="Nomor Asuransi" 
+              />
+              <Input 
+                value={editData.policyNumber || ""} 
+                onChange={(e) => handleChange("policyNumber", e.target.value)} 
+                placeholder="Nomor Polis" 
+              />
+              <Input 
+                value={editData.ptkpStatus || ""} 
+                onChange={(e) => handleChange("ptkpStatus", e.target.value)} 
+                placeholder="Status PTKP" 
+              />
+            </div>
+
+            <h4 className="text-lg font-semibold">Informasi Bank</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <Input 
+                value={editData.bankName || ""} 
+                onChange={(e) => handleChange("bankName", e.target.value)} 
+                placeholder="Nama Bank" 
+              />
+              <Input 
+                value={editData.bankAccountNumber || ""} 
+                onChange={(e) => handleChange("bankAccountNumber", e.target.value)} 
+                placeholder="Nomor Rekening" 
+              />
+              <Input 
+                value={editData.bankAccountName || ""} 
+                onChange={(e) => handleChange("bankAccountName", e.target.value)} 
+                placeholder="Nama Pemilik Rekening" 
+              />
+            </div>
+          </TabsContent>
+
+          {/* Contact Tab */}
+          <TabsContent value="contact" className="space-y-4">
+            <h4 className="text-lg font-semibold">Kontak Darurat</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <Input 
+                value={editData.emergencyContactName || ""} 
+                onChange={(e) => handleChange("emergencyContactName", e.target.value)} 
+                placeholder="Nama Kontak Darurat" 
+              />
+              <Input 
+                value={editData.emergencyContactRelation || ""} 
+                onChange={(e) => handleChange("emergencyContactRelation", e.target.value)} 
+                placeholder="Hubungan" 
+              />
+              <Input 
+                value={editData.emergencyContactPhone || ""} 
+                onChange={(e) => handleChange("emergencyContactPhone", e.target.value)} 
+                placeholder="No HP Darurat" 
+              />
+            </div>
+          </TabsContent>
+
+          {/* Social Tab */}
+          <TabsContent value="social" className="space-y-4">
+            <h4 className="text-lg font-semibold">Media Sosial</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                value={editData.instagram || ""} 
+                onChange={(e) => handleChange("instagram", e.target.value)} 
+                placeholder="Instagram" 
+              />
+              <Input 
+                value={editData.facebook || ""} 
+                onChange={(e) => handleChange("facebook", e.target.value)} 
+                placeholder="Facebook" 
+              />
+              <Input 
+                value={editData.twitter || ""} 
+                onChange={(e) => handleChange("twitter", e.target.value)} 
+                placeholder="Twitter" 
+              />
+              <Input 
+                value={editData.linkedin || ""} 
+                onChange={(e) => handleChange("linkedin", e.target.value)} 
+                placeholder="LinkedIn" 
+              />
+              <Input 
+                value={editData.tiktok || ""} 
+                onChange={(e) => handleChange("tiktok", e.target.value)} 
+                placeholder="TikTok" 
+              />
+            </div>
+          </TabsContent>
+
+          {/* Health Tab */}
+          <TabsContent value="health" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.bloodType || ""}
+                onChange={(e) => handleChange("bloodType", e.target.value)}
+              >
+                <option value="">Pilih Golongan Darah</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+                <option value="O">O</option>
+              </select>
+              <div className="flex gap-2">
+                <Input 
+                  type="number"
+                  value={editData.height || ""} 
+                  onChange={(e) => handleChange("height", Number(e.target.value))} 
+                  placeholder="Tinggi Badan (cm)" 
+                />
+                <Input 
+                  type="number"
+                  value={editData.weight || ""} 
+                  onChange={(e) => handleChange("weight", Number(e.target.value))} 
+                  placeholder="Berat Badan (kg)" 
+                />
+              </div>
+            </div>
+            <Textarea 
+              value={editData.medicalHistory || ""} 
+              onChange={(e) => handleChange("medicalHistory", e.target.value)} 
+              placeholder="Riwayat Penyakit" 
+            />
+            <Textarea 
+              value={editData.allergies || ""} 
+              onChange={(e) => handleChange("allergies", e.target.value)} 
+              placeholder="Alergi" 
+            />
+          </TabsContent>
+        </Tabs>
+
+        <Button className="w-full mt-4" onClick={handleSave}>
+          Simpan Perubahan
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }

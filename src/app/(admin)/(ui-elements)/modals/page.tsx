@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title: "connectiviz",
   description:
     "Connectiviz by adviz",
-  // other metadata
 };
 
 export default function Modals() {

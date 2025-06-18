@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   title: "table page | connectiviz",
   description:
     "table page for connectiviz by adviz",
-  // other metadata
 };
 
 export default function BasicTables() {

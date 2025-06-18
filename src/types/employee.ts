@@ -13,6 +13,7 @@ export interface NonFormalEducation {
 
 export interface User {
   id: number;
+  name: string;
   role?: Role;
   email: string;
   password?: string;
@@ -95,3 +96,14 @@ export interface Division {
   subDivisions?: Division[];
 }
 
+export interface EditEmployeeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editData: User | null;
+  setEditData: (data: User | null) => void;
+  formError: Record<string, string>;
+  setFormError: (errors: Record<string, string>) => void;
+  handleSave: () => void;
+  selectedTab: number;
+  setSelectedTab: (tab: number) => void;
+}

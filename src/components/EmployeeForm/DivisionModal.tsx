@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { fetchDivisionTree } from "@/store/divisionSlice";
@@ -24,27 +36,31 @@ const DivisionModal: React.FC<DivisionModalProps> = ({
   businessUnits,
   onCreate,
 }) => {
-  const dispatch = useDispatch<AppDispatch>();;
+  const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState("");
   const [businessUnitId, setBusinessUnitId] = useState("");
   const [parentId, setParentId] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch division tree sesuai businessUnit yang dipilih
+  // Ambil division tree berdasarkan BU ID yang dipilih
+  const divisionTree = useSelector((state: RootState) =>
+    businessUnitId ? state.division.tree[Number(businessUnitId)] || [] : []
+  );
+
+  const parentDivisionOptions = divisionTreeToOptions(divisionTree);
+
+  // Fetch division tree saat BU ID berubah
   useEffect(() => {
-    if (open && businessUnitId) {
+    if (businessUnitId) {
       dispatch(fetchDivisionTree(Number(businessUnitId)));
     }
-  }, [open, businessUnitId, dispatch]);
-
-  const divisionTree = useSelector((state: RootState) => state.division.tree);
-  const parentDivisionOptions = divisionTreeToOptions(divisionTree);
+  }, [dispatch, businessUnitId]);
 
   const handleCreate = async () => {
     if (!name || !businessUnitId) return;
     setLoading(true);
     try {
-      await onCreate(name, Number(businessUnitId), parentId ? Number(parentId) : -1);
+      await onCreate(name, Number(businessUnitId), parentId && parentId !== "-" ? Number(parentId) : -1);
       toast.success("Division created!");
       setName("");
       setBusinessUnitId("");
@@ -63,14 +79,23 @@ const DivisionModal: React.FC<DivisionModalProps> = ({
         </DialogHeader>
         <div className="space-y-4">
           <Label>Name</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Division Name" autoFocus />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Division Name"
+            autoFocus
+          />
 
           <Label>Business Unit</Label>
           <Select value={businessUnitId} onValueChange={setBusinessUnitId}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Select Business Unit" /></SelectTrigger>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Business Unit" />
+            </SelectTrigger>
             <SelectContent>
               {businessUnits.map((bu) => (
-                <SelectItem key={bu.id} value={String(bu.id)}>{bu.name}</SelectItem>
+                <SelectItem key={bu.id} value={String(bu.id)}>
+                  {bu.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -79,11 +104,15 @@ const DivisionModal: React.FC<DivisionModalProps> = ({
             <>
               <Label>Parent Division (optional, hierarchical)</Label>
               <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="No Parent" /></SelectTrigger>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="No Parent" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="-">None</SelectItem>
-                  {parentDivisionOptions.map(opt => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>{opt.label}</SelectItem>
+                  {parentDivisionOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={String(opt.id)}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -91,8 +120,14 @@ const DivisionModal: React.FC<DivisionModalProps> = ({
           )}
         </div>
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
-          <Button onClick={handleCreate} disabled={!name || !businessUnitId || loading} type="button">
+          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={!name || !businessUnitId || loading}
+            type="button"
+          >
             {loading ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>

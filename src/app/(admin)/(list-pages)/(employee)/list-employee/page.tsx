@@ -12,9 +12,9 @@ import {
   FiTrendingUp
 } from "react-icons/fi";
 import ListEmployee from "@/components/employee/listEmployee";
-import BusinessUnitList from "@/components/businessUnit/businessUnitList";
-import DivisionList from "@/components/division/divisionList";
-import EmployeeOrganization from "@/components/organization/EmployeeOrganization";
+import BusinessUnitList from "@/components/employeeMonitoring/BusinessUnitList";
+import DivisionList from "@/components/employeeMonitoring/divisionList";
+import EmployeeOrganization from "@/components/employeeMonitoring/EmployeeOrganization";
 
 export default function EmployeePage() {
   const { list: employees, loading: loadingEmp } = useEmployee();

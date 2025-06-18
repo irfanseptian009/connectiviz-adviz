@@ -1,18 +1,11 @@
 "use client";
 
 import CardGate from "@/components/gate/CardGate";
-// import type { Metadata } from "next";
 import React from "react";
 import carosel from "../../../public/images/carousel/carosel1.png";
 import Image from "next/image";
 import Link from "next/link";
 import { withAuth } from "@/context/AuthContext"; 
-// import { Metadata } from "next";
-
-// export const metadata: Metadata = {
-//   title: "Connectiviz",
-//   description: "This is a Connectiviz admin page.",
-// };
 
 function Gate() {
   return (

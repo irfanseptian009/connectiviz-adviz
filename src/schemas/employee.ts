@@ -1,50 +1,50 @@
 import { z } from 'zod';
 
 export const employeeSchema = z.object({
-  // Core Data - Required fields
   id: z.number().optional(),
+
+  // Core Account Info
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'EMPLOYEE']),
-  email: z.string().email("Email not valid"),
-  password: z.string().optional(),
-  username: z.string().min(1, "Username must be at least 1 character long").max(50, "Username cannot exceed 50 characters"),
+  email: z.string().email("Email tidak valid"),
+  password: z.string().optional().nullable(),
+  username: z.string().min(1, "Username wajib diisi").max(50),
 
-  // jobs
-  jobTitle: z.string().min(1, "Job title is required"),
-  jobLevel: z.string().min(1, "Job level is required"),
-
+  // Job Information
+  position: z.string().optional().nullable(),
+  jobLevel: z.enum(['Junior', 'Senior', 'Lead', 'Manager', 'Director']).optional().nullable(),
 
   // Personal Data
-  fullName: z.string().min(1, "Full name is required"),
+  fullName: z.string().min(1, "Full name wajib diisi"),
   nationalId: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   placeOfBirth: z.string().optional().nullable(),
   dateOfBirth: z.string().datetime().optional().nullable(),
-  gender: z.enum(['MALE', 'FEMALE']).optional().nullable(),
+  gender: z.enum(['Laki-laki', 'Perempuan', 'Other']).optional().nullable(),
   phoneNumber: z.string().optional().nullable(),
-  officeEmail: z.string().email("Email not valid").optional().nullable(),
+  officeEmail: z.string().email().optional().nullable(),
 
-  // Division/Business Unit
+  // Organization Data
   divisionId: z.number().optional().nullable(),
   businessUnitId: z.number().optional().nullable(),
 
   // Family Data
   motherName: z.string().optional().nullable(),
   fatherName: z.string().optional().nullable(),
-  maritalStatus: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']).optional().nullable(),
+  maritalStatus: z.enum(['Single', 'Menikah', 'Divorced', 'Widowed']).optional().nullable(),
   spouseName: z.string().optional().nullable(),
   childrenNames: z.array(z.string()).optional().nullable(),
 
-  // Education
+  // Education - Formal
   lastEducation: z.enum(['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3']).optional().nullable(),
-  schoolName: z.string().optional().nullable(),
-  major: z.string().optional().nullable(),
-  yearGraduate: z.number().min(1950,"Year graduate must be at least 1950").max(new Date().getFullYear()).optional().nullable(),
+  facultyName: z.string().optional().nullable(),
+  majorName: z.string().optional().nullable(),
+  graduationYear: z.number().min(1950).max(new Date().getFullYear()).optional().nullable(),
+  gpa: z.string().optional().nullable(),
 
-  // education non formal
-
-   nonFormalEducationNames: z.array(z.string()).optional().nullable(),
+  // Education - Non Formal
+  nonFormalEducationNames: z.array(z.string()).optional().nullable(),
   nonFormalInstitutions: z.array(z.string()).optional().nullable(),
-  nonFormalYears: z.array(z.number()).optional().nullable(),
+  nonFormalYears: z.array(z.number().min(1950).max(new Date().getFullYear())).optional().nullable(),
   nonFormalDescriptions: z.array(z.string()).optional().nullable(),
 
   // Documents
@@ -60,27 +60,27 @@ export const employeeSchema = z.object({
 
   // Emergency Contact
   emergencyContactName: z.string().optional().nullable(),
-  emergencyContactRelation: z.string().optional().nullable(),
+  emergencyContactRelation: z.enum(['Ayah', 'Ibu', 'Suami', 'Istri', 'Anak', 'Kakak', 'Adik', 'Saudara', 'Teman']).optional().nullable(),
   emergencyContactPhone: z.string().optional().nullable(),
 
-  // Bank
+  // Bank Account
   bankName: z.string().optional().nullable(),
   bankAccountNumber: z.string().optional().nullable(),
   bankAccountName: z.string().optional().nullable(),
 
-  // Social Media - all optional
+  // Social Media
   instagram: z.string().optional().nullable(),
   facebook: z.string().optional().nullable(),
   twitter: z.string().optional().nullable(),
   linkedin: z.string().optional().nullable(),
   tiktok: z.string().optional().nullable(),
 
-  // Health
-  bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']).optional().nullable(),
+  // Health Info
+  bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'O', 'AB+', 'AB-']).optional().nullable(),
   medicalHistory: z.string().optional().nullable(),
   allergies: z.string().optional().nullable(),
-  height: z.number().min(0).max(300,"Height must be between 0 and 300").optional().nullable(),
-  weight: z.number().min(0).max(500,"Weight must be between 0 and 500").optional().nullable(),
+  height: z.number().min(0).max(300).optional().nullable(),
+  weight: z.number().min(0).max(500).optional().nullable(),
 }).strict();
 
 export type EmployeeData = z.infer<typeof employeeSchema>;

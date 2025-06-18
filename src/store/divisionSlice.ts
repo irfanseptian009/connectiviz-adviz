@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import api from "@/lib/api";
+import { RootState } from "@/store";
 
-/* ─── Model ───────────────────────────────────────────────────── */
 export interface Division {
   id: number;
   name: string;
@@ -10,7 +10,6 @@ export interface Division {
   subDivisions?: Division[];
 }
 
-/* ─── Async Thunks ────────────────────────────────────────────── */
 export const fetchDivisionTree = createAsyncThunk(
   "division/fetchTree",
   async (businessUnitId: number) => {
@@ -27,7 +26,6 @@ export const createDivision = createAsyncThunk(
   }
 );
 
-/* ─── Slice ───────────────────────────────────────────────────── */
 interface DivisionState {
   list: Division[];
   tree: Record<number, Division[]>; 
@@ -38,7 +36,7 @@ interface DivisionState {
 
 const initialState: DivisionState = {
   list: [],
-  tree: {}, 
+  tree: {},
   loading: false,
   status: 'idle',
   error: null,
@@ -52,25 +50,42 @@ const divisionSlice = createSlice({
     builder
       .addCase(fetchDivisionTree.pending, (state) => {
         state.loading = true;
-        state.status = 'loading';
+        state.status = "loading";
       })
-        .addCase(fetchDivisionTree.fulfilled, (state, action) => {
-  const { businessUnitId, tree } = action.payload;
-  state.loading = false;
-  state.status = 'succeeded';
-  state.tree[businessUnitId] = tree;
-})
+      .addCase(fetchDivisionTree.fulfilled, (state, action) => {
+        const { businessUnitId, tree } = action.payload;
+        state.loading = false;
+        state.status = "succeeded";
 
+        // avoid unnecessary rerenders by shallow comparing before updating
+        const existing = state.tree[businessUnitId];
+        const isSame =
+          existing?.length === tree.length &&
+          existing?.every((div, i) => div.id === tree[i].id);
+
+        if (!isSame) {
+          state.tree[businessUnitId] = tree;
+        }
+      })
       .addCase(fetchDivisionTree.rejected, (state, action) => {
         state.loading = false;
-        state.status = 'failed';
+        state.status = "failed";
         state.error = action.error.message ?? "Unknown error";
       })
-
       .addCase(createDivision.fulfilled, (state, action) => {
         state.list.push(action.payload);
       });
-  }
+  },
 });
 
 export default divisionSlice.reducer;
+
+export const selectDivisionState = (state: RootState) => state.division;
+
+export const selectDivisionTree = createSelector(
+  [selectDivisionState],
+  (division) => division.tree
+);
+
+export const selectDivisionTreeByBU = (businessUnitId: number) =>
+  createSelector([selectDivisionTree], (tree) => tree[businessUnitId] ?? []);

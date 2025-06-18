@@ -39,11 +39,13 @@ import {
 } from "lucide-react";
 import NonFormalEducationArray, {
   NonFormalEducation,
-} from "./NonFormalEducationArray";
+} from "@/components/employeeForm/NonFormalEducationArray";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
   createBusinessUnit,
+
+
   fetchBusinessUnits,
 } from "@/store/businessUnitSlice";
 import {
@@ -53,17 +55,14 @@ import {
 import { createUser } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
-import BusinessUnitModal from "./BusinessUnitModal";
-import DivisionModal from "./DivisionModal";
-import UserSelectModal from "./UserSelectModal";
+import BusinessUnitModal from "@/components/employeeForm/BusinessUnitModal";
+import DivisionModal from "@/components/employeeForm/DivisionModal";
+import UserSelectModal from "@/components/employeeForm/UserSelectModal";
 import { withAuth } from "@/context/AuthContext";
 import { assignUserToDivision } from "@/store/userSlice";
 
 
-
-
 const EmployeeManagementCreateForm = () => {
-  /* Redux */
   const dispatch = useDispatch<AppDispatch>();
   const businessUnits = useSelector(
     (state: RootState) => state.businessUnit.list

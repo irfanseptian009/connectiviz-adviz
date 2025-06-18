@@ -1,7 +1,5 @@
 "use client";
 
-// import type { Metadata } from "next";
-
 import React from "react";
 import MonthlyTarget from "@/components/gate/MonthlyTarget";
 import StatisticsChart from "@/components/gate/StatisticsChart";
@@ -10,12 +8,6 @@ import { Metrics } from "@/components/gate/Metrics";
 import AttendantOverview from "@/components/gate/AttendantOverview";
 import VerticalPerformance from "@/components/gate/VerticalPerformance";
 import { withAuth } from "@/context/AuthContext";
-
-// export const metadata: Metadata = {
-//   title:
-//     "Naruku Dashboard | Naruku",
-//   description: "This is naruku Dashboard",
-// };
 
 function naruku() {
   return (

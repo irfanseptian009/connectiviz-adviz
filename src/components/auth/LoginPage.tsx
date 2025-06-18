@@ -29,8 +29,12 @@ const LoginPage = () => {
       });
       login(res.data.accessToken);
       router.push('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login gagal');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Login filed');
+      } else {
+        setError('Login filed');
+      }
     }
   };
 

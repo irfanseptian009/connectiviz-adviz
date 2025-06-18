@@ -1,4 +1,3 @@
-// app/layout.tsx
 import './globals.css';
 import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
@@ -9,19 +8,16 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 
-// ─── Google font ──────────────────────────────────────────────
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit-sans',
 });
 
-// ─── Optional: SEO/default meta ───────────────────────────────
 export const metadata: Metadata = {
-  title: 'My App',
-  description: 'Awesome app built with Next.js 14',
+  title: 'connectiviz',
+  description: 'A tool for visualizing and analyzing connections in data',
 };
 
-// ─── Root layout (server component) ───────────────────────────
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={outfit.variable}>

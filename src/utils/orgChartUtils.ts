@@ -12,16 +12,16 @@ export const buildOrgChartData = (users: User[]): OrgChartNode => {
   const divisionMap: Record<number, OrgChartNode> = {};
 
   users.forEach(user => {
-    const division = user.division;
-    if (division) {
-      if (!divisionMap[division.id]) {
-        divisionMap[division.id] = {
-          label: division.name,
+    const divisionId = user.divisionId;
+    if (divisionId) {
+      if (!divisionMap[divisionId]) {
+        divisionMap[divisionId] = {
+          label: String(divisionId),
           expanded: true,
           children: [],
         };
       }
-      divisionMap[division.id].children?.push({
+      divisionMap[divisionId].children?.push({
         label: user.fullName || user.username,
         data: user,
       });

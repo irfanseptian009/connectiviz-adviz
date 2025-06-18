@@ -12,8 +12,9 @@ import { RootState } from "@/store";
 import {
   fetchUsers,
   assignMultipleUsersToDivision,
-  User,
+ 
 } from "@/store/userSlice";
+import { User } from "@/types/employee";
 import { toast } from "react-hot-toast";
 import  type { AppDispatch } from "@/store";
 

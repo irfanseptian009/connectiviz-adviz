@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   title: "Connectiviz",
   description:
     "connectiviz by adviz",
-  // other metadata
 };
 
 export default function Images() {

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/lib/api";
 import { User } from "@/types/employee";
+import { AxiosError } from "axios";
 
 interface EmployeeState {
   data: User | null;
@@ -20,8 +21,11 @@ export const fetchEmployeeChart = createAsyncThunk(
     try {
       const { data } = await api.get<User>("/users/chart");
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || "Error fetching chart");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data || "Error fetching chart");
+      }
+      return rejectWithValue("Error fetching chart");
     }
   }
 );

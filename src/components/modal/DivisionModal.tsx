@@ -1,6 +1,13 @@
 "use client";
 import React from "react";
 
+interface Division {
+  id: string;
+  name: string;
+  parentId?: string;
+  buId?: string;
+}
+
 interface DivisionModalProps {
   show: boolean;
   divName: string;
@@ -10,9 +17,9 @@ interface DivisionModalProps {
   divBuId: string;
   onClose: () => void;
   onAdd: () => void;
-  renderDivisionOptions: (divisions: any[], parentId?: any, level?: number, buId?: any) => React.ReactNode;
-  getDivisionPath: (parentDivId: string, divisions: any[]) => string;
-  divisions: any[];
+  renderDivisionOptions: (divisions: Division[], parentId?: string, level?: number, buId?: string) => React.ReactNode;
+  getDivisionPath: (parentDivId: string, divisions: Division[]) => string;
+  divisions: Division[];
 }
 
 const DivisionModal: React.FC<DivisionModalProps> = ({
@@ -41,7 +48,7 @@ const DivisionModal: React.FC<DivisionModalProps> = ({
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="">Top Level Division</option>
-            {renderDivisionOptions(divisions, null, 0, divBuId)}
+            {renderDivisionOptions(divisions, undefined, 0, divBuId)}
           </select>
           {parentDivId && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

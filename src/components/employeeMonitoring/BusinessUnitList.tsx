@@ -8,22 +8,11 @@ import { fetchDivisionTree } from "@/store/divisionSlice";
 import { fetchUsers } from "@/store/userSlice";
 import { FiChevronRight, FiUsers, FiBriefcase, FiGrid, FiUser } from "react-icons/fi";
 
-// Type definitions
-interface User {
-  id: number;
-  username: string;
-  fullName?: string | null;
-  email: string;
-  role: 'SUPER_ADMIN' | 'ADMIN' | 'EMPLOYEE';
-  divisionId?: number | null;
-  nationalId?: string | null;
-  address?: string | null;
-  placeOfBirth?: string | null;
-  dateOfBirth?: string | null;
-  gender?: string | null;
-  phoneNumber?: string | null;
-  officeEmail?: string | null;
-}
+import { User as ImportedUser } from '@/types/employee';
+
+type User = ImportedUser & {
+  role: NonNullable<ImportedUser['role']>;
+};
 
 interface Division {
   id: number;
@@ -33,12 +22,8 @@ interface Division {
   subDivisions?: Division[];
 }
 
-interface BusinessUnit {
-  id: number;
-  name: string;
-}
 
-// Constants
+
 const ROLE_COLORS = {
   SUPER_ADMIN: {
     gradient: 'bg-gradient-to-br from-red-400 to-red-600',
@@ -73,25 +58,21 @@ const LEVEL_COLORS = {
 } as const;
 
 const BusinessUnitList: FC = () => {
-  // Redux hooks
   const dispatch = useDispatch<AppDispatch>();
-  
   const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
   const divisionTree = useSelector((state: RootState) => state.division.tree);
   const users = useSelector((state: RootState) => state.user.list);
   
   const isLoadingBU = useSelector((state: RootState) => state.businessUnit.loading);
   const isLoadingDiv = useSelector((state: RootState) => state.division.loading);
-  const isLoadingUsers = useSelector((state: RootState) => state.user.loading);
+  const isLoadingUsers = useSelector((state: RootState) => state.user.status === 'loading');
   
   const userStatus = useSelector((state: RootState) => state.user.status || 'idle');
   const divisionStatus = useSelector((state: RootState) => state.division.status || 'idle');
 
-  // Local state
   const [openBU, setOpenBU] = useState<number | null>(null);
   const [openDivisions, setOpenDivisions] = useState<Set<number>>(new Set());
 
-  // Effects
   useEffect(() => {
     if (businessUnits.length === 0) {
       dispatch(fetchBusinessUnits());
@@ -109,7 +90,6 @@ const BusinessUnitList: FC = () => {
     }
   }, [businessUnits, divisionStatus, dispatch]);
 
-  // Helper functions
   const toggleDivision = (divisionId: number): void => {
     const newOpenDivisions = new Set(openDivisions);
     if (newOpenDivisions.has(divisionId)) {
@@ -146,7 +126,8 @@ const BusinessUnitList: FC = () => {
   };
 
   const getUsersInDivision = (divisionId: number): User[] => {
-    return users.filter((user) => {
+    return users.filter((user): user is User => {
+      if (!user.role) return false;
       const userDivisionId = user.divisionId;
       const targetDivisionId = Number(divisionId);
       
@@ -369,7 +350,6 @@ const BusinessUnitList: FC = () => {
     );
   }
 
-  // Empty state
   if (businessUnits.length === 0) {
     return (
       <div className="text-center py-16">
@@ -514,7 +494,10 @@ const BusinessUnitList: FC = () => {
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {users
-                .filter(user => user.divisionId === null || user.divisionId === undefined)
+                .filter((user): user is User => {
+                  if (!user.role) return false;
+                  return user.divisionId === null || user.divisionId === undefined;
+                })
                 .map(user => {
                   const roleColors = getRoleColors(user.role);
                   return (

@@ -29,17 +29,17 @@ const NonFormalEducationArray: React.FC<Props> = ({ educations, onAdd }) => {
   };
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-2 items-end">
-        <div><Label>Name</Label><Input value={education.name} onChange={e => setEducation(ed => ({ ...ed, name: e.target.value }))} placeholder="Course Name" /></div>
-        <div><Label>Institution</Label><Input value={education.institution} onChange={e => setEducation(ed => ({ ...ed, institution: e.target.value }))} placeholder="Institution" /></div>
-        <div><Label>Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Year" /></div>
-        <div><Label>Description</Label><Input value={education.description || ""} onChange={e => setEducation(ed => ({ ...ed, description: e.target.value }))} placeholder="Desc (optional)" /></div>
-        <Button type="button" className="col-span-4 mt-2" onClick={handleAdd}>Add</Button>
+      <div className="grid grid-cols-4 gap-4  items-end">
+        <div ><Label className="mb-2 ">Name</Label><Input value={education.name} onChange={e => setEducation(ed => ({ ...ed, name: e.target.value }))} placeholder="Course Name" /></div>
+        <div><Label className="mb-2">Institution</Label><Input value={education.institution} onChange={e => setEducation(ed => ({ ...ed, institution: e.target.value }))} placeholder="Institution" /></div>
+        <div><Label className="mb-2">Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Year" /></div>
+        <div><Label className="mb-2">Description</Label><Input value={education.description || ""} onChange={e => setEducation(ed => ({ ...ed, description: e.target.value }))} placeholder="Desc (optional)" /></div>
+        <Button type="button" className="col-span-4 mt-4 dark:bg-slate-700 dark:text-white" onClick={handleAdd}>Add</Button>
       </div>
       <div className="space-y-2">
         {educations.map((edu, i) => (
           <Card key={i} className="p-3 bg-muted">
-            <div className="flex gap-4">
+            <div className="flex gap-4 ">
               <span className="font-semibold">{edu.name}</span> – {edu.institution} {edu.year ? <span>({edu.year})</span> : null}
               {edu.description ? <span className="ml-2 italic text-sm">{edu.description}</span> : null}
             </div>

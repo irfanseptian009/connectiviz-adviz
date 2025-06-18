@@ -24,13 +24,15 @@ const DivisionTree: React.FC<Props> = ({ businessUnitId }) => {
     dispatch(fetchDivisionTree(businessUnitId));
   }, [businessUnitId, dispatch]);
 
+  const divisionList = tree[businessUnitId] ?? [];
+
   return (
     <div className="ml-2">
-      {tree.length === 0 ? (
+      {divisionList.length === 0 ? (
         <span className="text-muted-foreground text-sm">No division.</span>
       ) : (
         <ul>
-          {tree.map((node) => (
+          {divisionList.map((node) => (
             <DivisionTreeNode node={node} key={node.id} />
           ))}
         </ul>

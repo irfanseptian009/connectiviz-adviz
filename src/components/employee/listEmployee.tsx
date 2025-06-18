@@ -1,193 +1,147 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch, } from "@/store";
+import { fetchUsers, editUser, deleteUser } from "@/store/userSlice";
+import { toast } from "react-hot-toast";
 import { withAuth } from "@/context/AuthContext";
-import { useEmployee } from "@/hooks/useEmployee";
 import EmployeeTable from "@/components/tables/employeeTable";
 import EditEmployeeModal from "@/components/employee/editEmployeeModal";
 import DeleteConfirmModal from "@/components/employee/deleteConfirmModal";
+import { employeeUpdateSchema } from "@/schemas/employeeUpdateSchema";
 import { User } from "@/types/employee";
-import { employeeSchema } from "@/schemas/employee";
+import { normalizeEmployee } from "@/utils/normalizationEmployee";
 
-function ListEmpolyee() {
+function ListEmployee() {
   const router = useRouter();
-  const { list, loading, fetchById, save, remove } = useEmployee();
+  const dispatch = useDispatch<AppDispatch>();
+  const { list, status } = useSelector((state: RootState) => state.user);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
   const [isEditOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState<User | null>(null);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [selectedTab, setSelectedTab] = useState(0);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const limit = 10;
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
+
+
 
   const handleView = (id: number) => router.push(`/detail-employee?id=${id}`);
 
-  const openEdit = async (id: number) => {
-    const data = await fetchById(id);
-    if (data) {
-      const editDataWithNumberId = {
-        ...data,
-        id: Number(data.id ?? 0)
-      } as const;
-      setEditData(editDataWithNumberId);
+  const openEdit = (id: number) => {
+    const user = list.find((u) => u.id === id);
+    if (user) {
+      setEditData({ ...user });
+      setFormError({});
+      setSelectedTab(0);
+      setEditOpen(true);
     }
-    setFormError({});
-    setSelectedTab(0);
-    setEditOpen(true);
   };
 
- const handleSave = async () => {
-  if (!editData?.id || !editData.fullName) return;
+  
 
-  // NORMALIZE 
-  const normalized = {
-    id: Number(editData.id),
-    fullName: editData.fullName,
-    role: editData.role as 'SUPER_ADMIN' | 'ADMIN' | 'EMPLOYEE',
-    email: editData.email || '',
-    username: editData.username || '',
+const handleSave = async () => {
+  if (!editData) return;
 
-    password: editData.password || undefined,
+  try {
+    const normalized = normalizeEmployee(editData);           
+    const validated = employeeUpdateSchema.parse(normalized);
+    const payload = Object.fromEntries(
+      Object.entries(validated).map(([key, value]) => [key, value === null ? undefined : value])
+    );
 
-    // PERSONAL
-    nationalId: editData.nationalId || undefined,
-    address: editData.address || undefined,
-    placeOfBirth: editData.placeOfBirth || undefined,
-    dateOfBirth: editData.dateOfBirth ? (editData.dateOfBirth.length === 10 ? `${editData.dateOfBirth}T00:00:00.000Z` : editData.dateOfBirth) : undefined,
-    gender: editData.gender || undefined,
-    phoneNumber: editData.phoneNumber || undefined,
-    officeEmail: editData.officeEmail || undefined,
-    divisionId: editData.divisionId ? Number(editData.divisionId) : undefined,
+    await dispatch(editUser({ id: validated.id, payload })).unwrap();
+    await dispatch(fetchUsers());       
 
-    // FAMILY
-    motherName: editData.motherName || undefined,
-    fatherName: editData.fatherName || undefined,
-    maritalStatus: editData.maritalStatus || undefined,
-    spouseName: editData.spouseName || undefined,
-    childrenNames: Array.isArray(editData.childrenNames)
-      ? editData.childrenNames
-      : (editData.childrenNames && typeof editData.childrenNames === "string" && String(editData.childrenNames).trim() !== ""
-        ? String(editData.childrenNames).split(",").map((s: string) => s.trim()).filter(Boolean)
-        : undefined),
-
-    // EDUCATION
-    lastEducation: editData.lastEducation || undefined,
-    schoolName: editData.schoolName || undefined,
-    major: editData.major || undefined,
-    yearStart: editData.yearStart ? Number(editData.yearStart) : undefined,
-    yearGraduate: editData.yearGraduate ? Number(editData.yearGraduate) : undefined,
-
-    // DOCUMENTS
-    identityCard: editData.identityCard || undefined,
-    taxNumber: editData.taxNumber || undefined,
-    drivingLicense: editData.drivingLicense || undefined,
-    bpjsHealth: editData.bpjsHealth || undefined,
-    bpjsEmployment: editData.bpjsEmployment || undefined,
-    insuranceCompany: editData.insuranceCompany || undefined,
-    insuranceNumber: editData.insuranceNumber || undefined,
-    policyNumber: editData.policyNumber || undefined,
-    ptkpStatus: editData.ptkpStatus || undefined,
-
-    // EMERGENCY
-    emergencyContactName: editData.emergencyContactName || undefined,
-    emergencyContactRelation: editData.emergencyContactRelation || undefined,
-    emergencyContactPhone: editData.emergencyContactPhone || undefined,
-
-    // BANK
-    bankName: editData.bankName || undefined,
-    bankAccountNumber: editData.bankAccountNumber || undefined,
-    bankAccountName: editData.bankAccountName || undefined,
-
-    // SOCIAL MEDIA
-    instagram: editData.instagram || undefined,
-    facebook: editData.facebook || undefined,
-    twitter: editData.twitter || undefined,
-    linkedin: editData.linkedin || undefined,
-    tiktok: editData.tiktok || undefined,
-
-    // HEALTH
-    bloodType: editData.bloodType || undefined,
-    medicalHistory: editData.medicalHistory || undefined,
-    allergies: editData.allergies || undefined,
-    height: editData.height ? Number(editData.height) : undefined,
-    weight: editData.weight ? Number(editData.weight) : undefined,
-  };
-
- try {
-  const employeeData = employeeSchema.parse(normalized);
-  await save(Number(editData.id), employeeData);
-  setEditOpen(false);
-  setFormError({}); 
-} catch (err: unknown) {
-  if (err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)) {
-    const errors: Record<string, string> = {};
-    (err as { errors: { path: string | string[], message: string }[] }).errors.forEach((e) => {
-      const field = Array.isArray(e.path) ? e.path.join(".") : e.path;
-      errors[field] = e.message;
-    });
-    setFormError(errors);
-  } else {
-    setFormError({ global: "Validation failed or unknown error" });
+    toast.success("Data karyawan berhasil diperbarui");
+    setEditOpen(false);
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'errors' in err) {
+      const obj: Record<string,string> = {};
+      const zodErr = err as { errors: Array<{ path: string[], message: string }> };
+      zodErr.errors.forEach(e => obj[e.path[0]] = e.message);
+      setFormError(obj);                  
+    } else {
+      const apiErr = err as { response?: { data?: string } };
+      toast.error(apiErr?.response?.data ?? "Gagal menyimpan");
+    }
   }
-}
-
 };
 
 
-  const openDelete = (id: number) => setDeleteId(id);
-
   const handleDelete = async (id: number) => {
-    await remove(id);
+    try {
+      await dispatch(deleteUser(id)).unwrap();
+      toast.success("Employee successfully deleted.");
+      dispatch(fetchUsers());
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to delete employee: ${errorMessage}`);
+    }
     setDeleteId(null);
   };
 
   const getUserName = (id: number | null) =>
-    list.find((u) => u.id === id)?.username ?? "employee not found";
+    list.find((u) => u.id === id)?.username || "Employee not found";
 
-  const filtered = list.filter(
-    (u) =>
-      u.username?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(
+    () =>
+      list.filter(
+        (u) =>
+          u.username?.toLowerCase().includes(search.toLowerCase()) ||
+          u.email?.toLowerCase().includes(search.toLowerCase())
+      ),
+    [search, list]
   );
+
   const totalPages = Math.ceil(filtered.length / limit);
   const paginated = filtered.slice((page - 1) * limit, page * limit);
 
   return (
     <>
       <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
-        employee list
+        Employee List
       </h1>
 
-      {loading ? (
+      {status === "loading" ? (
         <div className="flex justify-center py-10">
           <div className="animate-spin h-10 w-10 border-b-2 border-blue-500 rounded-full" />
         </div>
       ) : (
         <>
-          
-           <div className="mb-6 flex items-center gap-2">
-        <input
-          type="text"
-          placeholder="search name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 border dark:text-gray-100 dark:bg-gray-700 rounded-lg w-full sm:w-96 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
-        />
-      </div>
+          <div className="mb-6 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search name or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="px-4 py-2 border dark:text-gray-100 dark:bg-gray-700 rounded-lg w-full sm:w-96 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+            />
+          </div>
+
           <EmployeeTable
-            data={paginated}
+            data={paginated.map(user => ({
+              ...user,
+              fullName: user.fullName || '',
+              position: user.position || '',
+            }))}
             onView={handleView}
             onEdit={openEdit}
-            onDelete={openDelete}
+            onDelete={(id) => setDeleteId(id)}
           />
 
           <div className="flex flex-col sm:flex-row justify-between items-center mt-6 text-sm gap-2">
             <p className="text-gray-500 dark:text-gray-400">
-              show {paginated.length} from {filtered.length} employee
+              Showing {paginated.length} of {filtered.length} employees
             </p>
-
 
             <div className="flex gap-2 items-center">
               <button
@@ -224,7 +178,6 @@ function ListEmpolyee() {
         setSelectedTab={setSelectedTab}
       />
 
-
       <DeleteConfirmModal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -232,16 +185,7 @@ function ListEmpolyee() {
         userName={getUserName(deleteId)}
       />
     </>
-
-
   );
 }
 
-export default withAuth(ListEmpolyee);
-
-
-
-
-
-
-
+export default withAuth(ListEmployee);
