@@ -1,9 +1,9 @@
 "use client";
 
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useState, useEffect } from 'react';
 import { EyeCloseIcon, EyeIcon } from '@/icons';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import img from '../../../public/images/logo/bgLogin.png';
@@ -16,26 +16,53 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
 
-  const handleSubmit = async (e: FormEvent): Promise<void> => {
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) {
+      setSuccessMessage(message);
+      // Clear the message from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('message');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
+    // Clear any existing token first
+    localStorage.removeItem('token');
+    console.log("Cleared existing token before login");
+    
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         email,
         password,
       });
-      login(res.data.accessToken);
-      router.push('/');
-    } catch (err: unknown) {
+      console.log("Login response:", res.data);
+      console.log("Access token received:", res.data.accessToken);
+      
+      await login(res.data.accessToken);
+      console.log("Login process completed, redirecting...");
+      console.log("Current token after login:", localStorage.getItem('token'));
+      
+      // Tambahkan delay sebelum redirect untuk memastikan state terupdate
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
+    }catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Login filed');
+        console.error("Login error:", err.response?.data);
+        setError(err.response?.data?.message || 'Login failed');
       } else {
-        setError('Login filed');
+        console.error("Unexpected login error:", err);
+        setError('Login failed');
       }
     } finally {
       setLoading(false);
@@ -87,9 +114,8 @@ const LoginPage = () => {
               </div>
 
               {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-              <div className="mb-2 text-right">
-                <a href="#" className="text-sm text-blue-600 hover:underline">Forgot Password?</a>
+              {successMessage && <p className="text-green-600 text-sm mb-2">{successMessage}</p>}              <div className="mb-2 text-right">
+                <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot Password?</a>
               </div>
 
               <button

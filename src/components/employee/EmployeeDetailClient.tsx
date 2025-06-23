@@ -43,30 +43,42 @@ import {
   BookOpen
 } from "lucide-react";
 
-function DetailKaryawanPage() {
+// Tambahkan tipe props
+import { User } from "@/types/employee";
+
+interface EmployeeDetailClientProps {
+  user?: User;
+}
+
+function DetailKaryawanPage(props: EmployeeDetailClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const id = searchParams.get("id");  const [activeTab, setActiveTab] = useState("overview");
+  const id = searchParams.get("id");
+  const [activeTab, setActiveTab] = useState("overview");
 
   const dispatch = useDispatch<AppDispatch>();
   const userList = useSelector((state: RootState) => state.user.list);
   const status = useSelector((state: RootState) => state.user.status);
+
+  // Jika ada props.user, gunakan itu, jika tidak, fallback ke redux (untuk halaman detail karyawan)
+  const user = props.user || (id ? userList.find((u) => u.id === Number(id)) : undefined);
+
   useEffect(() => {
-    if (id) {
+    if (id && !props.user) {
       dispatch(fetchUserById(Number(id)));
     }
-  }, [dispatch, id]);
+  }, [dispatch, id, props.user]);
 
-  const user = userList.find((u) => u.id === Number(id));
-  
-  // Debug logging to check if education data is loaded
+  // Debug logging untuk memeriksa apakah data pendidikan sudah dimuat
   useEffect(() => {
     if (user) {
       console.log('User data:', user);
       console.log('Formal educations:', user.formalEducations);
       console.log('Non-formal educations:', user.nonFormalEducations);
     }
-  }, [user]);const formatFieldName = (key: string) => {
+  }, [user]);
+
+  const formatFieldName = (key: string) => {
     const fieldMappings: Record<string, string> = {
       fullName: "Nama Lengkap",
       username: "Username",

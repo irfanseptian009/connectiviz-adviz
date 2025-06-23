@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useModal } from "../../hooks/useModal";
+import { useAuth } from "../../context/AuthContext";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
@@ -8,54 +9,111 @@ import Label from "../form/Label";
 
 export default function UserAddressCard() {
   const { isOpen, openModal, closeModal } = useModal();
+  const { user } = useAuth();
+  
   const handleSave = () => {
     // Handle save logic here
     console.log("Saving changes...");
     closeModal();
   };
+
   return (
     <>
       <div className="p-5 border bg-blue-50 dark:bg-gray-600 border-gray-200 rounded-2xl shadow-xl mb-24 dark:border-gray-800 lg:p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-              Address
+              Contact & Emergency Information
             </h4>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Country
+                  Address
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  Indonesia
+                  {user?.address || "Not provided"}
                 </p>
               </div>
 
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  City/State
+                  Bank Name
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  Jakarta, Indonesia
+                  {user?.bankName || "Not provided"}
                 </p>
               </div>
 
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Postal Code
+                  Bank Account Number
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  45567
+                  {user?.bankAccountNumber || "Not provided"}
                 </p>
               </div>
 
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  TAX ID
+                  Bank Account Name
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  50396gf
+                  {user?.bankAccountName || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Emergency Contact Name
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.emergencyContactName || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Emergency Contact Phone
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.emergencyContactPhone || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Emergency Contact Relation
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.emergencyContactRelation || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Tax Number
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.taxNumber || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  BPJS Health
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.bpjsHealth || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  BPJS Employment
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.bpjsEmployment || "Not provided"}
                 </p>
               </div>
             </div>
@@ -84,45 +142,68 @@ export default function UserAddressCard() {
           </button>
         </div>
       </div>
+
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Address
+              Edit Contact Information
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
+              Update your contact details and emergency information.
             </p>
           </div>
           <form className="flex flex-col">
-            <div className="px-2 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                <div>
-                  <Label>Country</Label>
-                  <Input type="text" defaultValue="Indonesi" />
-                </div>
-
-                <div>
-                  <Label>City/State</Label>
-                  <Input type="text" defaultValue="Jakarta, Indonesi" />
-                </div>
-
-                <div>
-                  <Label>Postal Code</Label>
-                  <Input type="text" defaultValue="45573" />
-                </div>
-
-                <div>
-                  <Label>TAX ID</Label>
-                  <Input type="text" defaultValue="35636ns" />
-                </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  type="text"
+                  id="address"
+                  name="address"
+                  placeholder="Enter your address"
+                  defaultValue={user?.address || ""}
+                />
               </div>
-            </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
+              <div>
+                <Label htmlFor="bankName">Bank Name</Label>
+                <Input
+                  type="text"
+                  id="bankName"
+                  name="bankName"
+                  placeholder="Enter bank name"
+                  defaultValue={user?.bankName || ""}
+                />
+              </div>
+              <div>
+                <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
+                <Input
+                  type="text"
+                  id="emergencyContactName"
+                  name="emergencyContactName"
+                  placeholder="Enter emergency contact name"
+                  defaultValue={user?.emergencyContactName || ""}
+                />
+              </div>
+              <div>
+                <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
+                <Input
+                  type="text"
+                  id="emergencyContactPhone"
+                  name="emergencyContactPhone"
+                  placeholder="Enter emergency contact phone"
+                  defaultValue={user?.emergencyContactPhone || ""}
+                />
+              </div>
+            </div>            <div className="flex flex-col gap-4 mt-6 lg:flex-row lg:justify-end lg:gap-5">
+              <Button
+                onClick={closeModal}
+                variant="outline"
+                className="w-full lg:w-auto"
+              >
+                Cancel
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button onClick={handleSave} className="w-full lg:w-auto">
                 Save Changes
               </Button>
             </div>

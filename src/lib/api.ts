@@ -7,7 +7,17 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  console.log("API interceptor - token:", token);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log("API interceptor - Authorization header set:", config.headers.Authorization);
+  }
+  console.log("API interceptor - Full config:", {
+    url: config.url,
+    method: config.method,
+    baseURL: config.baseURL,
+    headers: config.headers
+  });
   return config;
 });
 

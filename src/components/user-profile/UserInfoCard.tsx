@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useModal } from "../../hooks/useModal";
+import { useAuth } from "../../context/AuthContext";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
@@ -8,6 +9,8 @@ import Label from "../form/Label";
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
+  const { user } = useAuth();
+  
   const handleSave = () => {
     // Handle save logic here
     console.log("Saving changes...");
@@ -19,24 +22,22 @@ export default function UserInfoCard() {
         <div>
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
             Personal Information
-          </h4>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+          </h4>          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
+                Full Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Irfan 
+                {user?.fullName || user?.username || "Not provided"}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
+                Username
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Septian
+                {user?.username || "Not provided"}
               </p>
             </div>
 
@@ -45,7 +46,124 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Ivanseftian70@gmail.com
+                {user?.email || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Office Email
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.officeEmail || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Phone Number
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.phoneNumber || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                National ID
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.nationalId || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Gender
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.gender || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Date of Birth
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Place of Birth
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.placeOfBirth || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Role
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.role ? user.role.replace(/_/g, ' ') : "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Position
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.position || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Job Title
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.jobTitle || "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Employment Type
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.employmentType ? user.employmentType.replace(/_/g, ' ') : "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Start Date
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.startDate ? new Date(user.startDate).toLocaleDateString() : "Not provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Division
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.division?.name || "Not assigned"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Business Unit
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user?.division?.businessUnit?.name || "Not assigned"}
               </p>
             </div>
 
