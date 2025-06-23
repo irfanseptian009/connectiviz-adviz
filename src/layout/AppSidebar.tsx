@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useHasMounted } from "../hooks/useClientOnly";
 import logo from "../../public/images/logo/logo1.png";
 import logo2 from "../../public/images/logo/logo-connectiviz.png";
 import {
@@ -94,6 +95,7 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const hasMounted = useHasMounted();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -155,6 +157,11 @@ const AppSidebar: React.FC = () => {
       return { type: menuType, index };
     });
   };
+
+  // Prevent hydration mismatch
+  if (!hasMounted) {
+    return null;
+  }
 
   const renderMenuItems = (navItems: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-3">

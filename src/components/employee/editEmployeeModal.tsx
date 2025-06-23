@@ -154,7 +154,7 @@ export default function EditEmployeeModal({
           const tabIndex = tabNames.indexOf(value);
           if (tabIndex !== -1) setSelectedTab(tabIndex);
         }} className="space-y-6">
-          <TabsList className="grid grid-cols-8 w-full">
+          <TabsList className="grid grid-cols-4 w-full overflow-x-auto gap-2">
             <TabsTrigger value="biodata">Data Diri</TabsTrigger>
             <TabsTrigger value="employment">Pekerjaan</TabsTrigger>
             <TabsTrigger value="family">Keluarga</TabsTrigger>
