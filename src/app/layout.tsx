@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={outfit.variable}>
-      <body className="dark:bg-black bg-orange-25">
+      <body className="dark:bg-black bg-orange-25" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

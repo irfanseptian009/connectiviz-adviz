@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FormalEducation, NonFormalEducation } from "@/types/employee";
 import {
-  User,
+  User as UserIcon,
   Building2,
   GraduationCap,
   Heart,
@@ -39,17 +40,8 @@ import {
   Award,
   Target,
   Zap,
-  Coffee,
-  BookOpen,
-  Laptop
+  BookOpen
 } from "lucide-react";
-
-interface NonFormalEducation {
-  name: string;
-  institution: string;
-  year?: number;
-  description?: string;
-}
 
 function DetailKaryawanPage() {
   const searchParams = useSearchParams();
@@ -59,7 +51,6 @@ function DetailKaryawanPage() {
   const dispatch = useDispatch<AppDispatch>();
   const userList = useSelector((state: RootState) => state.user.list);
   const status = useSelector((state: RootState) => state.user.status);
-
   useEffect(() => {
     if (id) {
       dispatch(fetchUserById(Number(id)));
@@ -67,29 +58,50 @@ function DetailKaryawanPage() {
   }, [dispatch, id]);
 
   const user = userList.find((u) => u.id === Number(id));
-
-  const formatFieldName = (key: string) => {
+  
+  // Debug logging to check if education data is loaded
+  useEffect(() => {
+    if (user) {
+      console.log('User data:', user);
+      console.log('Formal educations:', user.formalEducations);
+      console.log('Non-formal educations:', user.nonFormalEducations);
+    }
+  }, [user]);const formatFieldName = (key: string) => {
     const fieldMappings: Record<string, string> = {
       fullName: "Nama Lengkap",
+      username: "Username",
       email: "Email",
+      officeEmail: "Email Kantor",
       phoneNumber: "No. HP",
       nationalId: "NIK",
       address: "Alamat",
       placeOfBirth: "Tempat Lahir",
       dateOfBirth: "Tanggal Lahir",
       gender: "Jenis Kelamin",
+      role: "Role",
+      employmentType: "Tipe Kerja",
+      startDate: "Tanggal Mulai Kerja",
+      probationEndDate: "Tanggal Selesai Probation",
+      contractEndDate: "Tanggal Selesai Kontrak",
+      resignDate: "Tanggal Resign",
+      isActive: "Status Aktif",
+      isOnProbation: "Status Probation",
+      isResigned: "Status Resign",
+      profilePictureUrl: "Foto Profil",
       position: "Posisi",
+      jobTitle: "Jabatan",
       jobLevel: "Level Jabatan",
       divisionId: "Divisi",
       motherName: "Nama Ibu",
       fatherName: "Nama Ayah",
       maritalStatus: "Status Pernikahan",
       spouseName: "Nama Pasangan",
-      lastEducation: "Pendidikan Terakhir",
-      facultyName: "Fakultas",
-      majorName: "Jurusan",
-      graduationYear: "Tahun Lulus",
-      gpa: "IPK",
+      childrenNames: "Nama Anak-anak",
+      interests: "Minat",
+      skills: "Keahlian",
+      languages: "Bahasa",
+      formalEducations: "Pendidikan Formal",
+      nonFormalEducations: "Pendidikan Non-Formal",
       identityCard: "KTP",
       taxNumber: "NPWP",
       drivingLicense: "SIM",
@@ -117,24 +129,65 @@ function DetailKaryawanPage() {
       tiktok: "TikTok",
     };
     return fieldMappings[key] || key;
-  };
-  const formatFieldValue = (key: string, value: string | number | string[] | NonFormalEducation[] | null | undefined): string => {
-    if (!value) return "-";
-    if (key === "dateOfBirth") {
+  };  const formatFieldValue = (key: string, value: string | number | string[] | FormalEducation[] | NonFormalEducation[] | boolean | { id: number; name: string } | null | undefined): string => {
+    if (!value && value !== false && value !== 0) return "-";
+    
+    // Handle dates
+    if (key === "dateOfBirth" || key === "startDate" || key === "probationEndDate" || key === "contractEndDate" || key === "resignDate") {
       return new Date(value as string).toLocaleDateString("id-ID", {
         year: "numeric",
         month: "long",
         day: "numeric",
       });
     }
+    
+    // Handle boolean values
+    if (typeof value === "boolean") {
+      return value ? "Ya" : "Tidak";
+    }
+
+    // Handle division object
+    if (key === "division" && typeof value === "object" && value !== null) {
+      return (value as { id: number; name: string }).name;
+    }
+
+    // Handle arrays
     if (Array.isArray(value)) {
-      if (key === "nonFormalEducations") {
-        return (value as NonFormalEducation[])
-          .map(edu => `${edu.name} - ${edu.institution}`)
+      if (key === "formalEducations") {
+        return (value as FormalEducation[])
+          .map(edu => `${edu.level} ${edu.major || ''} - ${edu.schoolName} ${edu.yearGraduate ? `(${edu.yearGraduate})` : ''}`)
           .join(", ");
       }
-      return value.join(", ");
+      if (key === "nonFormalEducations") {
+        return (value as NonFormalEducation[])
+          .map(edu => `${edu.name} - ${edu.institution} ${edu.year ? `(${edu.year})` : ''}`)
+          .join(", ");
+      }
+      // Handle string arrays (interests, skills, languages, childrenNames)
+      return (value as string[]).join(", ");
     }
+    
+    // Handle employment type
+    if (key === "employmentType") {
+      const employmentTypeMap: Record<string, string> = {
+        INTERNSHIP: "Magang",
+        PROBATION: "Probation",
+        CONTRACT: "Kontrak",
+        PERMANENT: "Tetap"
+      };
+      return employmentTypeMap[value as string] || String(value);
+    }
+    
+    // Handle role
+    if (key === "role") {
+      const roleMap: Record<string, string> = {
+        SUPER_ADMIN: "Super Admin",
+        ADMIN: "Admin",
+        EMPLOYEE: "Karyawan"
+      };
+      return roleMap[value as string] || String(value);
+    }
+    
     return String(value);
   };
 
@@ -182,9 +235,9 @@ function DetailKaryawanPage() {
                   {getInitials(user.fullName || 'User')}
                 </div>
                 <div className="absolute -bottom-2 -right-2">
-                  <Badge className="bg-green-500 text-white border-0">
+                  <Badge className="bg-green-500  text-white border-0">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Aktif
+                    {user.isActive ? "Aktif" : "Tidak Aktif"}
                   </Badge>
                 </div>
               </div>
@@ -198,10 +251,9 @@ function DetailKaryawanPage() {
                       <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                         <Briefcase className="h-3 w-3 mr-1" />
                         {user.position || "Posisi"}
-                      </Badge>
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      </Badge>                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                         <Building2 className="h-3 w-3 mr-1" />
-                        {user.divisionId || "Divisi"}
+                        {user.division?.name || `Divisi ID: ${user.divisionId}` || "Divisi"}
                       </Badge>
                       <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                         <Star className="h-3 w-3 mr-1" />
@@ -302,9 +354,8 @@ function DetailKaryawanPage() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-none lg:flex">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-none lg:flex">            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4" />
               Overview
             </TabsTrigger>
             <TabsTrigger value="personal" className="flex items-center gap-2">
@@ -333,61 +384,79 @@ function DetailKaryawanPage() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Quick Info */}
-              <Card className="lg:col-span-2 border-none shadow-lg">
-                <CardHeader>
+              <Card className="lg:col-span-2 border-none shadow-lg">                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
+                    <UserIcon className="h-5 w-5" />
                     Informasi Utama
                   </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                </CardHeader>                <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoItem icon={<User className="h-4 w-4" />} label="Nama Lengkap" value={user.fullName} />
+                    <InfoItem icon={<UserIcon className="h-4 w-4" />} label="Nama Lengkap" value={user.fullName} />
                     <InfoItem icon={<Mail className="h-4 w-4" />} label="Email" value={user.email} />
                     <InfoItem icon={<Phone className="h-4 w-4" />} label="Telepon" value={user.phoneNumber} />
                     <InfoItem icon={<MapPin className="h-4 w-4" />} label="Alamat" value={user.address} />
                     <InfoItem icon={<Calendar className="h-4 w-4" />} label="Tanggal Lahir" value={formatFieldValue("dateOfBirth", user.dateOfBirth)} />
                     <InfoItem icon={<Briefcase className="h-4 w-4" />} label="Posisi" value={user.position} />
+                    <InfoItem icon={<Building2 className="h-4 w-4" />} label="Tipe Kerja" value={formatFieldValue("employmentType", user.employmentType)} />
+                    <InfoItem icon={<Calendar className="h-4 w-4" />} label="Mulai Kerja" value={formatFieldValue("startDate", user.startDate)} />
                   </div>
                 </CardContent>
-              </Card>
-
-              {/* Skills & Interests */}
+              </Card>              {/* Skills & Interests */}
               <Card className="border-none shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="h-5 w-5" />
-                    Skills & Interests
+                    Keahlian & Minat
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    {/* Skills */}
                     <div>
-                      <p className="text-sm font-medium mb-2">Technical Skills</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary">React</Badge>
-                        <Badge variant="secondary">TypeScript</Badge>
-                        <Badge variant="secondary">Node.js</Badge>
-                        <Badge variant="secondary">Python</Badge>
-                      </div>
+                      <p className="text-sm font-medium mb-2">Keahlian Teknis</p>
+                      {user.skills && user.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.skills.map((skill, index) => (
+                            <Badge key={index} variant="secondary">{skill}</Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data keahlian</p>
+                      )}
                     </div>
                     <Separator />
+                    {/* Interests */}
                     <div>
-                      <p className="text-sm font-medium mb-2">Interests</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline">
-                          <Coffee className="h-3 w-3 mr-1" />
-                          Coffee
-                        </Badge>
-                        <Badge variant="outline">
-                          <BookOpen className="h-3 w-3 mr-1" />
-                          Reading
-                        </Badge>
-                        <Badge variant="outline">
-                          <Laptop className="h-3 w-3 mr-1" />
-                          Technology
-                        </Badge>
-                      </div>
+                      <p className="text-sm font-medium mb-2">Minat</p>
+                      {user.interests && user.interests.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.interests.map((interest, index) => (
+                            <Badge key={index} variant="outline">
+                              <Heart className="h-3 w-3 mr-1" />
+                              {interest}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data minat</p>
+                      )}
+                    </div>
+                    <Separator />
+                    {/* Languages */}
+                    <div>
+                      <p className="text-sm font-medium mb-2">Bahasa</p>
+                      {user.languages && user.languages.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.languages.map((language, index) => (
+                            <Badge key={index} variant="outline">
+                              <Globe className="h-3 w-3 mr-1" />
+                              {language}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data bahasa</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -429,11 +498,10 @@ function DetailKaryawanPage() {
 
           {/* Personal Tab */}
           <TabsContent value="personal" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <DetailSection 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">              <DetailSection 
                 title="Data Pribadi" 
-                icon={<User className="h-5 w-5" />}
-                fields={["fullName", "nationalId", "placeOfBirth", "dateOfBirth", "gender", "address"]}
+                icon={<UserIcon className="h-5 w-5" />}
+                fields={["fullName", "username", "nationalId", "placeOfBirth", "dateOfBirth", "gender", "address"]}
                 user={user}
                 formatFieldName={formatFieldName}
                 formatFieldValue={formatFieldValue}
@@ -466,15 +534,31 @@ function DetailKaryawanPage() {
                 formatFieldValue={formatFieldValue}
               />
             </div>
-          </TabsContent>
-
-          {/* Work Tab */}
+          </TabsContent>          {/* Work Tab */}
           <TabsContent value="work" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <DetailSection 
                 title="Informasi Pekerjaan" 
                 icon={<Briefcase className="h-5 w-5" />}
-                fields={["position", "jobLevel", "officeEmail", "divisionId"]}
+                fields={["position", "jobTitle", "jobLevel", "employmentType", "startDate", "probationEndDate", "contractEndDate", "resignDate"]}
+                user={user}
+                formatFieldName={formatFieldName}
+                formatFieldValue={formatFieldValue}
+              />
+
+              <DetailSection 
+                title="Status Karyawan" 
+                icon={<Shield className="h-5 w-5" />}
+                fields={["isActive", "isOnProbation", "isResigned", "role"]}
+                user={user}
+                formatFieldName={formatFieldName}
+                formatFieldValue={formatFieldValue}
+              />
+
+              <DetailSection 
+                title="Kontak Kantor" 
+                icon={<Mail className="h-5 w-5" />}
+                fields={["officeEmail", "divisionId"]}
                 user={user}
                 formatFieldName={formatFieldName}
                 formatFieldValue={formatFieldValue}
@@ -488,43 +572,180 @@ function DetailKaryawanPage() {
                 formatFieldName={formatFieldName}
                 formatFieldValue={formatFieldValue}
               />
+
+              {/* Skills & Interests Section */}
+              <Card className="lg:col-span-2 border-none shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Keahlian & Minat
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Skills */}
+                    <div>
+                      <p className="text-sm font-medium mb-3 text-gray-600 dark:text-gray-400">Keahlian</p>
+                      {user.skills && user.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.skills.map((skill, index) => (
+                            <Badge key={index} variant="secondary">{skill}</Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data keahlian</p>
+                      )}
+                    </div>
+
+                    {/* Interests */}
+                    <div>
+                      <p className="text-sm font-medium mb-3 text-gray-600 dark:text-gray-400">Minat</p>
+                      {user.interests && user.interests.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.interests.map((interest, index) => (
+                            <Badge key={index} variant="outline">{interest}</Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data minat</p>
+                      )}
+                    </div>
+
+                    {/* Languages */}
+                    <div>
+                      <p className="text-sm font-medium mb-3 text-gray-600 dark:text-gray-400">Bahasa</p>
+                      {user.languages && user.languages.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {user.languages.map((language, index) => (
+                            <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
+                              <Globe className="h-3 w-3 mr-1" />
+                              {language}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Belum ada data bahasa</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </TabsContent>
-
-          {/* Education Tab */}
-          <TabsContent value="education" className="space-y-6">
-            <DetailSection 
-              title="Pendidikan Formal" 
-              icon={<GraduationCap className="h-5 w-5" />}
-              fields={["lastEducation", "facultyName", "majorName", "graduationYear", "gpa"]}
-              user={user}
-              formatFieldName={formatFieldName}
-              formatFieldValue={formatFieldValue}
-            />
-
-            {/* Non-Formal Education */}
+          </TabsContent>          {/* Education Tab */}
+          <TabsContent value="education" className="space-y-6">            {/* Formal Education Array */}
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Pendidikan Formal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  console.log('Checking formalEducations:', user.formalEducations);
+                  console.log('Type of formalEducations:', typeof user.formalEducations);
+                  console.log('Is array:', Array.isArray(user.formalEducations));
+                  
+                  if (user.formalEducations && Array.isArray(user.formalEducations) && user.formalEducations.length > 0) {
+                    return (
+                      <div className="space-y-4">
+                        {user.formalEducations.map((edu, index) => (
+                          <div key={edu.id || index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-semibold text-lg">{edu.level || 'Tingkat Pendidikan'}</h4>
+                              {edu.yearGraduate && (
+                                <span className="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                                  Lulus: {edu.yearGraduate}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-lg font-medium text-gray-800 dark:text-gray-200">
+                              {edu.schoolName || 'Nama Sekolah/Universitas'}
+                            </p>
+                            {edu.major && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">
+                                Jurusan: {edu.major}
+                              </p>
+                            )}
+                            {edu.gpa && (
+                              <p className="text-sm text-gray-500 mt-2">
+                                GPA: <span className="font-semibold">{edu.gpa}</span>
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="text-center py-12">
+                        <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">Belum ada data pendidikan formal</p>
+                        <p className="text-sm text-gray-400 mt-1">Data pendidikan formal akan ditampilkan di sini</p>
+                        {user.formalEducations && (
+                          <p className="text-xs text-red-400 mt-2">
+                            Debug: {JSON.stringify(user.formalEducations)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+                })()}
+              </CardContent>
+            </Card>            {/* Non-Formal Education */}
             <Card className="border-none shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
-                  Pendidikan Non-Formal
+                  Pendidikan Non-Formal & Sertifikasi
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {user.nonFormalEducations && user.nonFormalEducations.length > 0 ? (
-                  <div className="space-y-4">
-                    {(user.nonFormalEducations as NonFormalEducation[]).map((edu, index) => (
-                      <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <h4 className="font-semibold">{edu.name}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{edu.institution}</p>
-                        {edu.year && <p className="text-sm text-gray-500">{edu.year}</p>}
-                        {edu.description && <p className="text-sm mt-2">{edu.description}</p>}
+                {(() => {
+                  console.log('Checking nonFormalEducations:', user.nonFormalEducations);
+                  console.log('Type of nonFormalEducations:', typeof user.nonFormalEducations);
+                  console.log('Is array:', Array.isArray(user.nonFormalEducations));
+                  
+                  if (user.nonFormalEducations && Array.isArray(user.nonFormalEducations) && user.nonFormalEducations.length > 0) {
+                    return (
+                      <div className="space-y-4">
+                        {user.nonFormalEducations.map((edu, index) => (
+                          <div key={edu.id || index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border-l-4 border-green-500">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-semibold text-lg">{edu.name || 'Nama Pelatihan/Sertifikasi'}</h4>
+                              {edu.year && (
+                                <span className="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                                  Tahun: {edu.year}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-400 font-medium">
+                              {edu.institution || 'Institusi Penyelenggara'}
+                            </p>
+                            {edu.description && (
+                              <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                                <p className="text-sm">{edu.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">Belum ada data pendidikan non-formal</p>
-                )}
+                    );
+                  } else {
+                    return (
+                      <div className="text-center py-12">
+                        <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">Belum ada data pendidikan non-formal</p>
+                        <p className="text-sm text-gray-400 mt-1">Sertifikasi dan pelatihan akan ditampilkan di sini</p>
+                        {user.nonFormalEducations && (
+                          <p className="text-xs text-red-400 mt-2">
+                            Debug: {JSON.stringify(user.nonFormalEducations)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
@@ -664,26 +885,38 @@ const TimelineItem = ({ date, time, title, description, icon }: { date: string; 
 interface UserData {
   id?: number;
   fullName?: string;
+  username?: string;
   email?: string;
+  officeEmail?: string;
   phoneNumber?: string;
   position?: string;
+  jobTitle?: string;
   divisionId?: string | number;
-  jobLevel?: string;
+  division?: { id: number; name: string };
+  jobLevel?: string | number;
   nationalId?: string;
   address?: string;
   placeOfBirth?: string;
   dateOfBirth?: string;
   gender?: string;
+  role?: string;
+  employmentType?: string;
+  startDate?: string;
+  probationEndDate?: string;
+  contractEndDate?: string;
+  resignDate?: string;
+  isActive?: boolean;
+  isOnProbation?: boolean;
+  isResigned?: boolean;
+  profilePictureUrl?: string;
   motherName?: string;
   fatherName?: string;
   maritalStatus?: string;
   spouseName?: string;
   childrenNames?: string[];
-  lastEducation?: string;
-  facultyName?: string;
-  majorName?: string;
-  graduationYear?: number;
-  gpa?: string;
+  interests?: string[];
+  skills?: string[];
+  languages?: string[];
   identityCard?: string;
   taxNumber?: string;
   drivingLicense?: string;
@@ -709,8 +942,8 @@ interface UserData {
   twitter?: string;
   linkedin?: string;
   tiktok?: string;
+  formalEducations?: FormalEducation[];
   nonFormalEducations?: NonFormalEducation[];
-  officeEmail?: string;
 }
 
 const DetailSection = ({ title, icon, fields, user, formatFieldName, formatFieldValue }: {
@@ -719,9 +952,12 @@ const DetailSection = ({ title, icon, fields, user, formatFieldName, formatField
   fields: string[];
   user: UserData;
   formatFieldName: (key: string) => string;
-  formatFieldValue: (key: string, value: string | number | string[] | NonFormalEducation[] | null | undefined) => string;
+  formatFieldValue: (key: string, value: string | number | string[] | FormalEducation[] | NonFormalEducation[] | boolean | { id: number; name: string } | null | undefined) => string;
 }) => {
-  const visibleFields = fields.filter((key) => user[key as keyof typeof user] !== undefined);
+  const visibleFields = fields.filter((key) => {
+    const value = user[key as keyof typeof user];
+    return value !== undefined && value !== null && value !== "";
+  });
   
   if (visibleFields.length === 0) return null;
 

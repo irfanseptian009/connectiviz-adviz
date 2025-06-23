@@ -12,7 +12,7 @@ import { RiDeleteBin5Line, RiEditLine } from "react-icons/ri";
 import { User } from "@/types/employee";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Mail, Phone, Building } from "lucide-react";
+import { Eye, Mail, Phone, Building, CheckCircle, XCircle } from "lucide-react";
 
 type Props = {
   data: User[];
@@ -46,20 +46,29 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
     }
   };
 
+  const getStatusColor = (isActive: boolean) => {
+    return isActive 
+      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+  };
+
   return (
     <div className="overflow-hidden">
       <div className="overflow-x-auto">
         <Table className="text-sm">
           <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
             <TableRow className="hover:bg-transparent">
-              <TableCell isHeader className="w-[280px] p-4 font-semibold text-gray-700 dark:text-gray-300">
-                Employee
+              <TableCell isHeader className="w-[320px] p-4 font-semibold text-gray-700 dark:text-gray-300">
+                Employee Information
               </TableCell>
               <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-300">
-                Contact
+                Position
               </TableCell>
               <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-300">
                 Role
+              </TableCell>
+              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-300">
+                Status
               </TableCell>
               <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-300 text-center">
                 Actions
@@ -69,7 +78,8 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
 
           <TableBody>
             {(data?.length ?? 0) > 0 ? (
-              data.map((user) => (                <tr 
+              data.map((user) => (
+                <tr 
                   key={user.id} 
                   className={`
                     transition-all duration-200 border-b border-gray-100 dark:border-gray-800
@@ -81,13 +91,13 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                   onMouseEnter={() => setHoveredRow(user.id)}
                   onMouseLeave={() => setHoveredRow(null)}
                 >
-                  {/* Employee Info Column */}
+                  {/* Employee Information Column */}
                   <TableCell className="p-4">
                     <button
                       onClick={() => onView(user.id)}
                       className={`
-                        flex items-center gap-3 w-full text-left group
-                        transition-all duration-200 rounded-lg p-2 -m-2
+                        flex items-center gap-4 w-full text-left group
+                        transition-all duration-200 rounded-lg p-3 -m-3
                         ${hoveredRow === user.id 
                           ? 'bg-white dark:bg-gray-800 shadow-md scale-[1.02]' 
                           : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm'
@@ -96,33 +106,47 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                     >
                       {/* Avatar */}
                       <div className={`
-                        flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
+                        flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center
                         font-semibold text-sm transition-all duration-200
                         ${hoveredRow === user.id 
                           ? 'bg-blue-600 text-white shadow-lg' 
                           : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
                         }
                       `}>
-                        {getInitials(user.name || user.fullName || '')}
+                        {getInitials(user.fullName || '')}
                       </div>
                       
                       {/* User Info */}
                       <div className="flex-1 min-w-0">
                         <div className={`
-                          font-semibold transition-colors duration-200
+                          font-semibold text-base transition-colors duration-200 mb-1
                           ${hoveredRow === user.id 
                             ? 'text-blue-600 dark:text-blue-400' 
                             : 'text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400'
                           }
                         `}>
-                          {user.name || user.fullName || 'No Name'}
+                          {user.fullName || 'No Name'}
                         </div>
-                        {user.position && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                        
+                        {user.jobTitle && (
+                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1">
                             <Building className="h-3 w-3" />
-                            {user.position}
+                            {user.jobTitle}
                           </div>
                         )}
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <Mail className="h-3 w-3" />
+                            <span className="truncate">{user.email || 'No email'}</span>
+                          </div>
+                          {user.phoneNumber && (
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <Phone className="h-3 w-3" />
+                              {user.phoneNumber}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* View Icon */}
@@ -138,19 +162,13 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                     </button>
                   </TableCell>
 
-                  {/* Contact Column */}
+                  {/* Position Column */}
                   <TableCell className="p-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        {user.email || '-'}
-                      </div>
-                      {user.phoneNumber && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                          <Phone className="h-3 w-3" />
-                          {user.phoneNumber}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-900 dark:text-gray-100">
+                        {user.position || 'Not Assigned'}
+                      </span>
                     </div>
                   </TableCell>
 
@@ -161,6 +179,26 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                       className={`text-xs font-medium ${getRoleColor(user.role)}`}
                     >
                       {user.role?.replace('_', ' ') || 'No Role'}
+                    </Badge>
+                  </TableCell>
+
+                  {/* Status Column */}
+                  <TableCell className="p-4">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs font-medium flex items-center gap-1 w-fit ${getStatusColor(user.isActive !== false)}`}
+                    >
+                      {user.isActive !== false ? (
+                        <>
+                          <CheckCircle className="h-3 w-3" />
+                          Active
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-3 w-3" />
+                          Inactive
+                        </>
+                      )}
                     </Badge>
                   </TableCell>
 
@@ -195,7 +233,7 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                         variant="ghost"
                         size="sm"
                         onClick={() => onDelete(user.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:hover:text-red-300"
+                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:text-red-300"
                         title="Delete Employee"
                       >
                         <RiDeleteBin5Line className="h-4 w-4" />
@@ -206,7 +244,7 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
               ))
             ) : (
               <TableRow>
-                <td colSpan={4} className="text-center py-12">
+                <td colSpan={5} className="text-center py-12">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                       <Building className="h-8 w-8 text-gray-400" />

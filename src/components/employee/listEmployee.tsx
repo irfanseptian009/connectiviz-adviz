@@ -71,10 +71,18 @@ const handleSave = async () => {
 
   try {
     const normalized = normalizeEmployee(editData);           
+    console.log('Normalized data being sent:', normalized);
     const validated = employeeUpdateSchema.parse(normalized);
+    console.log('Validated data:', validated);
+    
+    // Filter out fields that shouldn't be sent to the backend
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id,  ...updateFields } = validated;
+    
     const payload = Object.fromEntries(
-      Object.entries(validated).map(([key, value]) => [key, value === null ? undefined : value])
+      Object.entries(updateFields).map(([key, value]) => [key, value === null ? undefined : value])
     );
+    console.log('Final payload:', payload);
 
     await dispatch(editUser({ id: validated.id, payload })).unwrap();
     await dispatch(fetchUsers());       
@@ -82,6 +90,7 @@ const handleSave = async () => {
     toast.success("Data karyawan berhasil diperbarui");
     setEditOpen(false);
   } catch (err: unknown) {
+    console.error('Error in handleSave:', err);
     if (err && typeof err === 'object' && 'errors' in err) {
       const obj: Record<string,string> = {};
       const zodErr = err as { errors: Array<{ path: string[], message: string }> };
@@ -184,13 +193,13 @@ const handleSave = async () => {
                 Export
               </Button>
               <Button
-  size="sm"
-  className="gap-2 bg-blue-600 hover:bg-blue-700"
-  onClick={() => router.push("/form-elements")}
->
-  <UserPlus className="h-4 w-4" />
-  Add Employee
-</Button>
+                size="sm"
+                className="gap-2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => router.push("/form-elements")}
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Employee
+              </Button>
 
             </div>
           </div>
@@ -327,3 +336,5 @@ const handleSave = async () => {
 }
 
 export default withAuth(ListEmployee);
+
+

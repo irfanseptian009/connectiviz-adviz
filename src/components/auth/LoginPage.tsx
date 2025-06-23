@@ -23,7 +23,7 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('https://connectiviz-be.vercel.app/api/auth/login', {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         email,
         password,
       });
@@ -49,9 +49,7 @@ const LoginPage = () => {
             <div>
               <h2 className="text-gray-800 w-full text-3xl font-extralight mb-2">Let&lsquo;s Setup your Operating Agreement</h2>
               <p className="text-blue-800 mt-3 font-light w-96 mb-3">Providing strategic guidance and support to help you thrive.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-2 w-80">
+            </div>            <form onSubmit={handleSubmit} className="mt-2 w-80" suppressHydrationWarning>
               <div className="mb-4">
                 <input
                   type="email"
@@ -60,6 +58,7 @@ const LoginPage = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 bg-white text-gray-500 py-2 rounded-lg border shadow-2xl border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
                   required
+                  suppressHydrationWarning
                 />
               </div>
 
@@ -71,11 +70,13 @@ const LoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 bg-white text-gray-500 rounded-lg border shadow-2xl border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
                   required
+                  suppressHydrationWarning
                 />
                 <button
                   type="button"
                   className="absolute right-3 top-3 text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
+                  suppressHydrationWarning
                 >
                   {showPassword ? <EyeCloseIcon size={20} /> : <EyeIcon size={20} />}
                 </button>
@@ -90,6 +91,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 className="w-full py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                suppressHydrationWarning
               >
                 Sign In
               </button>

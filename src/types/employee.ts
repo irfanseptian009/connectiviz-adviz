@@ -4,16 +4,36 @@ export enum Role {
   EMPLOYEE = "EMPLOYEE",
 }
 
+export enum EmploymentType {
+  INTERNSHIP = "INTERNSHIP",
+  PROBATION = "PROBATION", 
+  CONTRACT = "CONTRACT",
+  PERMANENT = "PERMANENT",
+}
+
+export interface FormalEducation {
+  id?: number;
+  level: string;
+  schoolName: string;
+  major?: string;
+  yearGraduate?: number;
+  gpa?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface NonFormalEducation {
+  id?: number;
   name: string;
   institution: string;
-  year: number;
+  year?: number;
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface User {
   id: number;
-  name: string;
   role?: Role;
   email: string;
   password?: string;
@@ -26,27 +46,40 @@ export interface User {
   gender?: string;
   phoneNumber?: string;
   officeEmail?: string;
-  // Relation
+
+  // Jabatan & Level Jabatan
+  position?: string;
+  jobTitle?: string;
+  jobLevel?: number;
+  employmentType?: EmploymentType;
+  startDate?: string;
+  probationEndDate?: string;
+  contractEndDate?: string;
+  resignDate?: string;
+
+  isActive?: boolean;
+  isOnProbation?: boolean;
+  isResigned?: boolean;
+
+  // Relasi Division
   divisionId?: number;
-  businessUnitId?: number;
-  // Job data
-  position?: string;         
-  jobLevel?: string;
+  division?: Division;
+
   // Family data
   motherName?: string;
   fatherName?: string;
   maritalStatus?: string;
   spouseName?: string;
   childrenNames?: string[];
+
   // Education
-  lastEducation?: string;
-  facultyName?: string;
-  graduationYear?: number;     
-  majorName?: string;
-  gpa?: string;
-  // Non-formal education
+  formalEducations?: FormalEducation[];
   nonFormalEducations?: NonFormalEducation[];
-  // Documents
+
+  // Interest & skills
+  interests?: string[];
+  skills?: string[];
+  languages?: string[];  // Documents
   identityCard?: string;
   taxNumber?: string;
   drivingLicense?: string;
@@ -56,26 +89,32 @@ export interface User {
   insuranceNumber?: string;
   policyNumber?: string;
   ptkpStatus?: string;
+
   // Emergency Contact
   emergencyContactName?: string;
   emergencyContactRelation?: string;
   emergencyContactPhone?: string;
+
   // Bank
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountName?: string;
+
   // Social Media
   instagram?: string;
   facebook?: string;
   twitter?: string;
   linkedin?: string;
   tiktok?: string;
+
   // Health
   bloodType?: string;
   medicalHistory?: string;
   allergies?: string;
   height?: number;
   weight?: number;
+  profilePictureUrl?: string;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -93,7 +132,22 @@ export interface Employee {
 export interface Division {
   id: number;
   name: string;
+  businessUnitId: number;
+  businessUnit?: BusinessUnit;
+  parentId?: number;
+  parent?: Division;
   subDivisions?: Division[];
+  users?: User[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BusinessUnit {
+  id: number;
+  name: string;
+  divisions?: Division[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EditEmployeeModalProps {
@@ -106,11 +160,4 @@ export interface EditEmployeeModalProps {
   handleSave: () => void;
   selectedTab: number;
   setSelectedTab: (tab: number) => void;
-}
-
-export interface NonFormalEducation {
-  name: string;
-  institution: string;
-  year: number;
-  description?: string;
 }

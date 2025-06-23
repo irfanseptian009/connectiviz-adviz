@@ -16,6 +16,7 @@ interface AuthCtx {
   user: User | null;
   login: (tok: string) => Promise<void>;
   logout: () => void;
+  isInitialized: boolean;
 }
 
 export const AuthContext = createContext<AuthCtx | null>(null);
@@ -29,17 +30,24 @@ export const useAuth = (): AuthCtx => {
 };
 
 export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => getToken());
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize token after component mounts to avoid hydration mismatch
+  useEffect(() => {
+    const storedToken = getToken();
+    setToken(storedToken);
+    setIsInitialized(true);
+  }, []);
 
   const logout = () => {
     persistToken(null);
     setToken(null);
     setUser(null);
   };
-
   useEffect(() => {
-    if (!token) {
+    if (!token || !isInitialized) {
       setUser(null);
       return;
     }
@@ -53,14 +61,14 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         logout();
       }
     })();
-  }, [token]);
+  }, [token, isInitialized]);
 
   const login = async (tok: string): Promise<void> => {
     persistToken(tok);
     setToken(tok);
   };
 
-  const value: AuthCtx = { token, user, login, logout };
+  const value: AuthCtx = { token, user, login, logout, isInitialized };
 
   return (
     <AuthContext.Provider value={value}>
@@ -72,19 +80,21 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 export const withAuth = <P extends object>(
   Component: React.ComponentType<P>
 ) => {
-  return function ProtectedPage(User: P) {
-    const { token } = useAuth();
-    const [ready, setReady] = useState(false);
+  return function ProtectedPage(props: P) {
+    const { token, isInitialized } = useAuth();
 
-    useEffect(() => setReady(true), []);
+    // Show loading until auth is initialized
+    if (!isInitialized) {
+      return <div>Loading...</div>;
+    }
 
-    if (!token && ready) {
+    if (!token) {
       if (typeof window !== "undefined") {
         window.location.replace("/signin");
       }
       return null;
     }
 
-    return <Component {...User} />;
+    return <Component {...props} />;
   };
 };

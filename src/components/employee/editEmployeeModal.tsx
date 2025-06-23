@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import { User, NonFormalEducation, EditEmployeeModalProps } from "@/types/employee";
+import { User, NonFormalEducation, EmploymentType, EditEmployeeModalProps } from "@/types/employee";
 import { fetchDivisionTree } from "@/store/divisionSlice";
 import { fetchBusinessUnits } from "@/store/businessUnitSlice";
 
@@ -17,13 +17,18 @@ export default function EditEmployeeModal({
   onClose,
   editData,
   setEditData,
+  formError,
+  setFormError,
   handleSave,
-}: EditEmployeeModalProps) {
-  const dispatch = useDispatch<AppDispatch>();
+  selectedTab,
+  setSelectedTab,
+}: EditEmployeeModalProps) {  const dispatch = useDispatch<AppDispatch>();
   const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
   const divisionTree = useSelector((state: RootState) => state.division.tree);
-  const [activeTab, setActiveTab] = useState("biodata");
   const [selectedBUId, setSelectedBUId] = useState<number | null>(null);
+  // Map selectedTab number to tab names
+  const tabNames = ["biodata", "employment", "family", "education", "documents", "contact", "social", "health"];
+  const activeTab = tabNames[selectedTab] || "biodata";
 
   useEffect(() => {
     if (businessUnits.length === 0) {
@@ -46,8 +51,7 @@ export default function EditEmployeeModal({
       }
     }
   }, [editData?.divisionId, businessUnits, divisionTree, dispatch]);
-
-  const handleChange = (field: keyof User, value: string | number | Date | null) => {
+  const handleChange = (field: keyof User, value: string | number | Date | boolean | null) => {
     setEditData({ ...editData!, [field]: value });
   };
 
@@ -95,6 +99,45 @@ export default function EditEmployeeModal({
     const updated = editData!.nonFormalEducations?.filter((_, i) => i !== index) || [];
     setEditData({ ...editData!, nonFormalEducations: updated });
   };
+  // Utility function to render input with error
+  const renderInputWithError = (
+    field: keyof User,
+    placeholder: string,
+    type: string = "text",
+    value?: string | number,
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  ) => (
+    <div className="space-y-1">
+      <Input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className={formError[field as string] ? "border-red-500" : ""}
+      />
+      {formError[field as string] && (
+        <p className="text-red-500 text-xs">{formError[field as string]}</p>
+      )}
+    </div>
+  );
+
+  // Basic validation function
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!editData?.username?.trim()) {
+      errors.username = "Username is required";
+    }
+    if (!editData?.email?.trim()) {
+      errors.email = "Email is required";
+    }
+    if (!editData?.fullName?.trim()) {
+      errors.fullName = "Full name is required";
+    }
+    
+    setFormError(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Get current divisions based on selected business unit
   const currentDivisions = selectedBUId ? divisionTree[selectedBUId] || [] : [];
@@ -103,14 +146,17 @@ export default function EditEmployeeModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl">        <DialogHeader>
           <DialogTitle>Edit Employee</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          const tabIndex = tabNames.indexOf(value);
+          if (tabIndex !== -1) setSelectedTab(tabIndex);
+        }} className="space-y-6">
+          <TabsList className="grid grid-cols-8 w-full">
             <TabsTrigger value="biodata">Data Diri</TabsTrigger>
+            <TabsTrigger value="employment">Pekerjaan</TabsTrigger>
             <TabsTrigger value="family">Keluarga</TabsTrigger>
             <TabsTrigger value="education">Pendidikan</TabsTrigger>
             <TabsTrigger value="documents">Dokumen</TabsTrigger>
@@ -122,49 +168,23 @@ export default function EditEmployeeModal({
           {/* Data Diri Tab */}
           <TabsContent value="biodata" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.username || ""} 
-                onChange={(e) => handleChange("username", e.target.value)} 
-                placeholder="Username" 
-              />
-              <Input 
-                value={editData.email || ""} 
-                onChange={(e) => handleChange("email", e.target.value)} 
-                placeholder="Email" 
-                type="email"
-              />
-              <Input 
-                value={editData.officeEmail || ""} 
-                onChange={(e) => handleChange("officeEmail", e.target.value)} 
-                placeholder="Email Kantor" 
-                type="email"
-              />
-              <Input 
-                value={editData.nationalId || ""} 
-                onChange={(e) => handleChange("nationalId", e.target.value)} 
-                placeholder="NIK" 
-              />
-              <Input 
-                value={editData.fullName || ""} 
-                onChange={(e) => handleChange("fullName", e.target.value)} 
-                placeholder="Nama Lengkap" 
-              />
-              <Input 
-                value={editData.phoneNumber || ""} 
-                onChange={(e) => handleChange("phoneNumber", e.target.value)} 
-                placeholder="No HP" 
-              />
-              <Input 
-                value={editData.placeOfBirth || ""} 
-                onChange={(e) => handleChange("placeOfBirth", e.target.value)} 
-                placeholder="Tempat Lahir" 
-              />
-              <Input 
-                type="date"
-                value={editData.dateOfBirth ? new Date(editData.dateOfBirth).toISOString().split('T')[0] : ""} 
-                onChange={(e) => handleChange("dateOfBirth", new Date(e.target.value))} 
-                placeholder="Tanggal Lahir" 
-              />
+              {renderInputWithError("username", "Username", "text", editData.username, (e) => handleChange("username", e.target.value))}
+              {renderInputWithError("email", "Email", "email", editData.email, (e) => handleChange("email", e.target.value))}
+              {renderInputWithError("officeEmail", "Email Kantor", "email", editData.officeEmail, (e) => handleChange("officeEmail", e.target.value))}
+              {renderInputWithError("nationalId", "NIK", "text", editData.nationalId, (e) => handleChange("nationalId", e.target.value))}
+              {renderInputWithError("fullName", "Nama Lengkap", "text", editData.fullName, (e) => handleChange("fullName", e.target.value))}
+              {renderInputWithError("phoneNumber", "No HP", "text", editData.phoneNumber, (e) => handleChange("phoneNumber", e.target.value))}
+              {renderInputWithError("placeOfBirth", "Tempat Lahir", "text", editData.placeOfBirth, (e) => handleChange("placeOfBirth", e.target.value))}              <div className="space-y-1">
+                <Input 
+                  type="date"
+                  value={editData.dateOfBirth ? new Date(editData.dateOfBirth).toISOString().split('T')[0] : ""} 
+                  onChange={(e) => handleChange("dateOfBirth", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)} 
+                  placeholder="Tanggal Lahir" 
+                />
+                {formError.dateOfBirth && (
+                  <p className="text-red-500 text-xs">{formError.dateOfBirth}</p>
+                )}
+              </div>
               <select
                 className="w-full px-3 py-2 border rounded-md"
                 value={editData.gender || ""}
@@ -183,25 +203,84 @@ export default function EditEmployeeModal({
                 <option value="ADMIN">Admin</option>
                 <option value="SUPER_ADMIN">Super Admin</option>
               </select>
-            </div>
-            <Textarea 
+            </div>            <Textarea 
               value={editData.address || ""} 
               onChange={(e) => handleChange("address", e.target.value)} 
               placeholder="Alamat" 
             />
-            
-            {/* Position & Job Level */}
+          </TabsContent>
+
+          {/* Employment Tab */}
+          <TabsContent value="employment" className="space-y-4">
+            <h3 className="text-lg font-semibold">Informasi Pekerjaan</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.position || ""} 
-                onChange={(e) => handleChange("position", e.target.value)} 
-                placeholder="Jabatan" 
+              {renderInputWithError("position", "Jabatan", "text", editData.position, (e) => handleChange("position", e.target.value))}
+              {renderInputWithError("jobTitle", "Judul Pekerjaan", "text", editData.jobTitle, (e) => handleChange("jobTitle", e.target.value))}
+              {renderInputWithError("jobLevel", "Level Jabatan", "number", editData.jobLevel, (e) => handleChange("jobLevel", Number(e.target.value)))}
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={editData.employmentType || ""}
+                onChange={(e) => handleChange("employmentType", e.target.value as EmploymentType)}
+              >
+                <option value="">Pilih Tipe Pekerjaan</option>
+                <option value="INTERNSHIP">Magang</option>
+                <option value="PROBATION">Probasi</option>
+                <option value="CONTRACT">Kontrak</option>
+                <option value="PERMANENT">Tetap</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">              <Input 
+                type="date"
+                value={editData.startDate ? new Date(editData.startDate).toISOString().split('T')[0] : ""} 
+                onChange={(e) => handleChange("startDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)} 
+                placeholder="Tanggal Mulai Bekerja" 
               />
               <Input 
-                value={editData.jobLevel || ""} 
-                onChange={(e) => handleChange("jobLevel", e.target.value)} 
-                placeholder="Level Jabatan" 
+                type="date"
+                value={editData.probationEndDate ? new Date(editData.probationEndDate).toISOString().split('T')[0] : ""} 
+                onChange={(e) => handleChange("probationEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)} 
+                placeholder="Tanggal Selesai Probasi" 
               />
+              <Input 
+                type="date"
+                value={editData.contractEndDate ? new Date(editData.contractEndDate).toISOString().split('T')[0] : ""} 
+                onChange={(e) => handleChange("contractEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)} 
+                placeholder="Tanggal Selesai Kontrak" 
+              />
+              <Input 
+                type="date"
+                value={editData.resignDate ? new Date(editData.resignDate).toISOString().split('T')[0] : ""} 
+                onChange={(e) => handleChange("resignDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)} 
+                placeholder="Tanggal Resign" 
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={editData.isActive || false}
+                  onChange={(e) => handleChange("isActive", e.target.checked)}
+                />
+                <span>Aktif</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={editData.isOnProbation || false}
+                  onChange={(e) => handleChange("isOnProbation", e.target.checked)}
+                />
+                <span>Sedang Probasi</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={editData.isResigned || false}
+                  onChange={(e) => handleChange("isResigned", e.target.checked)}
+                />
+                <span>Sudah Resign</span>
+              </label>
             </div>
 
             {/* Business Unit & Division Selection */}
@@ -233,16 +312,8 @@ export default function EditEmployeeModal({
           {/* Family Tab */}
           <TabsContent value="family" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.motherName || ""} 
-                onChange={(e) => handleChange("motherName", e.target.value)} 
-                placeholder="Nama Ibu" 
-              />
-              <Input 
-                value={editData.fatherName || ""} 
-                onChange={(e) => handleChange("fatherName", e.target.value)} 
-                placeholder="Nama Ayah" 
-              />
+              {renderInputWithError("motherName", "Nama Ibu", "text", editData.motherName, (e) => handleChange("motherName", e.target.value))}
+              {renderInputWithError("fatherName", "Nama Ayah", "text", editData.fatherName, (e) => handleChange("fatherName", e.target.value))}
               <select
                 className="w-full px-3 py-2 border rounded-md"
                 value={editData.maritalStatus || ""}
@@ -254,11 +325,7 @@ export default function EditEmployeeModal({
                 <option value="Cerai">Cerai</option>
                 <option value="Janda/Duda">Janda/Duda</option>
               </select>
-              <Input 
-                value={editData.spouseName || ""} 
-                onChange={(e) => handleChange("spouseName", e.target.value)} 
-                placeholder="Nama Pasangan" 
-              />
+              {renderInputWithError("spouseName", "Nama Pasangan", "text", editData.spouseName, (e) => handleChange("spouseName", e.target.value))}
             </div>
             
             <div className="space-y-2">
@@ -277,126 +344,183 @@ export default function EditEmployeeModal({
               ))}
               <Button onClick={() => addArrayItem("childrenNames")}>Tambah Anak</Button>
             </div>
-          </TabsContent>
-
-          {/* Education Tab */}
+          </TabsContent>          {/* Education Tab */}
           <TabsContent value="education" className="space-y-4">
-            <h3 className="text-lg font-semibold">Pendidikan Formal</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.lastEducation || ""} 
-                onChange={(e) => handleChange("lastEducation", e.target.value)} 
-                placeholder="Pendidikan Terakhir" 
-              />
-              <Input 
-                value={editData.facultyName || ""} 
-                onChange={(e) => handleChange("facultyName", e.target.value)} 
-                placeholder="Fakultas" 
-              />
-              <Input 
-                value={editData.majorName || ""} 
-                onChange={(e) => handleChange("majorName", e.target.value)} 
-                placeholder="Jurusan" 
-              />
-              <Input 
-                type="number"
-                value={editData.graduationYear || ""} 
-                onChange={(e) => handleChange("graduationYear", Number(e.target.value))} 
-                placeholder="Tahun Lulus" 
-              />
-              <Input 
-                type="number"
-                step="0.01"
-                value={editData.gpa || ""} 
-                onChange={(e) => handleChange("gpa", Number(e.target.value))} 
-                placeholder="IPK" 
-              />
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold">Pendidikan Non Formal</h4>
-              {(editData.nonFormalEducations || []).map((edu, i) => (
-                <div key={i} className="space-y-2 border rounded p-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="Nama Pendidikan" value={edu.name} onChange={(e) => handleNFChange(i, 'name', e.target.value)} />
-                    <Input placeholder="Lembaga" value={edu.institution} onChange={(e) => handleNFChange(i, 'institution', e.target.value)} />
-                    <Input placeholder="Tahun" type="number" value={edu.year || ''} onChange={(e) => handleNFChange(i, 'year', Number(e.target.value))} />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Pendidikan Formal</h3>
+                {(editData.formalEducations || []).map((edu, i) => (
+                  <div key={i} className="space-y-2 border rounded p-4 mb-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input 
+                        placeholder="Tingkat Pendidikan (SD/SMP/SMA/D3/S1/S2/S3)" 
+                        value={edu.level || ''} 
+                        onChange={(e) => {
+                          const list = [...(editData.formalEducations || [])];
+                          list[i] = { ...list[i], level: e.target.value };
+                          setEditData({ ...editData!, formalEducations: list });
+                        }} 
+                      />
+                      <Input 
+                        placeholder="Nama Sekolah/Universitas" 
+                        value={edu.schoolName || ''} 
+                        onChange={(e) => {
+                          const list = [...(editData.formalEducations || [])];
+                          list[i] = { ...list[i], schoolName: e.target.value };
+                          setEditData({ ...editData!, formalEducations: list });
+                        }} 
+                      />
+                      <Input 
+                        placeholder="Jurusan/Program Studi" 
+                        value={edu.major || ''} 
+                        onChange={(e) => {
+                          const list = [...(editData.formalEducations || [])];
+                          list[i] = { ...list[i], major: e.target.value };
+                          setEditData({ ...editData!, formalEducations: list });
+                        }} 
+                      />
+                      <Input 
+                        placeholder="Tahun Lulus" 
+                        type="number" 
+                        value={edu.yearGraduate || ''} 
+                        onChange={(e) => {
+                          const list = [...(editData.formalEducations || [])];
+                          list[i] = { ...list[i], yearGraduate: Number(e.target.value) };
+                          setEditData({ ...editData!, formalEducations: list });
+                        }} 
+                      />
+                      <Input 
+                        placeholder="IPK/Nilai" 
+                        type="number" 
+                        step="0.01"
+                        value={edu.gpa || ''} 
+                        onChange={(e) => {
+                          const list = [...(editData.formalEducations || [])];
+                          list[i] = { ...list[i], gpa: Number(e.target.value) };
+                          setEditData({ ...editData!, formalEducations: list });
+                        }} 
+                      />
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => {
+                        const updated = editData!.formalEducations?.filter((_, index) => index !== i) || [];
+                        setEditData({ ...editData!, formalEducations: updated });
+                      }}
+                    >
+                      Hapus
+                    </Button>
                   </div>
-                  <Textarea placeholder="Deskripsi" value={edu.description || ''} onChange={(e) => handleNFChange(i, 'description', e.target.value)} />
-                  <Button variant="destructive" onClick={() => removeNF(i)}>Hapus</Button>
+                ))}
+                <Button 
+                  onClick={() => {
+                    const updated = [...(editData?.formalEducations || []), { 
+                      level: '', 
+                      schoolName: '', 
+                      major: '', 
+                      yearGraduate: 0, 
+                      gpa: 0 
+                    }];
+                    setEditData({ ...editData!, formalEducations: updated });
+                  }}
+                >
+                  Tambah Pendidikan Formal
+                </Button>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Pendidikan Non Formal</h3>
+                {(editData.nonFormalEducations || []).map((edu, i) => (
+                  <div key={i} className="space-y-2 border rounded p-4 mb-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="Nama Pendidikan" value={edu.name} onChange={(e) => handleNFChange(i, 'name', e.target.value)} />
+                      <Input placeholder="Lembaga" value={edu.institution} onChange={(e) => handleNFChange(i, 'institution', e.target.value)} />
+                      <Input placeholder="Tahun" type="number" value={edu.year || ''} onChange={(e) => handleNFChange(i, 'year', Number(e.target.value))} />
+                    </div>
+                    <Textarea placeholder="Deskripsi" value={edu.description || ''} onChange={(e) => handleNFChange(i, 'description', e.target.value)} />
+                    <Button variant="destructive" onClick={() => removeNF(i)}>Hapus</Button>
+                  </div>
+                ))}
+                <Button onClick={addNF}>Tambah Pendidikan Non Formal</Button>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Minat & Kemampuan</h3>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Minat</h4>
+                    {(editData.interests || []).map((interest, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input 
+                          value={interest} 
+                          onChange={(e) => handleArrayChange("interests", i, e.target.value)} 
+                          placeholder={`Minat ${i + 1}`} 
+                        />
+                        <Button variant="destructive" onClick={() => removeArrayItem("interests", i)}>
+                          Hapus
+                        </Button>
+                      </div>
+                    ))}
+                    <Button onClick={() => addArrayItem("interests")}>Tambah Minat</Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Kemampuan</h4>
+                    {(editData.skills || []).map((skill, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input 
+                          value={skill} 
+                          onChange={(e) => handleArrayChange("skills", i, e.target.value)} 
+                          placeholder={`Kemampuan ${i + 1}`} 
+                        />
+                        <Button variant="destructive" onClick={() => removeArrayItem("skills", i)}>
+                          Hapus
+                        </Button>
+                      </div>
+                    ))}
+                    <Button onClick={() => addArrayItem("skills")}>Tambah Kemampuan</Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Bahasa</h4>
+                    {(editData.languages || []).map((language, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Input 
+                          value={language} 
+                          onChange={(e) => handleArrayChange("languages", i, e.target.value)} 
+                          placeholder={`Bahasa ${i + 1}`} 
+                        />
+                        <Button variant="destructive" onClick={() => removeArrayItem("languages", i)}>
+                          Hapus
+                        </Button>
+                      </div>
+                    ))}
+                    <Button onClick={() => addArrayItem("languages")}>Tambah Bahasa</Button>
+                  </div>
                 </div>
-              ))}
-              <Button onClick={addNF}>Tambah Pendidikan Non Formal</Button>
+              </div>
             </div>
           </TabsContent>
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.identityCard || ""} 
-                onChange={(e) => handleChange("identityCard", e.target.value)} 
-                placeholder="KTP" 
-              />
-              <Input 
-                value={editData.taxNumber || ""} 
-                onChange={(e) => handleChange("taxNumber", e.target.value)} 
-                placeholder="NPWP" 
-              />
-              <Input 
-                value={editData.drivingLicense || ""} 
-                onChange={(e) => handleChange("drivingLicense", e.target.value)} 
-                placeholder="SIM" 
-              />
-              <Input 
-                value={editData.bpjsHealth || ""} 
-                onChange={(e) => handleChange("bpjsHealth", e.target.value)} 
-                placeholder="BPJS Kesehatan" 
-              />
-              <Input 
-                value={editData.bpjsEmployment || ""} 
-                onChange={(e) => handleChange("bpjsEmployment", e.target.value)} 
-                placeholder="BPJS Ketenagakerjaan" 
-              />
-              <Input 
-                value={editData.insuranceCompany || ""} 
-                onChange={(e) => handleChange("insuranceCompany", e.target.value)} 
-                placeholder="Perusahaan Asuransi" 
-              />
-              <Input 
-                value={editData.insuranceNumber || ""} 
-                onChange={(e) => handleChange("insuranceNumber", e.target.value)} 
-                placeholder="Nomor Asuransi" 
-              />
-              <Input 
-                value={editData.policyNumber || ""} 
-                onChange={(e) => handleChange("policyNumber", e.target.value)} 
-                placeholder="Nomor Polis" 
-              />
-              <Input 
-                value={editData.ptkpStatus || ""} 
-                onChange={(e) => handleChange("ptkpStatus", e.target.value)} 
-                placeholder="Status PTKP" 
-              />
+              {renderInputWithError("identityCard", "KTP", "text", editData.identityCard, (e) => handleChange("identityCard", e.target.value))}
+              {renderInputWithError("taxNumber", "NPWP", "text", editData.taxNumber, (e) => handleChange("taxNumber", e.target.value))}
+              {renderInputWithError("drivingLicense", "SIM", "text", editData.drivingLicense, (e) => handleChange("drivingLicense", e.target.value))}
+              {renderInputWithError("bpjsHealth", "BPJS Kesehatan", "text", editData.bpjsHealth, (e) => handleChange("bpjsHealth", e.target.value))}
+              {renderInputWithError("bpjsEmployment", "BPJS Ketenagakerjaan", "text", editData.bpjsEmployment, (e) => handleChange("bpjsEmployment", e.target.value))}
+              {renderInputWithError("insuranceCompany", "Perusahaan Asuransi", "text", editData.insuranceCompany, (e) => handleChange("insuranceCompany", e.target.value))}
+              {renderInputWithError("insuranceNumber", "Nomor Asuransi", "text", editData.insuranceNumber, (e) => handleChange("insuranceNumber", e.target.value))}
+              {renderInputWithError("policyNumber", "Nomor Polis", "text", editData.policyNumber, (e) => handleChange("policyNumber", e.target.value))}
+              {renderInputWithError("ptkpStatus", "Status PTKP", "text", editData.ptkpStatus, (e) => handleChange("ptkpStatus", e.target.value))}
             </div>
 
             <h4 className="text-lg font-semibold">Informasi Bank</h4>
             <div className="grid grid-cols-3 gap-4">
-              <Input 
-                value={editData.bankName || ""} 
-                onChange={(e) => handleChange("bankName", e.target.value)} 
-                placeholder="Nama Bank" 
-              />
-              <Input 
-                value={editData.bankAccountNumber || ""} 
-                onChange={(e) => handleChange("bankAccountNumber", e.target.value)} 
-                placeholder="Nomor Rekening" 
-              />
-              <Input 
-                value={editData.bankAccountName || ""} 
-                onChange={(e) => handleChange("bankAccountName", e.target.value)} 
-                placeholder="Nama Pemilik Rekening" 
-              />
+              {renderInputWithError("bankName", "Nama Bank", "text", editData.bankName, (e) => handleChange("bankName", e.target.value))}
+              {renderInputWithError("bankAccountNumber", "Nomor Rekening", "text", editData.bankAccountNumber, (e) => handleChange("bankAccountNumber", e.target.value))}
+              {renderInputWithError("bankAccountName", "Nama Pemilik Rekening", "text", editData.bankAccountName, (e) => handleChange("bankAccountName", e.target.value))}
             </div>
           </TabsContent>
 
@@ -404,21 +528,9 @@ export default function EditEmployeeModal({
           <TabsContent value="contact" className="space-y-4">
             <h4 className="text-lg font-semibold">Kontak Darurat</h4>
             <div className="grid grid-cols-3 gap-4">
-              <Input 
-                value={editData.emergencyContactName || ""} 
-                onChange={(e) => handleChange("emergencyContactName", e.target.value)} 
-                placeholder="Nama Kontak Darurat" 
-              />
-              <Input 
-                value={editData.emergencyContactRelation || ""} 
-                onChange={(e) => handleChange("emergencyContactRelation", e.target.value)} 
-                placeholder="Hubungan" 
-              />
-              <Input 
-                value={editData.emergencyContactPhone || ""} 
-                onChange={(e) => handleChange("emergencyContactPhone", e.target.value)} 
-                placeholder="No HP Darurat" 
-              />
+              {renderInputWithError("emergencyContactName", "Nama Kontak Darurat", "text", editData.emergencyContactName, (e) => handleChange("emergencyContactName", e.target.value))}
+              {renderInputWithError("emergencyContactRelation", "Hubungan", "text", editData.emergencyContactRelation, (e) => handleChange("emergencyContactRelation", e.target.value))}
+              {renderInputWithError("emergencyContactPhone", "No HP Darurat", "text", editData.emergencyContactPhone, (e) => handleChange("emergencyContactPhone", e.target.value))}
             </div>
           </TabsContent>
 
@@ -426,31 +538,11 @@ export default function EditEmployeeModal({
           <TabsContent value="social" className="space-y-4">
             <h4 className="text-lg font-semibold">Media Sosial</h4>
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                value={editData.instagram || ""} 
-                onChange={(e) => handleChange("instagram", e.target.value)} 
-                placeholder="Instagram" 
-              />
-              <Input 
-                value={editData.facebook || ""} 
-                onChange={(e) => handleChange("facebook", e.target.value)} 
-                placeholder="Facebook" 
-              />
-              <Input 
-                value={editData.twitter || ""} 
-                onChange={(e) => handleChange("twitter", e.target.value)} 
-                placeholder="Twitter" 
-              />
-              <Input 
-                value={editData.linkedin || ""} 
-                onChange={(e) => handleChange("linkedin", e.target.value)} 
-                placeholder="LinkedIn" 
-              />
-              <Input 
-                value={editData.tiktok || ""} 
-                onChange={(e) => handleChange("tiktok", e.target.value)} 
-                placeholder="TikTok" 
-              />
+              {renderInputWithError("instagram", "Instagram", "text", editData.instagram, (e) => handleChange("instagram", e.target.value))}
+              {renderInputWithError("facebook", "Facebook", "text", editData.facebook, (e) => handleChange("facebook", e.target.value))}
+              {renderInputWithError("twitter", "Twitter", "text", editData.twitter, (e) => handleChange("twitter", e.target.value))}
+              {renderInputWithError("linkedin", "LinkedIn", "text", editData.linkedin, (e) => handleChange("linkedin", e.target.value))}
+              {renderInputWithError("tiktok", "TikTok", "text", editData.tiktok, (e) => handleChange("tiktok", e.target.value))}
             </div>
           </TabsContent>
 
@@ -494,9 +586,11 @@ export default function EditEmployeeModal({
               placeholder="Alergi" 
             />
           </TabsContent>
-        </Tabs>
-
-        <Button className="w-full mt-4" onClick={handleSave}>
+        </Tabs>        <Button className="w-full mt-4" onClick={() => {
+          if (validateForm()) {
+            handleSave();
+          }
+        }}>
           Simpan Perubahan
         </Button>
       </DialogContent>

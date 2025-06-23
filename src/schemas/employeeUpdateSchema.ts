@@ -1,21 +1,20 @@
 import { z } from 'zod';
+import { formalEducationSchema, nonFormalEducationSchema } from './employee';
 
 export const employeeUpdateSchema = z.object({
   id: z.number(),
 
   // Auth
-  username: z.string().min(1, 'Username wajib diisi'),
-  email: z.string().email('Email tidak valid'),
-
-  // Optional personal details
-  fullName: z.string().optional(),
-  nationalId: z.string().optional(),
-  address: z.string().optional(),
-  placeOfBirth: z.string().optional(),
-  gender: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  officeEmail: z.string().optional(),
-
+  username: z.string().min(1, 'Username wajib diisi').optional(),
+  email: z.string().email('Email tidak valid').optional(),
+  // Personal details
+  fullName: z.string().optional().nullable(),
+  nationalId: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  placeOfBirth: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  phoneNumber: z.string().optional().nullable(),
+  officeEmail: z.string().optional().nullable(),
   dateOfBirth: z
     .string()
     .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
@@ -23,79 +22,92 @@ export const employeeUpdateSchema = z.object({
     })
     .optional()
     .or(z.null()),
-
-  // Jabatan
-  position: z.string().optional(),
-  jobLevel: z.string().optional(),
-
-  divisionId: z.number().optional().nullable(),
-
-  // Family
-  motherName: z.string().optional(),
-  fatherName: z.string().optional(),
-  maritalStatus: z.string().optional(),
-  spouseName: z.string().optional(),
-
-  childrenNames: z.array(z.string()).optional().nullable(),
-
-  // Education
-  lastEducation: z.string().optional(),
-  facultyName: z.string().optional(),
-  majorName: z.string().optional(),
-  graduationYear: z.number().optional().or(z.null()),
-
-  gpa: z
+  // Jabatan & Level Jabatan
+  position: z.string().optional().nullable(),
+  jobTitle: z.string().optional().nullable(),
+  jobLevel: z.number().optional().nullable(),
+  employmentType: z.enum(['INTERNSHIP', 'PROBATION', 'CONTRACT', 'PERMANENT']).optional().nullable(),
+  startDate: z
     .string()
-    .refine((val) => !val || !isNaN(parseFloat(val)), {
-      message: 'GPA harus berupa angka',
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
     })
     .optional()
     .or(z.null()),
+  probationEndDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  contractEndDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  resignDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  isActive: z.boolean().optional().nullable(),
+  isOnProbation: z.boolean().optional().nullable(),
+  isResigned: z.boolean().optional().nullable(),
 
-  // Nested NonFormalEducation
-  nonFormalEducations: z
-    .array(
-      z.object({
-        name: z.string().min(1, 'Nama pelatihan wajib'),
-        institution: z.string().min(1, 'Lembaga wajib'),
-        year: z.number().optional(),
-        description: z.string().optional(),
-      })
-    )
-    .optional(),
+  divisionId: z.number().optional().nullable(),
+  // Family
+  motherName: z.string().optional().nullable(),
+  fatherName: z.string().optional().nullable(),
+  maritalStatus: z.string().optional().nullable(),
+  spouseName: z.string().optional().nullable(),
+  childrenNames: z.array(z.string()).optional().nullable(),
 
+  // Education - New Structure
+  formalEducations: z.array(formalEducationSchema).optional().nullable(),
+  nonFormalEducations: z.array(nonFormalEducationSchema).optional().nullable(),
+
+  // Interest & Skills
+  interests: z.array(z.string()).optional().nullable(),
+  skills: z.array(z.string()).optional().nullable(),
+  languages: z.array(z.string()).optional().nullable(),
   // Documents
-  identityCard: z.string().optional(),
-  taxNumber: z.string().optional(),
-  drivingLicense: z.string().optional(),
-  bpjsHealth: z.string().optional(),
-  bpjsEmployment: z.string().optional(),
-  insuranceCompany: z.string().optional(),
-  insuranceNumber: z.string().optional(),
-  policyNumber: z.string().optional(),
-  ptkpStatus: z.string().optional(),
+  identityCard: z.string().optional().nullable(),
+  taxNumber: z.string().optional().nullable(),
+  drivingLicense: z.string().optional().nullable(),
+  bpjsHealth: z.string().optional().nullable(),
+  bpjsEmployment: z.string().optional().nullable(),
+  insuranceCompany: z.string().optional().nullable(),
+  insuranceNumber: z.string().optional().nullable(),
+  policyNumber: z.string().optional().nullable(),
+  ptkpStatus: z.string().optional().nullable(),
 
-  // Emergency
-  emergencyContactName: z.string().optional(),
-  emergencyContactRelation: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
+  // Emergency Contact
+  emergencyContactName: z.string().optional().nullable(),
+  emergencyContactRelation: z.string().optional().nullable(),
+  emergencyContactPhone: z.string().optional().nullable(),
 
-  // Bank
-  bankName: z.string().optional(),
-  bankAccountNumber: z.string().optional(),
-  bankAccountName: z.string().optional(),
-
+  // Bank Account
+  bankName: z.string().optional().nullable(),
+  bankAccountNumber: z.string().optional().nullable(),
+  bankAccountName: z.string().optional().nullable(),
   // Social Media
-  instagram: z.string().optional(),
-  facebook: z.string().optional(),
-  twitter: z.string().optional(),
-  linkedin: z.string().optional(),
-  tiktok: z.string().optional(),
+  instagram: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
+  twitter: z.string().optional().nullable(),
+  linkedin: z.string().optional().nullable(),
+  tiktok: z.string().optional().nullable(),
 
-  // Health
-  bloodType: z.string().optional(),
-  medicalHistory: z.string().optional(),
-  allergies: z.string().optional(),
-  height: z.number().optional().or(z.null()),
-  weight: z.number().optional().or(z.null()),
+  // Health Info
+  bloodType: z.string().optional().nullable(),
+  medicalHistory: z.string().optional().nullable(),
+  allergies: z.string().optional().nullable(),  height: z.number().optional().nullable(),
+  weight: z.number().optional().nullable(),
+  profilePictureUrl: z.string().optional().nullable(),
 });
+
+export type EmployeeUpdateData = z.infer<typeof employeeUpdateSchema>;

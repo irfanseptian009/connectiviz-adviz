@@ -57,8 +57,8 @@ export default function OrganizationChart() {
   // Get status from Redux state
   const userStatus = useSelector((state: RootState) => state.user.status || 'idle');
   const divisionStatus = useSelector((state: RootState) => state.division.status || 'idle');
-
   const [selectedBusinessUnit, setSelectedBusinessUnit] = useState<number | null>(null);
+  const [selectedDivision, setSelectedDivision] = useState<number | null>(null);
   const [orgData, setOrgData] = useState<OrgChartNode[]>([]);
 
   useEffect(() => {
@@ -68,7 +68,10 @@ export default function OrganizationChart() {
     if (userStatus === 'idle') {
       dispatch(fetchUsers());
     }
-  }, [businessUnits.length, userStatus, dispatch]);
+  }, [businessUnits.length, userStatus, dispatch]);  // Reset selected division when business unit changes
+  useEffect(() => {
+    setSelectedDivision(null);
+  }, [selectedBusinessUnit]);
 
   useEffect(() => {
     if (businessUnits.length > 0 && divisionStatus === 'idle') {
@@ -80,9 +83,14 @@ export default function OrganizationChart() {
 
   // Helper function to get users in a division
   const getUsersInDivision = React.useCallback((divisionId: number): User[] => {
-    return users.filter((user) => {
+    console.log('Getting users for division ID:', divisionId);
+    console.log('All users:', users.length);
+    
+    const filteredUsers = users.filter((user) => {
       const userDivisionId = user.divisionId;
       const targetDivisionId = Number(divisionId);
+      
+      console.log(`User ${user.id} (${user.username}): divisionId=${userDivisionId}, target=${targetDivisionId}`);
       
       if (userDivisionId === null || userDivisionId === undefined) {
         return false;
@@ -90,6 +98,9 @@ export default function OrganizationChart() {
       
       return Number(userDivisionId) === targetDivisionId;
     });
+    
+    console.log('Filtered users for division', divisionId, ':', filteredUsers);
+    return filteredUsers;
   }, [users]);
 
   // Helper function to get display name for user
@@ -151,8 +162,11 @@ export default function OrganizationChart() {
 
   // Convert division tree to organization chart format
   const convertDivisionToOrgChart = React.useCallback((division: Division): OrgChartNode => {
+    console.log('Converting division:', division);
     const divisionUsers = getUsersInDivision(division.id);
+    console.log('Division users for', division.name, ':', divisionUsers);
     const subDivisions = division.subDivisions || [];
+    console.log('Sub divisions for', division.name, ':', subDivisions);
     const totalSubDivisionCount = countAllSubDivisions(division);
     
     const userNodes: OrgChartNode[] = divisionUsers.map(user => ({
@@ -163,7 +177,7 @@ export default function OrganizationChart() {
         name: getUserDisplayName(user),
         title: user.position || 'No Position',
         role: user.role,
-        jobLevel: user.jobLevel || 'Not Specified',
+        jobLevel: user.jobLevel?.toString() || 'Not Specified',
         position: user.position,
         email: user.email,
         officeEmail: user.officeEmail,
@@ -175,11 +189,9 @@ export default function OrganizationChart() {
 
     const divisionNodes: OrgChartNode[] = subDivisions.map(subDiv => 
       convertDivisionToOrgChart(subDiv)
-    );
-
-    return {
+    );    const result: OrgChartNode = {
       key: `division-${division.id}`,
-      type: 'division',
+      type: 'division' as const,
       data: {
         id: division.id,
         name: division.name,
@@ -191,18 +203,50 @@ export default function OrganizationChart() {
       expanded: true,
       selectable: false
     };
+    
+    console.log('Converted division result:', result);
+    return result;
   }, [getUsersInDivision, getUserDisplayName, countAllSubDivisions]);
-
-  // Build organization chart data for selected business unit
+  // Build organization chart data for selected division
   useEffect(() => {
-    if (selectedBusinessUnit && divisionTree[selectedBusinessUnit]) {
+    console.log('=== EmployeeOrganization Debug ===');
+    console.log('selectedBusinessUnit:', selectedBusinessUnit);
+    console.log('selectedDivision:', selectedDivision);
+    console.log('divisionTree:', divisionTree);
+    console.log('divisionTree for selected BU:', divisionTree[selectedBusinessUnit || 0]);
+    console.log('users:', users);
+    console.log('businessUnits:', businessUnits);
+    
+    if (selectedBusinessUnit && selectedDivision && divisionTree[selectedBusinessUnit]) {
       const rootDivisions = divisionTree[selectedBusinessUnit] || [];
-      const orgChartData = rootDivisions.map(division => convertDivisionToOrgChart(division));
-      setOrgData(orgChartData);
+      console.log('rootDivisions:', rootDivisions);
+      
+      // Find the selected division from the tree
+      const findDivision = (divisions: Division[], targetId: number): Division | null => {
+        for (const division of divisions) {
+          if (division.id === targetId) {
+            return division;
+          }
+          if (division.subDivisions) {
+            const found = findDivision(division.subDivisions, targetId);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      
+      const selectedDivisionData = findDivision(rootDivisions, selectedDivision);
+      if (selectedDivisionData) {
+        const orgChartData = [convertDivisionToOrgChart(selectedDivisionData)];
+        console.log('orgChartData:', orgChartData);
+        setOrgData(orgChartData);
+      } else {
+        setOrgData([]);
+      }
     } else {
       setOrgData([]);
     }
-  }, [selectedBusinessUnit, divisionTree, users, convertDivisionToOrgChart]);
+  }, [selectedBusinessUnit, selectedDivision, divisionTree, users, convertDivisionToOrgChart, businessUnits]);
 
   // Custom node template for organization chart
   const nodeTemplate = (node: OrgChartNode) => {
@@ -326,60 +370,75 @@ export default function OrganizationChart() {
       </div>
     );
   }
-
-  // Calculate statistics for selected business unit
+  // Calculate statistics for selected division
   const selectedBU = businessUnits.find(bu => bu.id === selectedBusinessUnit);
   const selectedBUDivisions = selectedBusinessUnit ? divisionTree[selectedBusinessUnit] || [] : [];
-  const totalUsers = selectedBusinessUnit ? 
-    users.filter(user => {
-      const getAllDivisionIds = (divisions: Division[]): number[] => {
-        let ids: number[] = [];
-        divisions.forEach(div => {
-          ids.push(div.id);
-          if (div.subDivisions) {
-            ids = ids.concat(getAllDivisionIds(div.subDivisions));
-          }
-        });
+  
+  // Find selected division data
+  const findDivision = (divisions: Division[], targetId: number): Division | null => {
+    for (const division of divisions) {
+      if (division.id === targetId) {
+        return division;
+      }
+      if (division.subDivisions) {
+        const found = findDivision(division.subDivisions, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  
+  const selectedDivisionData = selectedDivision ? findDivision(selectedBUDivisions, selectedDivision) : null;
+  
+  const totalUsers = selectedDivisionData ? 
+    (() => {
+      const getAllDivisionIds = (division: Division): number[] => {
+        let ids: number[] = [division.id];
+        if (division.subDivisions) {
+          division.subDivisions.forEach(subDiv => {
+            ids = ids.concat(getAllDivisionIds(subDiv));
+          });
+        }
         return ids;
       };
-      const divisionIds = getAllDivisionIds(selectedBUDivisions);
-      return user.divisionId && divisionIds.includes(user.divisionId);
-    }).length : 0;
+      const divisionIds = getAllDivisionIds(selectedDivisionData);
+      return users.filter(user => user.divisionId && divisionIds.includes(user.divisionId)).length;
+    })() : 0;
 
-  const totalDivisions = selectedBusinessUnit ?
+  const totalDivisions = selectedDivisionData ?
     (() => {
-      const countDivisions = (divisions: Division[]): number => {
-        let count = divisions.length;
-        divisions.forEach(div => {
-          if (div.subDivisions) {
-            count += countDivisions(div.subDivisions);
-          }
-        });
+      const countDivisions = (division: Division): number => {
+        let count = division.subDivisions ? division.subDivisions.length : 0;
+        if (division.subDivisions) {
+          division.subDivisions.forEach(subDiv => {
+            count += countDivisions(subDiv);
+          });
+        }
         return count;
       };
-      return countDivisions(selectedBUDivisions);
+      return countDivisions(selectedDivisionData);
     })() : 0;
 
   // Calculate role distribution
-  const roleDistribution = selectedBusinessUnit ? 
-    users.filter(user => {
-      const getAllDivisionIds = (divisions: Division[]): number[] => {
-        let ids: number[] = [];
-        divisions.forEach(div => {
-          ids.push(div.id);
-          if (div.subDivisions) {
-            ids = ids.concat(getAllDivisionIds(div.subDivisions));
-          }
-        });
+  const roleDistribution = selectedDivisionData ? 
+    (() => {
+      const getAllDivisionIds = (division: Division): number[] => {
+        let ids: number[] = [division.id];
+        if (division.subDivisions) {
+          division.subDivisions.forEach(subDiv => {
+            ids = ids.concat(getAllDivisionIds(subDiv));
+          });
+        }
         return ids;
       };
-      const divisionIds = getAllDivisionIds(selectedBUDivisions);
-      return user.divisionId && divisionIds.includes(user.divisionId);
-    }).reduce((acc, user) => {
-      const role = user.role || 'EMPLOYEE';
-      acc[role] = (acc[role] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) : {};
+      const divisionIds = getAllDivisionIds(selectedDivisionData);
+      return users.filter(user => user.divisionId && divisionIds.includes(user.divisionId))
+        .reduce((acc, user) => {
+          const role = user.role || 'EMPLOYEE';
+          acc[role] = (acc[role] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+    })() : {};
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -389,8 +448,7 @@ export default function OrganizationChart() {
           <FiBriefcase className="text-blue-600" />
           Organizational Hierarchy Chart
         </h3>
-        
-        {/* Business Unit Selector */}
+          {/* Business Unit Selector */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Business Unit:
@@ -409,7 +467,26 @@ export default function OrganizationChart() {
           </select>
         </div>
 
-        {/* Enhanced Statistics for selected business unit */}
+        {/* Division Selector */}
+        {selectedBusinessUnit && divisionTree[selectedBusinessUnit] && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Select Division:
+            </label>
+            <select
+              value={selectedDivision || ''}
+              onChange={(e) => setSelectedDivision(e.target.value ? Number(e.target.value) : null)}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">Choose a division...</option>
+              {divisionTree[selectedBusinessUnit].map(division => (
+                <option key={division.id} value={division.id}>
+                  {division.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}        {/* Enhanced Statistics for selected business unit and division */}
         {selectedBU && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -420,10 +497,22 @@ export default function OrganizationChart() {
               <p className="text-lg font-bold text-blue-600 dark:text-blue-400 truncate">{selectedBU.name}</p>
             </div>
             
+            {selectedDivisionData && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiGrid className="text-green-500" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Selected Division</span>
+                </div>
+                <p className="text-lg font-bold text-green-600 dark:text-green-400 truncate">{selectedDivisionData.name}</p>
+              </div>
+            )}
+            
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-2">
                 <FiGrid className="text-green-500" />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Divisions</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  {selectedDivisionData ? 'Sub-Divisions' : 'Total Divisions'}
+                </span>
               </div>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">{totalDivisions}</p>
             </div>
@@ -436,26 +525,26 @@ export default function OrganizationChart() {
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalUsers}</p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 mb-2">
-                <FiAward className="text-orange-500" />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Role Distribution</span>
+            {Object.keys(roleDistribution).length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiAward className="text-orange-500" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Role Distribution</span>
+                </div>
+                <div className="space-y-1 text-xs">
+                  {Object.entries(roleDistribution).map(([role, count]) => (
+                    <div key={role} className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">{formatRole(role)}:</span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">{count}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-1 text-xs">
-                {Object.entries(roleDistribution).map(([role, count]) => (
-                  <div key={role} className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">{formatRole(role)}:</span>
-                    <span className="font-semibold text-orange-600 dark:text-orange-400">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         )}
-      </div>
-
-      {/* Organization Chart */}
-      {selectedBusinessUnit ? (
+      </div>      {/* Organization Chart */}
+      {selectedBusinessUnit && selectedDivision ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           {orgData.length > 0 ? (
             <div className="overflow-auto">
@@ -469,13 +558,25 @@ export default function OrganizationChart() {
             <div className="text-center py-12">
               <FiGrid className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
-                No Divisions Found
+                No Data Found
               </p>
               <p className="text-gray-500 dark:text-gray-400">
-                This business unit doesn&apos;t have any divisions yet.
+                This division doesn&apos;t have any sub-divisions or users yet.
               </p>
             </div>
           )}
+        </div>
+      ) : selectedBusinessUnit ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+          <div className="text-center">
+            <FiGrid className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">
+              Select a Division
+            </p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Choose a division from the dropdown above to view its detailed organizational hierarchy.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
@@ -485,7 +586,7 @@ export default function OrganizationChart() {
               Select a Business Unit
             </p>
             <p className="text-gray-500 dark:text-gray-400">
-              Choose a business unit from the dropdown above to view its detailed organizational hierarchy.
+              Choose a business unit from the dropdown above to view its divisions and organizational hierarchy.
             </p>
           </div>
         </div>

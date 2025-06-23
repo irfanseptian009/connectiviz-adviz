@@ -6,11 +6,11 @@ import {
   getEmployee,
   deleteEmployee,
 } from "../services/employee";
-import { Employee } from "../types/employee";
+import { User } from "../types/employee";
 import toast from "react-hot-toast";
 
 export function useEmployee() {
-  const [list, setList] = useState<Employee[]>([]);
+  const [list, setList] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {

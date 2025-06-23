@@ -1,5 +1,24 @@
 import { z } from 'zod';
 
+// Schema for FormalEducation
+export const formalEducationSchema = z.object({
+  id: z.number().optional(),
+  level: z.string().min(1, "Level pendidikan wajib diisi"),
+  schoolName: z.string().min(1, "Nama sekolah wajib diisi"),
+  major: z.string().optional().nullable(),
+  yearGraduate: z.number().min(1950).max(new Date().getFullYear()).optional().nullable(),
+  gpa: z.number().min(0).max(4).optional().nullable(),
+});
+
+// Schema for NonFormalEducation  
+export const nonFormalEducationSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().min(1, "Nama kursus/pelatihan wajib diisi"),
+  institution: z.string().min(1, "Nama institusi wajib diisi"),
+  year: z.number().min(1950).max(new Date().getFullYear()).optional().nullable(),
+  description: z.string().optional().nullable(),
+});
+
 export const employeeSchema = z.object({
   id: z.number().optional(),
 
@@ -9,43 +28,47 @@ export const employeeSchema = z.object({
   password: z.string().optional().nullable(),
   username: z.string().min(1, "Username wajib diisi").max(50),
 
-  // Job Information
-  position: z.string().optional().nullable(),
-  jobLevel: z.enum(['Junior', 'Senior', 'Lead', 'Manager', 'Director']).optional().nullable(),
-
   // Personal Data
-  fullName: z.string().min(1, "Full name wajib diisi"),
   nationalId: z.string().optional().nullable(),
+  fullName: z.string().min(1, "Nama lengkap wajib diisi"),
   address: z.string().optional().nullable(),
   placeOfBirth: z.string().optional().nullable(),
-  dateOfBirth: z.string().datetime().optional().nullable(),
-  gender: z.enum(['Laki-laki', 'Perempuan', 'Other']).optional().nullable(),
+  dateOfBirth: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
   phoneNumber: z.string().optional().nullable(),
   officeEmail: z.string().email().optional().nullable(),
 
+  // Jabatan & Level Jabatan
+  position: z.string().optional().nullable(),
+  jobTitle: z.string().optional().nullable(),
+  jobLevel: z.number().optional().nullable(),
+  employmentType: z.enum(['INTERNSHIP', 'PROBATION', 'CONTRACT', 'PERMANENT']).optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  probationEndDate: z.string().optional().nullable(),
+  contractEndDate: z.string().optional().nullable(),
+  resignDate: z.string().optional().nullable(),
+
+  isActive: z.boolean().optional(),
+  isOnProbation: z.boolean().optional(),
+  isResigned: z.boolean().optional(),
+
   // Organization Data
   divisionId: z.number().optional().nullable(),
-  businessUnitId: z.number().optional().nullable(),
-
   // Family Data
   motherName: z.string().optional().nullable(),
   fatherName: z.string().optional().nullable(),
-  maritalStatus: z.enum(['Single', 'Menikah', 'Divorced', 'Widowed']).optional().nullable(),
+  maritalStatus: z.string().optional().nullable(),
   spouseName: z.string().optional().nullable(),
   childrenNames: z.array(z.string()).optional().nullable(),
 
-  // Education - Formal
-  lastEducation: z.enum(['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3']).optional().nullable(),
-  facultyName: z.string().optional().nullable(),
-  majorName: z.string().optional().nullable(),
-  graduationYear: z.number().min(1950).max(new Date().getFullYear()).optional().nullable(),
-  gpa: z.string().optional().nullable(),
+  // Education Arrays - New Structure
+  formalEducations: z.array(formalEducationSchema).optional().nullable(),
+  nonFormalEducations: z.array(nonFormalEducationSchema).optional().nullable(),
 
-  // Education - Non Formal
-  nonFormalEducationNames: z.array(z.string()).optional().nullable(),
-  nonFormalInstitutions: z.array(z.string()).optional().nullable(),
-  nonFormalYears: z.array(z.number().min(1950).max(new Date().getFullYear())).optional().nullable(),
-  nonFormalDescriptions: z.array(z.string()).optional().nullable(),
+  // Interest & Skills
+  interests: z.array(z.string()).optional().nullable(),
+  skills: z.array(z.string()).optional().nullable(),
+  languages: z.array(z.string()).optional().nullable(),
 
   // Documents
   identityCard: z.string().optional().nullable(),
@@ -74,13 +97,13 @@ export const employeeSchema = z.object({
   twitter: z.string().optional().nullable(),
   linkedin: z.string().optional().nullable(),
   tiktok: z.string().optional().nullable(),
-
   // Health Info
   bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'O', 'AB+', 'AB-']).optional().nullable(),
   medicalHistory: z.string().optional().nullable(),
   allergies: z.string().optional().nullable(),
   height: z.number().min(0).max(300).optional().nullable(),
   weight: z.number().min(0).max(500).optional().nullable(),
+  profilePictureUrl: z.string().optional().nullable(),
 }).strict();
 
 export type EmployeeData = z.infer<typeof employeeSchema>;

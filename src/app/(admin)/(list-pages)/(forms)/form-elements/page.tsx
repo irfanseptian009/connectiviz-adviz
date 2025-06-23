@@ -1,15 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema, UserFormType } from "@/validation/userSchema";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,14 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
   User,
@@ -43,290 +31,97 @@ import {
   Calendar,
   Users,
   Briefcase,
-  LucideIcon,
+  Loader2,
+  X,
 } from "lucide-react";
 
-import { NonFormalEducation } from "@/types/employee";
+import { FormalEducation, NonFormalEducation, EmploymentType, Role, User as UserType } from "@/types/employee";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
-import {createBusinessUnit,fetchBusinessUnits,} from "@/store/businessUnitSlice";
-import {
-  createDivision,
-  fetchDivisionTree,
-} from "@/store/divisionSlice";
-import { createUser } from "@/store/userSlice";
+import { createBusinessUnit, fetchBusinessUnits } from "@/store/businessUnitSlice";
+import { createDivision, fetchDivisionTree } from "@/store/divisionSlice";
+import { createUser, assignUserToDivision } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
 import { withAuth } from "@/context/AuthContext";
-import { assignUserToDivision, fetchUsers } from "@/store/userSlice";
 
-
-function BusinessUnitModal({ open, onOpenChange, onCreate }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (name: string) => void;
-}) {
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const handleCreate = async () => {
-    if (!name) return;
-    setLoading(true);
-    await onCreate(name);
-    setName("");
-    setLoading(false);
-    onOpenChange(false);
-  };
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Business Unit</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Label>Name</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Business Unit Name" autoFocus />
-        </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
-          <Button onClick={handleCreate} disabled={!name || loading} type="button">
-            {loading ? "Saving..." : "Save"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// DivisionModal
-function DivisionModal({ open, onOpenChange, businessUnits, onCreate }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  businessUnits: { id: number; name: string }[];
-  onCreate: (name: string, businessUnitId: number, parentId: number) => void;
-}) {
-  const dispatch = useDispatch<AppDispatch>();
-  const [name, setName] = useState("");
-  const [businessUnitId, setBusinessUnitId] = useState("");
-  const [parentId, setParentId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const divisionTree = useSelector((state: RootState) => businessUnitId ? state.division.tree[Number(businessUnitId)] || [] : []);
-  const parentDivisionOptions = divisionTreeToOptions(divisionTree);
-  useEffect(() => {
-    if (businessUnitId) {
-      dispatch(fetchDivisionTree(Number(businessUnitId)));
-    }
-  }, [dispatch, businessUnitId]);
-  const handleCreate = async () => {
-    if (!name || !businessUnitId) return;
-    setLoading(true);
-    try {
-      await onCreate(name, Number(businessUnitId), parentId && parentId !== "-" ? Number(parentId) : -1);
-      toast.success("Division created!");
-      setName("");
-      setBusinessUnitId("");
-      setParentId("");
-      onOpenChange(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Division</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Division Name" autoFocus />
-          <Label>Business Unit</Label>
-          <Select value={businessUnitId} onValueChange={setBusinessUnitId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Business Unit" />
-            </SelectTrigger>
-            <SelectContent>
-              {businessUnits.map((bu) => (
-                <SelectItem key={bu.id} value={String(bu.id)}>
-                  {bu.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {businessUnitId && (
-            <>
-              <Label>Parent Division (optional, hierarchical)</Label>
-              <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="No Parent" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="-">None</SelectItem>
-                  {parentDivisionOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-        </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
-          <Button onClick={handleCreate} disabled={!name || !businessUnitId || loading} type="button">
-            {loading ? "Saving..." : "Save"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// NonFormalEducationArray
-function NonFormalEducationArray({ educations, onAdd }: {
-  educations: NonFormalEducation[];
-  onAdd: (education: NonFormalEducation) => void;
-}) {
-  const [education, setEducation] = useState({ name: "", institution: "", year: 0, description: "" });
-  const handleAdd = () => {
-    if (!education.name || !education.institution) return;
-    onAdd({ ...education, year: education.year ? Number(education.year) : 0 });
-    setEducation({ name: "", institution: "", year: 0, description: "" });
-  };
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-4  items-end">
-        <div ><Label className="mb-2 ">Name</Label><Input value={education.name} onChange={e => setEducation(ed => ({ ...ed, name: e.target.value }))} placeholder="Course Name" /></div>
-        <div><Label className="mb-2">Institution</Label><Input value={education.institution} onChange={e => setEducation(ed => ({ ...ed, institution: e.target.value }))} placeholder="Institution" /></div>
-        <div><Label className="mb-2">Year</Label><Input type="number" value={education.year || ""} onChange={e => setEducation(ed => ({ ...ed, year: e.target.value ? Number(e.target.value) : 0 }))} placeholder="Year" /></div>
-        <div><Label className="mb-2">Description</Label><Input value={education.description || ""} onChange={e => setEducation(ed => ({ ...ed, description: e.target.value }))} placeholder="Desc (optional)" /></div>
-        <Button type="button" className="col-span-4 mt-4 dark:bg-slate-700 dark:text-white" onClick={handleAdd}>Add</Button>
-      </div>
-      <div className="space-y-2">
-        {educations.map((edu, i) => (
-          <Card key={i} className="p-3 bg-muted">
-            <div className="flex gap-4 ">
-              <span className="font-semibold">{edu.name}</span> – {edu.institution} {edu.year ? <span>({edu.year})</span> : null}
-              {edu.description ? <span className="ml-2 italic text-sm">{edu.description}</span> : null}
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// UserSelectModal
-function UserSelectModal({ open, onOpenChange, divisionId }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  divisionId: number | null;
-}) {
-  const dispatch = useDispatch<AppDispatch>();
-  const users = useSelector((state: RootState) => state.user.list);
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  useEffect(() => {
-    if (open) dispatch(fetchUsers());
-    if (!open) setSelectedUserIds([]);
-  }, [open, dispatch]);
-  const handleToggle = (id: number) => {
-    setSelectedUserIds((ids) =>
-      ids.includes(id) ? ids.filter((uid) => uid !== id) : [...ids, id]
-    );
-  };
-  const handleAssign = async () => {
-    if (!divisionId || selectedUserIds.length === 0) return;
-    // For simplicity, just use assignUserToDivision for each user
-    for (const userId of selectedUserIds) {
-      await dispatch(assignUserToDivision({ userId, divisionId }));
-    }
-    toast.success("Users assigned to division!");
-    setSelectedUserIds([]);
-    onOpenChange(false);
-  };
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Assign Users to Division</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {users.length === 0 && <div className="text-muted-foreground text-sm">No users available.</div>}
-          {users.map((user) => (
-            <label key={user.id} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted">
-              <input
-                type="checkbox"
-                checked={selectedUserIds.includes(user.id)}
-                onChange={() => handleToggle(user.id)}
-                className="accent-primary"
-              />
-              <span>{user.fullName || user.username} <span className="ml-1 text-xs text-muted-foreground">({user.email})</span></span>
-            </label>
-          ))}
-        </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
-          <Button onClick={handleAssign} disabled={selectedUserIds.length === 0} type="button">Assign</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+// Import custom components
+import { BusinessUnitModal } from "@/components/forms/BusinessUnitModal";
+import { DivisionModal } from "@/components/forms/DivisionModal";
+import { FormalEducationArray } from "@/components/forms/FormalEducationArray";
+import { NonFormalEducationArray } from "@/components/forms/NonFormalEducationArray";
+import { FormSection, InputField } from "@/components/forms/FormComponents";
 
 const EmployeeManagementCreateForm = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const businessUnits = useSelector(
-    (state: RootState) => state.businessUnit.list
+  const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
+
+  // Loading states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedBusinessUnit, setSelectedBusinessUnit] = useState<number | null>(null);
+
+  const divisionTree = useSelector((state: RootState) =>
+    selectedBusinessUnit !== null
+      ? state.division.tree[selectedBusinessUnit] || []
+      : []
   );
- 
 
-
-  /* Local State*/
-  const [selectedBusinessUnit, setSelectedBusinessUnit] =
-    useState<number | null>(null);
-
-   const divisionTree = useSelector((state: RootState) =>
-  selectedBusinessUnit !== null
-    ? state.division.tree[selectedBusinessUnit] || []
-    : []
-);
-  const [selectedDivisionId, setSelectedDivisionId] =
-    useState<number | null>(null);
-  const [selectedJobLevel, setSelectedJobLevel] = useState<string | null>(
-    null
-  );
+  const [selectedDivisionId, setSelectedDivisionId] = useState<number | null>(null);
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState<EmploymentType | null>(null);
+  const [selectedRole, setSelectedRole] = useState<Role>(Role.EMPLOYEE);
+  
+  // Modal states
   const [showBusinessUnitModal, setShowBusinessUnitModal] = useState(false);
   const [showDivisionModal, setShowDivisionModal] = useState(false);
-  const [showUserSelectModal, setShowUserSelectModal] = useState(false);
+  
+  // Form section navigation
   const [activeSection, setActiveSection] = useState<string>("auth");
-  const [nonFormalEducations, setNonFormalEducations] = useState<
-    NonFormalEducation[]
-  >([]);
-
-  const {
+  
+  // Education arrays
+  const [formalEducations, setFormalEducations] = useState<FormalEducation[]>([]);
+  const [nonFormalEducations, setNonFormalEducations] = useState<NonFormalEducation[]>([]);
+  
+  // Skills, interests, languages
+  const [skills, setSkills] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
+  const [newInterest, setNewInterest] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");  const {
     register,
     handleSubmit,
     setValue,
     formState: { errors },
     control,
-    reset,
-  } = useForm<UserFormType>({
+    reset,  } = useForm({
     resolver: zodResolver(userSchema),
     defaultValues: {
+      email: "",
+      password: "",
+      username: "",
       childrenNames: [],
+      formalEducations: [],
+      nonFormalEducations: [],
+      interests: [],
+      skills: [],
+      languages: [],
+      role: Role.EMPLOYEE,
+      isActive: true,
+      isOnProbation: false,
+      isResigned: false,
     },
-  });
-  const {
+  });  const {
     fields: childrenFields,
     append: appendChild,
     remove: removeChild,
-  } = useFieldArray<UserFormType>({
+  } = useFieldArray({
     control,
-    name: "nonFormalEducations",
+    // @ts-expect-error - temporary fix for type mismatch
+    name: "childrenNames",
   });
 
-  /*Side Effects*/
+  // Side Effects
   useEffect(() => {
     dispatch(fetchBusinessUnits());
   }, [dispatch]);
@@ -339,19 +134,17 @@ const EmployeeManagementCreateForm = () => {
 
   const divisionOptions = divisionTreeToOptions(divisionTree);
 
-  const handleAddNonFormalEducation = (education: NonFormalEducation) => {
-    setNonFormalEducations((prev) => [...prev, education]);
-  };
+  // Handlers
   const handleBusinessUnitCreate = async (name: string) => {
     try {
       await dispatch(createBusinessUnit({ name })).unwrap();
-      toast.success("Business Unit created!");
+      toast.success("Business Unit created successfully!");
       dispatch(fetchBusinessUnits());
     } catch (err) {
       const error = err as Error & { response?: { data: string } };
-      toast.error("Failed to create business unit! " + error.message);
+      toast.error("Failed to create business unit: " + error.message);
+      throw err;
     }
-    setShowBusinessUnitModal(false);
   };
 
   const handleDivisionCreate = async (
@@ -361,16 +154,68 @@ const EmployeeManagementCreateForm = () => {
   ) => {
     try {
       await dispatch(createDivision({ name, businessUnitId, parentId })).unwrap();
-      toast.success("Division created!");
-      if (selectedBusinessUnit)
+      toast.success("Division created successfully!");
+      if (selectedBusinessUnit) {
         dispatch(fetchDivisionTree(selectedBusinessUnit));
+      }
     } catch (err) {
       const error = err as Error & { response?: { data: string } };
-      toast.error("Failed to create division!" + error.message);
+      toast.error("Failed to create division: " + error.message);
+      throw err;
     }
-    setShowDivisionModal(false);
   };
 
+  // Array handlers
+  const addSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      setNewSkill("");
+    }
+  };
+
+  const removeSkill = (index: number) => {
+    setSkills(skills.filter((_, i) => i !== index));
+  };
+
+  const addInterest = () => {
+    if (newInterest.trim() && !interests.includes(newInterest.trim())) {
+      setInterests([...interests, newInterest.trim()]);
+      setNewInterest("");
+    }
+  };
+
+  const removeInterest = (index: number) => {
+    setInterests(interests.filter((_, i) => i !== index));
+  };
+
+  const addLanguage = () => {
+    if (newLanguage.trim() && !languages.includes(newLanguage.trim())) {
+      setLanguages([...languages, newLanguage.trim()]);
+      setNewLanguage("");
+    }
+  };
+
+  const removeLanguage = (index: number) => {
+    setLanguages(languages.filter((_, i) => i !== index));
+  };
+
+  const addFormalEducation = (education: FormalEducation) => {
+    setFormalEducations([...formalEducations, education]);
+  };
+
+  const removeFormalEducation = (index: number) => {
+    setFormalEducations(formalEducations.filter((_, i) => i !== index));
+  };
+
+  const addNonFormalEducation = (education: NonFormalEducation) => {
+    setNonFormalEducations([...nonFormalEducations, education]);
+  };
+
+  const removeNonFormalEducation = (index: number) => {
+    setNonFormalEducations(nonFormalEducations.filter((_, i) => i !== index));
+  };
+
+  // Form sections configuration
   const sections = [
     { id: "auth", title: "Authentication", icon: Shield },
     { id: "personal", title: "Personal Info", icon: User },
@@ -381,6 +226,7 @@ const EmployeeManagementCreateForm = () => {
     { id: "health", title: "Health Info", icon: Heart },
     { id: "social", title: "Social Media", icon: Globe },
     { id: "education", title: "Education", icon: GraduationCap },
+    { id: "skills", title: "Skills & Interests", icon: Briefcase },
   ];
 
   const sectionOrder = sections.map((s) => s.id);
@@ -401,116 +247,111 @@ const EmployeeManagementCreateForm = () => {
     }
   };
 
-  /* Form Submit */
-  const onSubmit = async (data: UserFormType) => {
-  let dateOfBirthISO: string | undefined;
-  if (data.dateOfBirth) {
-    dateOfBirthISO =
-      data.dateOfBirth.length === 10
-        ? data.dateOfBirth + "T00:00:00.000Z"
-        : data.dateOfBirth;
-  }
+  // Form submission
+  const onSubmit: SubmitHandler<UserFormType> = async (data) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Validate required fields based on form sections
+      if (!data.email || !data.password || !data.username) {
+        toast.error("Please fill in all required authentication fields");
+        setActiveSection("auth");
+        return;
+      }
 
-  const validNonFormalEducations = nonFormalEducations
-    .filter((edu) => edu.year !== undefined)
-    .map((edu) => ({ ...edu, year: edu.year! }));
+      // Prepare date fields
+      let dateOfBirthISO: string | undefined;
+      if (data.dateOfBirth) {
+        dateOfBirthISO = data.dateOfBirth.length === 10
+          ? data.dateOfBirth + "T00:00:00.000Z"
+          : data.dateOfBirth;
+      }
 
-  const payload = {
-    ...data,
-    dateOfBirth: dateOfBirthISO ?? undefined,
-    nonFormalEducations: validNonFormalEducations,
-    gpa: data.gpa ? String(data.gpa) : undefined,
-    graduationYear:
-      data.graduationYear !== undefined && data.graduationYear !== null
-        ? Number(data.graduationYear)
-        : undefined,
-    divisionId: data.divisionId ? parseInt(String(data.divisionId)) : undefined,
-  };
+      let startDateISO: string | undefined;
+      if (data.startDate) {
+        startDateISO = data.startDate.length === 10
+          ? data.startDate + "T00:00:00.000Z"
+          : data.startDate;
+      }
 
-  try {
-    const newUser = await dispatch(createUser(payload)).unwrap();
+      let probationEndDateISO: string | undefined;
+      if (data.probationEndDate) {
+        probationEndDateISO = data.probationEndDate.length === 10
+          ? data.probationEndDate + "T00:00:00.000Z"
+          : data.probationEndDate;
+      }
 
-    if (newUser?.id && payload.divisionId) {
-      await dispatch(assignUserToDivision({ userId: newUser.id, divisionId: payload.divisionId }));
+      let contractEndDateISO: string | undefined;
+      if (data.contractEndDate) {
+        contractEndDateISO = data.contractEndDate.length === 10
+          ? data.contractEndDate + "T00:00:00.000Z"
+          : data.contractEndDate;
+      }
+
+      // Prepare payload
+      const payload: Partial<UserType> = {
+        ...data,
+        dateOfBirth: dateOfBirthISO,
+        startDate: startDateISO,
+        probationEndDate: probationEndDateISO,
+        contractEndDate: contractEndDateISO,
+        divisionId: data.divisionId ? parseInt(String(data.divisionId)) : undefined,
+        jobLevel: data.jobLevel ? parseInt(String(data.jobLevel)) : undefined,
+        formalEducations,
+        nonFormalEducations,
+        skills,
+        interests,
+        languages,
+      };
+
+      // Create user
+      const newUser = await dispatch(createUser(payload)).unwrap();
+
+      // Assign to division if specified
+      if (newUser?.id && payload.divisionId) {
+        await dispatch(assignUserToDivision({ 
+          userId: newUser.id, 
+          divisionId: payload.divisionId 
+        }));
+      }
+
+      toast.success("Employee profile created successfully!");
+      
+      // Reset form
+      reset();
+      setFormalEducations([]);
+      setNonFormalEducations([]);
+      setSkills([]);
+      setInterests([]);
+      setLanguages([]);
+      setSelectedDivisionId(null);
+      setSelectedBusinessUnit(null);
+      setActiveSection("auth");
+      
+    } catch (err) {
+      const error = err as Error & { response?: { data: string } };
+      toast.error("Failed to create employee: " + error.message);
+      console.error("Form submission error:", err);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast.success("User created and assigned to division!");
-    reset();
-    setNonFormalEducations([]);
-    setSelectedDivisionId(null);
-    setActiveSection("auth");
-  } catch (err) {
-    const error = err as Error & { response?: { data: string } };
-    toast.error("Failed to create user! " + error.message);
-  }
-};
-
-  const FormSection = ({
-    title,
-    icon: Icon,
-    children,
-    isActive,
-  }: {
-    title: string;
-    icon: LucideIcon;
-    children: React.ReactNode;
-    isActive: boolean;
-  }) => (
-    <Card
-      className={`transition-all duration-300 ${
-        isActive ? "ring-2 dark:ring-blue-500/10 ring-gray-100 shadow-lg" : "hover:shadow-md"
-      }`}
-    >
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
-          <Icon className="w-5 h-5 text-blue-600" />
-          {title}
-        </CardTitle>
-        <Separator />
-      </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
-    </Card>
-  );
-
-  const InputField = ({
-    label,
-    icon: Icon,
-    children,
-    error,
-  }: {
-    label: string;
-    icon?: LucideIcon;
-    children: React.ReactNode;
-    error?: string;
-  }) => (
-    <div className="space-y-2">
-      <Label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-500">
-        {Icon && <Icon className="w-4 h-4 text-gray-500" />}
-        {label}
-      </Label>
-      {children}
-      {error && <span className="text-red-500 text-xs">{error}</span>}
-    </div>
-  );
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Connectiviz Create Employee 
+          Create Employee Profile
         </h1>
-        <p className="text-gray-600 dark:text-white">
-          Create comprehensive employee profiles and organizational structure
+        <p className="text-gray-600 dark:text-gray-300">
+          Create comprehensive employee profiles with organizational structure
         </p>
       </div>
 
       {/* Section Navigation Tabs */}
-      <Card className="shadow hover:shadow-xl dark:bg-slate-800 bg-blue-50 rounded-lg p-4">
-        <div
-          className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-thin hide-scrollbar"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
+      <Card className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+        <div className="flex flex-wrap justify-center gap-3 ">
           {sections.map((section) => {
             const Icon = section.icon;
             const isActive = activeSection === section.id;
@@ -520,14 +361,13 @@ const EmployeeManagementCreateForm = () => {
                 variant={isActive ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveSection(section.id)}
-                className={`flex items-center gap-2 rounded-md px-4 ml-2 py-2 transition ${
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-all ${
                   isActive
-                    ? "bg-blue-300 text-white dark:bg-black shadow-lg"
-                    : "bg-white dark:bg-black text-gray-800 dark:text-white hover:bg-blue-50"
-                } border border-gray-200 font-semibold`}
-                style={{ minWidth: "max-content" }}
+                    ? "bg-blue-600 text-white shadow-lg scale-105"
+                    : "bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-slate-500"
+                } border font-medium whitespace-nowrap`}
               >
-                <Icon className="w-4 h-4 mr-1" />
+                <Icon className="w-4 h-4" />
                 {section.title}
               </Button>
             );
@@ -537,63 +377,119 @@ const EmployeeManagementCreateForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
         {/* Authentication Section */}
         {activeSection === "auth" && (
-          <FormSection title="Authentication" icon={Shield} isActive>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField label="Email Address" icon={Globe}>
+          <FormSection title="Authentication & Basic Info" icon={Shield} isActive>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <InputField 
+                label="Email Address" 
+                icon={Globe} 
+                error={errors.email?.message}
+                required
+              >
                 <Input
                   {...register("email")}
                   type="email"
                   placeholder="user@company.com"
+                  className={errors.email ? "border-red-500" : ""}
                 />
               </InputField>
-              <InputField label="Password" icon={Shield}>
+              
+              <InputField 
+                label="Password" 
+                icon={Shield} 
+                error={errors.password?.message}
+                required
+              >
                 <Input
                   {...register("password")}
                   type="password"
                   placeholder="••••••••"
+                  className={errors.password ? "border-red-500" : ""}
                 />
               </InputField>
-              <InputField label="Username" icon={User}>
-                <Input {...register("username")} placeholder="johndoe" />
+              
+              <InputField 
+                label="Username" 
+                icon={User} 
+                error={errors.username?.message}
+                required
+              >
+                <Input 
+                  {...register("username")} 
+                  placeholder="johndoe"
+                  className={errors.username ? "border-red-500" : ""}
+                />
+              </InputField>
+
+              <InputField label="Role" icon={Shield}>                <Select
+                  value={selectedRole}
+                  onValueChange={(value) => {
+                    const roleValue = value as Role;
+                    setSelectedRole(roleValue);
+                    setValue("role", roleValue);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EMPLOYEE">Employee</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </InputField>
+
+              <InputField label="Employment Type" icon={Briefcase}>
+                <Select
+                  value={selectedEmploymentType || ""}
+                  onValueChange={(value) => {
+                    setSelectedEmploymentType(value as EmploymentType);
+                    setValue("employmentType", value as EmploymentType);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Employment Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INTERNSHIP">Internship</SelectItem>
+                    <SelectItem value="PROBATION">Probation</SelectItem>
+                    <SelectItem value="CONTRACT">Contract</SelectItem>
+                    <SelectItem value="PERMANENT">Permanent</SelectItem>
+                  </SelectContent>
+                </Select>
               </InputField>
             </div>
           </FormSection>
-        )}
-
-        {/* Personal Section */}
+        )}        {/* Personal Section */}
         {activeSection === "personal" && (
           <FormSection title="Personal Information" icon={User} isActive>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <InputField label="Full Name" icon={User}>
+              <InputField label="Full Name" icon={User} error={errors.fullName?.message}>
                 <Input {...register("fullName")} placeholder="John Doe" />
               </InputField>
-              <InputField label="National ID" icon={FileText}>
-                <Input
-                  {...register("nationalId")}
-                  placeholder="1234567890123456"
-                />
+              
+              <InputField label="National ID" icon={FileText} error={errors.nationalId?.message}>
+                <Input {...register("nationalId")} placeholder="1234567890123456" />
               </InputField>
-              <InputField label="Phone Number" icon={Phone}>
-                <Input
-                  {...register("phoneNumber")}
-                  placeholder="+62 812 3456 7890"
-                />
+              
+              <InputField label="Phone Number" icon={Phone} error={errors.phoneNumber?.message}>
+                <Input {...register("phoneNumber")} placeholder="+62 812 3456 7890" />
               </InputField>
-              <InputField label="Address" icon={MapPin}>
-                <Input
-                  {...register("address")}
-                  placeholder="Jl. Sudirman No. 123"
-                />
+              
+              <InputField label="Address" icon={MapPin} error={errors.address?.message}>
+                <Input {...register("address")} placeholder="Jl. Sudirman No. 123" />
               </InputField>
-              <InputField label="Place of Birth" icon={MapPin}>
+              
+              <InputField label="Place of Birth" icon={MapPin} error={errors.placeOfBirth?.message}>
                 <Input {...register("placeOfBirth")} placeholder="Jakarta" />
               </InputField>
-              <InputField label="Date of Birth" icon={Calendar}>
+              
+              <InputField label="Date of Birth" icon={Calendar} error={errors.dateOfBirth?.message}>
                 <Input {...register("dateOfBirth")} type="date" />
               </InputField>
+              
               <InputField label="Gender">
                 <Select
                   value={selectedGender ?? ""}
@@ -623,23 +519,36 @@ const EmployeeManagementCreateForm = () => {
               <InputField label="Mother's Name" icon={User}>
                 <Input {...register("motherName")} placeholder="Jane Doe" />
               </InputField>
+              
               <InputField label="Father's Name" icon={User}>
                 <Input {...register("fatherName")} placeholder="John Doe Sr." />
               </InputField>
+              
               <InputField label="Marital Status">
-                <Input
-                  {...register("maritalStatus")}
-                  placeholder="Single/Married/Divorced"
-                />
+                <Select
+                  onValueChange={(value) => setValue("maritalStatus", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Marital Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Single">Single</SelectItem>
+                    <SelectItem value="Married">Married</SelectItem>
+                    <SelectItem value="Divorced">Divorced</SelectItem>
+                    <SelectItem value="Widowed">Widowed</SelectItem>
+                  </SelectContent>
+                </Select>
               </InputField>
+              
               <InputField label="Spouse Name" icon={User}>
                 <Input {...register("spouseName")} placeholder="Spouse name" />
               </InputField>
             </div>
+            
             {/* Children Names */}
             <div className="space-y-3">
-              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Users className="w-4 h-4 text-gray-500" />
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <Users className="w-4 h-4" />
                 Children Names
               </Label>
               <div className="space-y-2">
@@ -656,15 +565,17 @@ const EmployeeManagementCreateForm = () => {
                       variant="destructive"
                       onClick={() => removeChild(idx)}
                     >
-                      ×
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
-                ))}
-                <Button
+                ))}                <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                 onClick={() => appendChild({ name: "", institution: "", year: 0 })}
+                  onClick={() => {
+                    // @ts-expect-error - temporary fix for type mismatch
+                    appendChild("");
+                  }}
                   className="flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
@@ -679,40 +590,60 @@ const EmployeeManagementCreateForm = () => {
         {activeSection === "organization" && (
           <FormSection title="Organization Structure" icon={Building2} isActive>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InputField label="Office Email" icon={Globe}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <InputField label="Office Email" icon={Globe} error={errors.officeEmail?.message}>
                   <Input
                     {...register("officeEmail")}
                     type="email"
                     placeholder="john@company.com"
                   />
                 </InputField>
+                
                 <InputField label="Position" icon={Briefcase}>
                   <Input {...register("position")} placeholder="Software Engineer" />
                 </InputField>
-                <InputField label="Job Level">
-                  <Select
-                    value={selectedJobLevel ?? ""}
-                    onValueChange={(value) => {
-                      setSelectedJobLevel(value);
-                      setValue("jobLevel", value);
-                    }}
-                  >
+                
+                <InputField label="Job Title" icon={Briefcase}>
+                  <Select onValueChange={(value) => setValue("jobTitle", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Job Level" />
+                      <SelectValue placeholder="Select Job Title" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Intern">Intern</SelectItem>
                       <SelectItem value="Junior">Junior</SelectItem>
-                      <SelectItem value="Middle">Middle</SelectItem>
+                      <SelectItem value="Associate">Associate</SelectItem>
                       <SelectItem value="Senior">Senior</SelectItem>
-                      <SelectItem value="Lead">Lead</SelectItem>
+                      <SelectItem value="Supervisor">Supervisor</SelectItem>
+                      <SelectItem value="Assistant Manager">Assistant Manager</SelectItem>
                       <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Senior Manager">Senior Manager</SelectItem>
+                      <SelectItem value="VP / Deputy Director">VP / Deputy Director</SelectItem>
                       <SelectItem value="Director">Director</SelectItem>
-                      <SelectItem value="VP">VP</SelectItem>
-                      <SelectItem value="C-Level">C-Level</SelectItem>
+                      <SelectItem value="Partner">Partner</SelectItem>
                     </SelectContent>
                   </Select>
+                </InputField>
+                
+                <InputField label="Job Level" error={errors.jobLevel?.message}>
+                  <Input
+                    {...register("jobLevel", { valueAsNumber: true })}
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="1-10"
+                  />
+                </InputField>
+                
+                <InputField label="Start Date" icon={Calendar}>
+                  <Input {...register("startDate")} type="date" />
+                </InputField>
+                
+                <InputField label="Probation End Date" icon={Calendar}>
+                  <Input {...register("probationEndDate")} type="date" />
+                </InputField>
+                
+                <InputField label="Contract End Date" icon={Calendar}>
+                  <Input {...register("contractEndDate")} type="date" />
                 </InputField>
               </div>
 
@@ -720,11 +651,7 @@ const EmployeeManagementCreateForm = () => {
                 <InputField label="Business Unit" icon={Building2}>
                   <div className="flex gap-2">
                     <Select
-                      value={
-                        selectedBusinessUnit !== null
-                          ? String(selectedBusinessUnit)
-                          : undefined
-                      }
+                      value={selectedBusinessUnit !== null ? String(selectedBusinessUnit) : ""}
                       onValueChange={(v) => {
                         setSelectedBusinessUnit(Number(v));
                         setSelectedDivisionId(null);
@@ -756,12 +683,7 @@ const EmployeeManagementCreateForm = () => {
                 <InputField label="Division" error={errors.divisionId?.message}>
                   <div className="flex gap-2">
                     <Select
-                      {...register("divisionId")}
-                      value={
-                        selectedDivisionId !== null
-                          ? String(selectedDivisionId)
-                          : undefined
-                      }
+                      value={selectedDivisionId !== null ? String(selectedDivisionId) : ""}
                       onValueChange={(v) => {
                         setSelectedDivisionId(Number(v));
                         setValue("divisionId", v);
@@ -770,8 +692,7 @@ const EmployeeManagementCreateForm = () => {
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Division" />
-                      </SelectTrigger>
-                      <SelectContent>
+                      </SelectTrigger>                      <SelectContent>
                         {divisionOptions.length === 0 ? (
                           <div className="p-2 text-muted-foreground text-sm">
                             No division available
@@ -807,17 +728,35 @@ const EmployeeManagementCreateForm = () => {
               <InputField label="Identity Card" icon={FileText}>
                 <Input {...register("identityCard")} placeholder="KTP Number" />
               </InputField>
+              
               <InputField label="Tax Number (NPWP)" icon={FileText}>
-                <Input
-                  {...register("taxNumber")}
-                  placeholder="12.345.678.9-012.000"
-                />
+                <Input {...register("taxNumber")} placeholder="12.345.678.9-012.000" />
               </InputField>
+              
               <InputField label="Driving License" icon={FileText}>
                 <Input {...register("drivingLicense")} placeholder="SIM Number" />
               </InputField>
+              
               <InputField label="PTKP Status" icon={FileText}>
-                <Input {...register("ptkpStatus")} placeholder="TK/0, K/1, etc." />
+                <Select onValueChange={(value) => setValue("ptkpStatus", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select PTKP Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TK/0">TK/0 - Single, No Dependent</SelectItem>
+                    <SelectItem value="TK/1">TK/1 - Single, 1 Dependent</SelectItem>
+                    <SelectItem value="TK/2">TK/2 - Single, 2 Dependents</SelectItem>
+                    <SelectItem value="TK/3">TK/3 - Single, 3 Dependents</SelectItem>
+                    <SelectItem value="K/0">K/0 - Married, No Dependent</SelectItem>
+                    <SelectItem value="K/1">K/1 - Married, 1 Dependent</SelectItem>
+                    <SelectItem value="K/2">K/2 - Married, 2 Dependents</SelectItem>
+                    <SelectItem value="K/3">K/3 - Married, 3 Dependents</SelectItem>
+                    <SelectItem value="K/I/0">K/I/0 - Married, Wife Income, No Dependent</SelectItem>
+                    <SelectItem value="K/I/1">K/I/1 - Married, Wife Income, 1 Dependent</SelectItem>
+                    <SelectItem value="K/I/2">K/I/2 - Married, Wife Income, 2 Dependents</SelectItem>
+                    <SelectItem value="K/I/3">K/I/3 - Married, Wife Income, 3 Dependents</SelectItem>
+                  </SelectContent>
+                </Select>
               </InputField>
             </div>
           </FormSection>
@@ -830,36 +769,31 @@ const EmployeeManagementCreateForm = () => {
               <InputField label="Bank Name" icon={Building2}>
                 <Input {...register("bankName")} placeholder="Bank Mandiri" />
               </InputField>
+              
               <InputField label="Bank Account Number" icon={DollarSign}>
-                <Input
-                  {...register("bankAccountNumber")}
-                  placeholder="1234567890"
-                />
+                <Input {...register("bankAccountNumber")} placeholder="1234567890" />
               </InputField>
+              
               <InputField label="Bank Account Name" icon={User}>
                 <Input {...register("bankAccountName")} placeholder="John Doe" />
               </InputField>
+              
               <InputField label="BPJS Health" icon={Heart}>
                 <Input {...register("bpjsHealth")} placeholder="BPJS Health Number" />
               </InputField>
+              
               <InputField label="BPJS Employment" icon={Briefcase}>
-                <Input
-                  {...register("bpjsEmployment")}
-                  placeholder="BPJS Employment Number"
-                />
+                <Input {...register("bpjsEmployment")} placeholder="BPJS Employment Number" />
               </InputField>
+              
               <InputField label="Insurance Company" icon={Shield}>
-                <Input
-                  {...register("insuranceCompany")}
-                  placeholder="Insurance Company Name"
-                />
+                <Input {...register("insuranceCompany")} placeholder="Insurance Company Name" />
               </InputField>
+              
               <InputField label="Insurance Number" icon={FileText}>
-                <Input
-                  {...register("insuranceNumber")}
-                  placeholder="Insurance Number"
-                />
+                <Input {...register("insuranceNumber")} placeholder="Insurance Number" />
               </InputField>
+              
               <InputField label="Policy Number" icon={FileText}>
                 <Input {...register("policyNumber")} placeholder="Policy Number" />
               </InputField>
@@ -872,55 +806,73 @@ const EmployeeManagementCreateForm = () => {
           <FormSection title="Health Information" icon={Heart} isActive>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <InputField label="Blood Type" icon={Heart}>
-                <Input {...register("bloodType")} placeholder="A+, B-, O+, etc." />
+                <Select onValueChange={(value) => setValue("bloodType", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Blood Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A+">A+</SelectItem>
+                    <SelectItem value="A-">A-</SelectItem>
+                    <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="B-">B-</SelectItem>
+                    <SelectItem value="AB+">AB+</SelectItem>
+                    <SelectItem value="AB-">AB-</SelectItem>
+                    <SelectItem value="O+">O+</SelectItem>
+                    <SelectItem value="O-">O-</SelectItem>
+                  </SelectContent>
+                </Select>
               </InputField>
-              <InputField label="Height (cm)" icon={User}>
+              
+              <InputField label="Height (cm)" icon={User} error={errors.height?.message}>
                 <Input
                   {...register("height", { valueAsNumber: true })}
                   type="number"
+                  min="50"
+                  max="300"
                   placeholder="170"
                 />
               </InputField>
-              <InputField label="Weight (kg)" icon={User}>
+              
+              <InputField label="Weight (kg)" icon={User} error={errors.weight?.message}>
                 <Input
                   {...register("weight", { valueAsNumber: true })}
                   type="number"
+                  min="20"
+                  max="500"
                   placeholder="70"
                 />
               </InputField>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField label="Medical History" icon={FileText}>
-                <Input
+                <Textarea
                   {...register("medicalHistory")}
                   placeholder="Medical conditions, surgeries, etc."
+                  rows={3}
                 />
               </InputField>
+              
               <InputField label="Allergies" icon={Heart}>
-                <Input
+                <Textarea
                   {...register("allergies")}
                   placeholder="Food allergies, drug allergies, etc."
+                  rows={3}
                 />
               </InputField>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <InputField label="Emergency Contact Name" icon={User}>
-                <Input
-                  {...register("emergencyContactName")}
-                  placeholder="Emergency contact name"
-                />
+                <Input {...register("emergencyContactName")} placeholder="Emergency contact name" />
               </InputField>
+              
               <InputField label="Emergency Contact Relation" icon={Users}>
-                <Input
-                  {...register("emergencyContactRelation")}
-                  placeholder="Father, Mother, Spouse, etc."
-                />
+                <Input {...register("emergencyContactRelation")} placeholder="Father, Mother, Spouse, etc." />
               </InputField>
+              
               <InputField label="Emergency Contact Phone" icon={Phone}>
-                <Input
-                  {...register("emergencyContactPhone")}
-                  placeholder="+62 812 3456 7890"
-                />
+                <Input {...register("emergencyContactPhone")} placeholder="+62 812 3456 7890" />
               </InputField>
             </div>
           </FormSection>
@@ -933,21 +885,19 @@ const EmployeeManagementCreateForm = () => {
               <InputField label="Instagram" icon={Globe}>
                 <Input {...register("instagram")} placeholder="@username" />
               </InputField>
+              
               <InputField label="Facebook" icon={Globe}>
-                <Input
-                  {...register("facebook")}
-                  placeholder="facebook.com/username"
-                />
+                <Input {...register("facebook")} placeholder="facebook.com/username" />
               </InputField>
+              
               <InputField label="Twitter" icon={Globe}>
                 <Input {...register("twitter")} placeholder="@username" />
               </InputField>
+              
               <InputField label="LinkedIn" icon={Globe}>
-                <Input
-                  {...register("linkedin")}
-                  placeholder="linkedin.com/in/username"
-                />
+                <Input {...register("linkedin")} placeholder="linkedin.com/in/username" />
               </InputField>
+              
               <InputField label="TikTok" icon={Globe}>
                 <Input {...register("tiktok")} placeholder="@username" />
               </InputField>
@@ -958,75 +908,159 @@ const EmployeeManagementCreateForm = () => {
         {/* Education Section */}
         {activeSection === "education" && (
           <FormSection title="Education" icon={GraduationCap} isActive>
-            {/* Formal Education */}
-            <div className="space-y-4">
-              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <GraduationCap className="w-4 h-4 text-gray-500" /> Formal
-                Education
-              </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <InputField label="Last Education">
-                  <Input
-                    {...register("lastEducation")}
-                    placeholder="Last Education"
-                  />
-                </InputField>
-                <InputField label="Faculty Name">
-                  <Input
-                    {...register("facultyName")}
-                    placeholder="Faculty Name"
-                  />
-                </InputField>
-                <InputField label="Graduation Year">
-                  <Input
-                    {...register("graduationYear", { valueAsNumber: true })}
-                    type="number"
-                    placeholder="2007"
-                  />
-                </InputField>
-                <InputField label="Major Name">
-                  <Input
-                    {...register("majorName")}
-                    placeholder="Major Name"
-                  />
-                </InputField>
-                <InputField label="GPA">
-                  <Input
-               {...register("gpa")}          
-               type="number"
-               step="0.01"
-               placeholder="3.50"  
-               /> 
-
-                </InputField>
+            <div className="space-y-6">
+              {/* Formal Education */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-lg font-semibold">
+                  <GraduationCap className="w-5 h-5" />
+                  Formal Education
+                </Label>
+                <FormalEducationArray
+                  educations={formalEducations}
+                  onAdd={addFormalEducation}
+                  onRemove={removeFormalEducation}
+                />
               </div>
-            </div>
 
-            {/* Non‑Formal Education */}
-            <div className="space-y-4">
-              <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <GraduationCap className="w-4 h-4 text-gray-500" /> Non‑Formal
-                Education
-              </Label>
-              <NonFormalEducationArray
-                educations={nonFormalEducations}
-                onAdd={handleAddNonFormalEducation}
-              />
+              {/* Non-Formal Education */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-lg font-semibold">
+                  <GraduationCap className="w-5 h-5" />
+                  Non-Formal Education
+                </Label>
+                <NonFormalEducationArray
+                  educations={nonFormalEducations}
+                  onAdd={addNonFormalEducation}
+                  onRemove={removeNonFormalEducation}
+                />
+              </div>
             </div>
           </FormSection>
         )}
 
+        {/* Skills & Interests Section */}
+        {activeSection === "skills" && (
+          <FormSection title="Skills & Interests" icon={Briefcase} isActive>
+            <div className="space-y-6">
+              {/* Skills */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-lg font-semibold">
+                  <Briefcase className="w-5 h-5" />
+                  Skills
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a skill"
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
+                  />
+                  <Button type="button" onClick={addSkill} disabled={!newSkill.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill, index) => (
+                    <div key={index} className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">
+                      <span>{skill}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeSkill(index)}
+                        className="h-4 w-4 p-0 hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-        {/* Next Submit section */}
-        <Card className="flex flex-col items-center space-y-4 p-6 shadow-md bg-blue-50 dark:bg-slate-800">
+              {/* Interests */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-lg font-semibold">
+                  <Heart className="w-5 h-5" />
+                  Interests
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newInterest}
+                    onChange={(e) => setNewInterest(e.target.value)}
+                    placeholder="Add an interest"
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addInterest())}
+                  />
+                  <Button type="button" onClick={addInterest} disabled={!newInterest.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {interests.map((interest, index) => (
+                    <div key={index} className="flex items-center gap-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">
+                      <span>{interest}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeInterest(index)}
+                        className="h-4 w-4 p-0 hover:bg-green-200 dark:hover:bg-green-800"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Languages */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-lg font-semibold">
+                  <Globe className="w-5 h-5" />
+                  Languages
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newLanguage}
+                    onChange={(e) => setNewLanguage(e.target.value)}
+                    placeholder="Add a language"
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addLanguage())}
+                  />
+                  <Button type="button" onClick={addLanguage} disabled={!newLanguage.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {languages.map((language, index) => (
+                    <div key={index} className="flex items-center gap-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">
+                      <span>{language}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeLanguage(index)}
+                        className="h-4 w-4 p-0 hover:bg-purple-200 dark:hover:bg-purple-800"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </FormSection>
+        )}
+
+        {/* Navigation and Submit Section */}
+        <Card className="flex flex-col items-center space-y-4 p-6 shadow-md bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
           {/* Progress Meter */}
           <div className="w-full">
-            <progress
-              value={currentIndex + 1}
-              max={sections.length}
-              className="w-full h-2 rounded bg-blue-500 dark:bg-gray-700"
-            ></progress>
-            <div className="text-xs text-center mt-1 text-gray-600 dark:text-gray-300">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentIndex + 1) / sections.length) * 100}%` }}
+              ></div>
+            </div>
+            <div className="text-xs text-center mt-2 text-gray-600 dark:text-gray-300">
               {currentIndex + 1} / {sections.length} Sections Completed
             </div>
           </div>
@@ -1034,12 +1068,21 @@ const EmployeeManagementCreateForm = () => {
           {/* Navigation Buttons */}
           <div className="flex flex-wrap justify-center gap-4">
             {currentIndex > 0 && (
-              <Button type="button" variant="outline" onClick={handlePrev}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handlePrev}
+                disabled={isSubmitting}
+              >
                 Previous
               </Button>
             )}
             {!isLastSection && (
-              <Button type="button" onClick={handleNext}>
+              <Button 
+                type="button" 
+                onClick={handleNext}
+                disabled={isSubmitting}
+              >
                 Next
               </Button>
             )}
@@ -1047,16 +1090,27 @@ const EmployeeManagementCreateForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="inline-flex items-center gap-2 text-lg font-semibold dark:bg-slate-700 dark:text-white"
+                className="inline-flex items-center gap-2 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isSubmitting}
               >
-                <User className="w-5 h-5" /> Create Employee Profile
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating Employee...
+                  </>
+                ) : (
+                  <>
+                    <User className="w-5 h-5" />
+                    Create Employee Profile
+                  </>
+                )}
               </Button>
             )}
           </div>
         </Card>
       </form>
 
-      {/*  Modals */}
+      {/* Modals */}
       <BusinessUnitModal
         open={showBusinessUnitModal}
         onOpenChange={setShowBusinessUnitModal}
@@ -1067,11 +1121,6 @@ const EmployeeManagementCreateForm = () => {
         onOpenChange={setShowDivisionModal}
         businessUnits={businessUnits}
         onCreate={handleDivisionCreate}
-      />
-      <UserSelectModal
-        open={showUserSelectModal}
-        onOpenChange={setShowUserSelectModal}
-        divisionId={selectedDivisionId}
       />
     </div>
   );
