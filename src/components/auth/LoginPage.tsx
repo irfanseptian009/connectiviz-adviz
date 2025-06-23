@@ -16,12 +16,14 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); 
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         email,
@@ -35,6 +37,8 @@ const LoginPage = () => {
       } else {
         setError('Login filed');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,10 +94,18 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                className="w-full py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                className="w-full py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center"
                 suppressHydrationWarning
+                disabled={loading} // disable tombol saat loading
               >
-                Sign In
+                {loading ? (
+                  // Spinner sederhana, bisa diganti dengan komponen spinner lain jika ada
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                ) : null}
+                {loading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
           </div>
