@@ -1,5 +1,6 @@
 import Image from "next/image";
 import cardcover from "../../../public/images/grid-image/cardcover.png"
+import logo from "../../../public/images/logo/naruku_logo-removebg-preview.png";
 
 
 export default function CardGate() {
@@ -30,9 +31,11 @@ export default function CardGate() {
         {/* Center circle with logo */}
         <div className="absolute left-24 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 rounded-full h-16 w-16 flex items-center justify-center border-2 shadow-2xl border-gray-400">
           <div className="text-center">
-            <svg className="w-9 h-9 mx-auto text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
-            </svg>
+            <Image
+              src={logo}
+              alt="Naruku Logo"
+              className="h-12 w-12 rounded-full"
+            />
     
           </div>
           

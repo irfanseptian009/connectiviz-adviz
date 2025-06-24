@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import UserMetaCard from "../user-profile/UserMetaCard";
+import UserAvatar from "@/components/common/UserAvatar";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,16 +31,14 @@ export default function UserDropdown() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
-      >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          {user?.profilePictureUrl ? (
-            <Image width={44} height={44} src={user.profilePictureUrl} alt="User" />
-          ) : (
-            <span className="flex items-center justify-center h-full w-full bg-blue-500 text-white text-lg font-bold">
-              {user?.fullName?.charAt(0) || user?.username?.charAt(0) || "U"}
-            </span>
-          )}
+        className="flex items-center  dropdown-toggle"
+      >        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
+          <UserAvatar 
+            src={user?.profilePictureUrl}
+            name={user?.fullName || user?.username}
+            size={44}
+            className="border-2 border-white/20"
+          />
         </span>
         <span className="block mr-1 font-medium text-theme-sm">
           {user?.fullName || user?.username || "User"}
@@ -65,22 +63,22 @@ export default function UserDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[25px] nav flex w-[320px] flex-col rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        className="absolute right-0 mt-[25px]  flex w-[320px] flex-col rounded-2xl border  border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
         <UserMetaCard />
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800 px-7">
           <li>
-            <DropdownItem onItemClick={closeDropdown} tag="a" href="/profile">
+            <DropdownItem className="dark:text-white dark:hover:bg-white/5" onItemClick={closeDropdown} tag="a" href="/profile">
               Edit profile
             </DropdownItem>
           </li>
           <li>
-            <DropdownItem onItemClick={closeDropdown} tag="a" href="/profile">
+            <DropdownItem className="dark:text-white dark:hover:bg-white/5" onItemClick={closeDropdown} tag="a" href="/profile">
               Account settings
             </DropdownItem>
           </li>
           <li>
-            <DropdownItem onItemClick={closeDropdown} tag="a" href="/support">
+            <DropdownItem className="dark:text-white dark:hover:bg-white/5" onItemClick={closeDropdown} tag="a" href="/support">
               Support
             </DropdownItem>
           </li>
@@ -88,10 +86,10 @@ export default function UserDropdown() {
         <div className="px-7 pb-5">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+            className="w-full flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 dark:text-white  dark:hover:bg-white/5 dark:hover:text-gray-300"
           >
             <svg
-              className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
+              className="fill-gray-500  group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
               width="24"
               height="24"
               viewBox="0 0 24 24"

@@ -42,8 +42,9 @@ import { createBusinessUnit, fetchBusinessUnits } from "@/store/businessUnitSlic
 import { createDivision, fetchDivisionTree } from "@/store/divisionSlice";
 import { createUser, assignUserToDivision } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
-import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
 import { withAuth } from "@/context/AuthContext";
+import { adminPhotoService } from "@/services/adminPhotoService";
+import { divisionTreeToOptions } from "@/utils/divisionTreeToOptions";
 
 // Import custom components
 import { BusinessUnitModal } from "@/components/forms/BusinessUnitModal";
@@ -51,6 +52,7 @@ import { DivisionModal } from "@/components/forms/DivisionModal";
 import { FormalEducationArray } from "@/components/forms/FormalEducationArray";
 import { NonFormalEducationArray } from "@/components/forms/NonFormalEducationArray";
 import { FormSection, InputField } from "@/components/forms/FormComponents";
+import EmployeePhotoUpload from "@/components/employee/EmployeePhotoUpload";
 
 const EmployeeManagementCreateForm = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -88,7 +90,12 @@ const EmployeeManagementCreateForm = () => {
   const [languages, setLanguages] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
   const [newInterest, setNewInterest] = useState("");
-  const [newLanguage, setNewLanguage] = useState("");  const {
+  const [newLanguage, setNewLanguage] = useState("");
+  
+  // Profile photo state
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+
+  const {
     register,
     handleSubmit,
     setValue,
@@ -302,9 +309,7 @@ const EmployeeManagementCreateForm = () => {
         skills,
         interests,
         languages,
-      };
-
-      // Create user
+      };      // Create user
       const newUser = await dispatch(createUser(payload)).unwrap();
 
       // Assign to division if specified
@@ -313,6 +318,15 @@ const EmployeeManagementCreateForm = () => {
           userId: newUser.id, 
           divisionId: payload.divisionId 
         }));
+      }      // Upload profile photo if provided
+      if (profilePhoto && newUser?.id) {
+        try {
+          await adminPhotoService.uploadUserProfilePhoto(newUser.id, profilePhoto);
+          toast.success('Profile photo uploaded successfully!');
+        } catch (photoError) {
+          console.error('Photo upload failed:', photoError);
+          toast.error('Employee created but photo upload failed');
+        }
       }
 
       toast.success("Employee profile created successfully!");
@@ -327,6 +341,7 @@ const EmployeeManagementCreateForm = () => {
       setSelectedDivisionId(null);
       setSelectedBusinessUnit(null);
       setActiveSection("auth");
+      setProfilePhoto(null);
       
     } catch (err) {
       const error = err as Error & { response?: { data: string } };
@@ -465,6 +480,15 @@ const EmployeeManagementCreateForm = () => {
         )}        {/* Personal Section */}
         {activeSection === "personal" && (
           <FormSection title="Personal Information" icon={User} isActive>
+            {/* Profile Photo Upload */}
+            <div className="mb-6">
+              <EmployeePhotoUpload
+                onPhotoChange={setProfilePhoto}
+                disabled={isSubmitting}
+                className="max-w-md mx-auto"
+              />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <InputField label="Full Name" icon={User} error={errors.fullName?.message}>
                 <Input {...register("fullName")} placeholder="John Doe" />

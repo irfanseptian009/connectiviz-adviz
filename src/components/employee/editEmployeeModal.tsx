@@ -11,6 +11,9 @@ import { RootState, AppDispatch } from "@/store";
 import { User, NonFormalEducation, EmploymentType, EditEmployeeModalProps } from "@/types/employee";
 import { fetchDivisionTree } from "@/store/divisionSlice";
 import { fetchBusinessUnits } from "@/store/businessUnitSlice";
+import EmployeePhotoUpload from "./EmployeePhotoUpload";
+import { adminPhotoService } from "@/services/adminPhotoService";
+import { toast } from "react-hot-toast";
 
 export default function EditEmployeeModal({
   isOpen,
@@ -26,6 +29,9 @@ export default function EditEmployeeModal({
   const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
   const divisionTree = useSelector((state: RootState) => state.division.tree);
   const [selectedBUId, setSelectedBUId] = useState<number | null>(null);
+    // Profile photo state
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
   // Map selectedTab number to tab names
   const tabNames = ["biodata", "employment", "family", "education", "documents", "contact", "social", "health"];
   const activeTab = tabNames[selectedTab] || "biodata";
@@ -99,6 +105,45 @@ export default function EditEmployeeModal({
     const updated = editData!.nonFormalEducations?.filter((_, i) => i !== index) || [];
     setEditData({ ...editData!, nonFormalEducations: updated });
   };
+
+  // Photo upload handlers
+  const handlePhotoUpload = async (file: File) => {
+    if (!editData?.id) return;
+    
+    setIsUploadingPhoto(true);
+    try {
+      const response = await adminPhotoService.uploadUserProfilePhoto(editData.id, file);
+      setEditData({ ...editData, profilePictureUrl: response.profilePictureUrl });
+      toast.success('Profile photo updated successfully!');
+    } catch (error) {
+      console.error('Photo upload failed:', error);
+      toast.error('Failed to upload profile photo');    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handlePhotoDelete = async () => {
+    if (!editData?.id || !editData?.profilePictureUrl) return;
+    
+    setIsUploadingPhoto(true);
+    try {
+      await adminPhotoService.deleteUserProfilePhoto(editData.id);
+      setEditData({ ...editData, profilePictureUrl: undefined });
+      toast.success('Profile photo deleted successfully!');
+    } catch (error) {
+      console.error('Photo delete failed:', error);
+      toast.error('Failed to delete profile photo');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+  const handlePhotoChange = (file: File | null) => {
+    if (file) {
+      handlePhotoUpload(file);
+    }
+  };
+
   // Utility function to render input with error
   const renderInputWithError = (
     field: keyof User,
@@ -163,10 +208,18 @@ export default function EditEmployeeModal({
             <TabsTrigger value="contact">Kontak</TabsTrigger>
             <TabsTrigger value="social">Sosial</TabsTrigger>
             <TabsTrigger value="health">Kesehatan</TabsTrigger>
-          </TabsList>
-
-          {/* Data Diri Tab */}
+          </TabsList>          {/* Data Diri Tab */}
           <TabsContent value="biodata" className="space-y-4">
+            {/* Profile Photo Upload */}
+            <div className="mb-6 flex justify-center">
+              <EmployeePhotoUpload
+                currentPhotoUrl={editData?.profilePictureUrl}
+                onPhotoChange={handlePhotoChange}
+                disabled={isUploadingPhoto}
+                className="max-w-md"
+              />
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               {renderInputWithError("username", "Username", "text", editData.username, (e) => handleChange("username", e.target.value))}
               {renderInputWithError("email", "Email", "email", editData.email, (e) => handleChange("email", e.target.value))}

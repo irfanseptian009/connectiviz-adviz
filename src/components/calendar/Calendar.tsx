@@ -37,27 +37,34 @@ const Calendar: React.FC = () => {
     Primary: "primary",
     Warning: "warning",
   };
-
   useEffect(() => {
-    // Initialize with some events
+    // Initialize with some events using fixed dates to avoid hydration issues
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(today.getDate() + 2);
+    const threeDaysLater = new Date(today);
+    threeDaysLater.setDate(today.getDate() + 3);
+
     setEvents([
       {
         id: "1",
         title: "Event Conf.",
-        start: new Date().toISOString().split("T")[0],
+        start: today.toISOString().split("T")[0],
         extendedProps: { calendar: "Danger" },
       },
       {
         id: "2",
         title: "Meeting",
-        start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+        start: tomorrow.toISOString().split("T")[0],
         extendedProps: { calendar: "Success" },
       },
       {
         id: "3",
         title: "Workshop",
-        start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-        end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
+        start: dayAfterTomorrow.toISOString().split("T")[0],
+        end: threeDaysLater.toISOString().split("T")[0],
         extendedProps: { calendar: "Primary" },
       },
     ]);
@@ -95,11 +102,10 @@ const Calendar: React.FC = () => {
               }
             : event
         )
-      );
-    } else {
-      // Add new event
+      );    } else {
+      // Add new event - use crypto.randomUUID() or a counter to avoid hydration issues
       const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID ? crypto.randomUUID() : `event-${Math.floor(Math.random() * 1000000)}`,
         title: eventTitle,
         start: eventStartDate,
         end: eventEndDate,

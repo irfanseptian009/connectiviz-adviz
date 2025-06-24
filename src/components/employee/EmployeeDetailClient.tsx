@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormalEducation, NonFormalEducation } from "@/types/employee";
+import ProfilePhotoUpload from "@/components/user-profile/ProfilePhotoUpload";
+import UserAvatar from "@/components/common/UserAvatar";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
   User as UserIcon,
   Building2,
@@ -40,7 +43,8 @@ import {
   Award,
   Target,
   Zap,
-  BookOpen
+  BookOpen,
+  Camera
 } from "lucide-react";
 
 // Tambahkan tipe props
@@ -198,24 +202,14 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
         EMPLOYEE: "Karyawan"
       };
       return roleMap[value as string] || String(value);
-    }
-    
+    }    
     return String(value);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
-  if (status === "loading") {
+  };  if (status === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <LoadingSpinner variant="skeleton" text="Loading employee data..." rows={6} />
+        </div>
       </div>
     );
   }
@@ -242,9 +236,14 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
         <Card className="mb-8 overflow-hidden border-none shadow-xl bg-gradient-to-r dark:from-slate-700 dark:to-purple-900 to-blue-700 from-blue-400  text-white">
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">              {/* Avatar Section */}
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl font-bold border-4 border-white/30">
-                  {getInitials(user.fullName || 'User')}
+              <div className="relative">                <div className="w-32 h-32 rounded-full overflow-hidden bg-white/20 backdrop-blur-sm border-4 border-white/30">
+                  <UserAvatar 
+                    src={user.profilePictureUrl}
+                    name={user.fullName}
+                    size={128}
+                    fallbackBg="bg-white/30"
+                    textColor="text-white"
+                  />
                 </div>
                 <div className="absolute -bottom-2 -right-2">
                   <Badge className="bg-green-500  text-white border-0">
@@ -362,11 +361,10 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Main Content Tabs */}
+        </div>        {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-none lg:flex">            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className={`grid w-full ${props.user ? 'grid-cols-7' : 'grid-cols-6'} lg:w-auto lg:grid-cols-none lg:flex`}>
+            <TabsTrigger value="overview" className="flex items-center gap-2">
               <UserIcon className="h-4 w-4" />
               Overview
             </TabsTrigger>
@@ -390,6 +388,13 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
               <Activity className="h-4 w-4" />
               Activity
             </TabsTrigger>
+            {/* Tampilkan tab Edit hanya untuk profil sendiri */}
+            {props.user && (
+              <TabsTrigger value="edit" className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Edit Profile
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Overview Tab */}
@@ -835,8 +840,107 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
                   />
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
+            </Card>          </TabsContent>
+
+          {/* Edit Profile Tab - Hanya untuk profil sendiri */}
+          {props.user && (
+            <TabsContent value="edit" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Photo Upload Section */}
+                <Card className="border-none shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Camera className="h-5 w-5" />
+                      Foto Profil
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProfilePhotoUpload
+                      currentPhotoUrl={user.profilePictureUrl}
+                      onPhotoUpdated={(photoUrl) => {
+                        // Callback when photo is updated - this will be handled by the component itself
+                        console.log('Photo updated:', photoUrl);
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Quick Profile Info */}
+                <Card className="border-none shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5" />
+                      Informasi Cepat
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100">
+                        <UserAvatar 
+                          src={user.profilePictureUrl}
+                          name={user.fullName}
+                          size={80}
+                          fallbackBg="bg-gray-100"
+                          textColor="text-gray-500"
+                        />
+                      </div>
+                      <h3 className="font-semibold text-lg">{user.fullName}</h3>
+                      <p className="text-gray-600">{user.position}</p>
+                      <p className="text-sm text-gray-500">{user.division?.name}</p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Email:</span>
+                        <span className="text-sm font-medium">{user.email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Phone:</span>
+                        <span className="text-sm font-medium">{user.phoneNumber || '-'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Status:</span>
+                        <Badge variant={user.isActive ? "default" : "secondary"}>
+                          {user.isActive ? "Aktif" : "Tidak Aktif"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Additional Edit Options */}
+              <Card className="border-none shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="h-5 w-5" />
+                    Pengaturan Profil
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Edit className="h-4 w-4" />
+                      Edit Informasi Personal
+                    </Button>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Ubah Password
+                    </Button>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      Social Media
+                    </Button>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Upload Dokumen
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Back Button */}

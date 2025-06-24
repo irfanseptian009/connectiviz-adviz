@@ -10,6 +10,7 @@ import { withAuth } from "@/context/AuthContext";
 import EmployeeTable from "@/components/tables/employeeTable";
 import EditEmployeeModal from "@/components/employee/editEmployeeModal";
 import DeleteConfirmModal from "@/components/employee/deleteConfirmModal";
+import TableLoadingSkeleton from "@/components/common/TableLoadingSkeleton";
 import { employeeUpdateSchema } from "@/schemas/employeeUpdateSchema";
 import { User } from "@/types/employee";
 import { normalizeEmployee } from "@/utils/normalizationEmployee";
@@ -204,28 +205,11 @@ const handleSave = async () => {
             </div>
           </div>
         </CardContent>
-      </Card>
-
-      {/* Loading State */}
+      </Card>      {/* Loading State */}
       {status === "loading" ? (
         <Card>
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="relative">
-                <div className="animate-spin h-12 w-12 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                  Loading employees...
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Please wait while we fetch the data
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-6">
+            <TableLoadingSkeleton rows={8} columns={6} showHeader={true} />
           </CardContent>
         </Card>
       ) : (

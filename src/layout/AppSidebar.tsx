@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useHasMounted } from "../hooks/useClientOnly";
+import { useAdaptiveNavigation } from "../hooks/useAdaptiveNavigation";
 import logo from "../../public/images/logo/logo1.png";
 import logo2 from "../../public/images/logo/logo-connectiviz.png";
 import {
@@ -38,19 +38,19 @@ const navItems: NavItem[] = [
   {
     name: "Forms",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Employee", path: "/form-elements", pro: false }],
+    subItems: [{ name: "Form Create New Employee", path: "/form-elements", pro: false }],
   },
   {
     name: "Tables",
     icon: <TableIcon />,
     subItems: [{ name: "Table Employee", path: "/basic-tables", pro: false }],
-  },
-  {
+  },  {
     name: "Pages",
     icon: <PageIcon />,
     subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
+      { name: "Business Analytics Hub", path: "/business-analytics", pro: false },
+      { name: "Organization", path: "/organization", pro: false },
+      { name: "Business Unit", path: "/business-unit", pro: false },
     ],
   },
   
@@ -61,7 +61,7 @@ const othersItems: NavItem[] = [
     icon: <PieChartIcon />,
     name: "Employee",
     subItems: [
-      { name: "List Employee", path: "/list-employee", pro: false },
+      { name: "Employee Monitoring", path: "/list-employee", pro: false },
     ],
   },
   {
@@ -96,6 +96,7 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const hasMounted = useHasMounted();
+  const { navigateWithAdaptiveLoading, preloadRoute } = useAdaptiveNavigation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -203,10 +204,10 @@ const AppSidebar: React.FC = () => {
                 />
               )}
             </button>
-          ) : (
-            nav.path && (
-              <Link
-                href={nav.path}
+          ) : (            nav.path && (
+              <button
+                onClick={() => navigateWithAdaptiveLoading(nav.path!, `Loading ${nav.name}...`)}
+                onMouseEnter={() => preloadRoute(nav.path!)}
                 className={`flex items-center rounded-lg px-1 py-2.5 w-full text-sm transition-all duration-200
                   ${
                     isActive(nav.path)
@@ -225,11 +226,10 @@ const AppSidebar: React.FC = () => {
                 `}
                 >
                   {nav.icon}
-                </span>
-                {(isExpanded || isHovered || isMobileOpen) && (
+                </span>                {(isExpanded || isHovered || isMobileOpen) && (
                   <span className="font-medium">{nav.name}</span>
                 )}
-              </Link>
+              </button>
             )
           )}
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
@@ -247,10 +247,10 @@ const AppSidebar: React.FC = () => {
             >
               <ul className="mt-1 space-y-1 ">
                 {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      href={subItem.path}
-                      className={`flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200
+                  <li key={subItem.name}>                    <button
+                      onClick={() => navigateWithAdaptiveLoading(subItem.path, `Loading ${subItem.name}...`)}
+                      onMouseEnter={() => preloadRoute(subItem.path)}
+                      className={`flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 w-full text-left
                         ${
                           isActive(subItem.path)
                             ? "bg-blue-500/10 font-medium text-black dark:bg-gray-100/10 dark:text-white "
@@ -281,9 +281,8 @@ const AppSidebar: React.FC = () => {
                           >
                             adviz
                           </span>
-                        )}
-                      </span>
-                    </Link>
+                        )}                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -304,9 +303,11 @@ const AppSidebar: React.FC = () => {
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className={`py-5 m-2 mt-3  flex ${!isExpanded && !isHovered ? "justify-center" : "px-4"}`}>
-        <Link className="flex items-center gap-3" href="/">
+    >      <div className={`py-5 m-2 mt-3  flex ${!isExpanded && !isHovered ? "justify-center" : "px-4"}`}>        <button 
+          onClick={() => navigateWithAdaptiveLoading('/', 'Loading Dashboard...')}
+          onMouseEnter={() => preloadRoute('/')}
+          className="flex items-center gap-3"
+        >
           <Image
             src={logo}
             alt="Logo"
@@ -322,10 +323,9 @@ const AppSidebar: React.FC = () => {
             width={isExpanded || isHovered || isMobileOpen ? 200 : 32}
             height={isExpanded || isHovered || isMobileOpen ? 200 : 32}
             className="transition-all duration-300 dark:brightness-200"
-          />
-            </span>
+          />            </span>
           )}
-        </Link>
+        </button>
       </div>
 
       <div className="flex  flex-col h-[calc(100vh-7rem)] overflow-y-auto px-1 py-4 no-scrollbar">

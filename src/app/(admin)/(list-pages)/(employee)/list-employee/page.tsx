@@ -13,7 +13,7 @@ import {
 } from "react-icons/fi";
 import ListEmployee from "@/components/employee/listEmployee";
 import BusinessUnitList from "@/components/employeeMonitoring/BusinessUnitList";
-import DivisionList from "@/components/employeeMonitoring/divisionList";
+import BusinessAnalyticsDashboard from "@/components/employeeMonitoring/BusinessAnalyticsDashboard.tsx";
 import EmployeeOrganization from "@/components/employeeMonitoring/EmployeeOrganization";
 
 export default function EmployeePage() {
@@ -21,7 +21,7 @@ export default function EmployeePage() {
   const { list: businessUnits, loading: loadingBU } = useBusinessUnit();
   const { list: divisions, loading: loadingDiv } = useDivision();
 
-  const [showComponent, setShowComponent] = useState<"employee" | "businessUnit" | "division" | "organization">("employee");
+  const [showComponent, setShowComponent] = useState<"employee" | "businessUnit" | "Analitycs" | "organization">("employee");
 
   const stats = useMemo(() => ({
     totalEmployee: employees.length,
@@ -89,13 +89,13 @@ export default function EmployeePage() {
           {/* Total Division */}
           <div
             className={cardStyle}
-            onClick={() => setShowComponent("division")}
+            onClick={() => setShowComponent("Analitycs")}
           >
             <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
               <FiGrid size={32} className="text-orange-500 dark:text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-300">Divisions</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Business Analitycs</p>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{stats.totalDivision}</h3>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function EmployeePage() {
         <div className="mt-8">
           {showComponent === "employee" && <ListEmployee />}
           {showComponent === "businessUnit" && <BusinessUnitList />}
-          {showComponent === "division" && <DivisionList />}
+          {showComponent === "Analitycs" && <BusinessAnalyticsDashboard />}
           {showComponent === "organization" && <EmployeeOrganization />}
         </div>
 

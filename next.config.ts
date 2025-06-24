@@ -6,8 +6,17 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   images: {
-    domains: ['localhost'],
-    unoptimized: true
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
+    unoptimized: false,
   },
   webpack(config) {
     config.module.rules.push({
@@ -16,6 +25,11 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  // Add build output configuration for Vercel
+  output: 'standalone',
 };
 
 export default nextConfig;

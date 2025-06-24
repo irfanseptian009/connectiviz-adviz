@@ -3,14 +3,15 @@ import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
+import { useAdaptiveNavigation } from "@/hooks/useAdaptiveNavigation";
 import Image from "next/image";
-import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import logo from "../../public/images/logo/logo1.png";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { navigateWithAdaptiveLoading, preloadRoute } = useAdaptiveNavigation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleToggle = () => {
@@ -81,9 +82,11 @@ const AppHeader: React.FC = () => {
                 />
               </svg>
             )}
-          </button>
-
-          <Link href="/" className="lg:hidden flex items-center">
+          </button>          <button 
+            onClick={() => navigateWithAdaptiveLoading('/', 'Loading Dashboard...')}
+            onMouseEnter={() => preloadRoute('/')}
+            className="lg:hidden flex items-center"
+          >
             <div className="flex items-center justify-center bg-white/20 dark:bg-gray-800/40 w-10 h-10 rounded-lg">
               <Image
                 width={28}
@@ -92,9 +95,8 @@ const AppHeader: React.FC = () => {
                 alt="Logo"
                 className="dark:brightness-200"
               />
-            </div>
-            <span className="ml-2 text-white dark:text-gray-200 font-medium">ConnectiViz</span>
-          </Link>
+            </div>            <span className="ml-2 text-white dark:text-gray-200 font-medium">ConnectiViz</span>
+          </button>
 
           <button
             onClick={toggleApplicationMenu}

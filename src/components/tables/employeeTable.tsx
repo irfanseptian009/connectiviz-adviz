@@ -13,6 +13,7 @@ import { User } from "@/types/employee";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Mail, Phone, Building, CheckCircle, XCircle } from "lucide-react";
+import UserAvatar from "@/components/common/UserAvatar";
 
 type Props = {
   data: User[];
@@ -23,15 +24,6 @@ type Props = {
 
 export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: Props) {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-
-  const getInitials = (name: string) => {
-    return name
-      ?.split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .substring(0, 2)
-      .toUpperCase() || '??';
-  };
 
   const getRoleColor = (role?: string) => {
     switch (role?.toUpperCase()) {
@@ -103,17 +95,24 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                           : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm'
                         }
                       `}
-                    >
-                      {/* Avatar */}
-                      <div className={`
-                        flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center
-                        font-semibold text-sm transition-all duration-200
-                        ${hoveredRow === user.id 
-                          ? 'bg-blue-600 text-white shadow-lg' 
-                          : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
-                        }
-                      `}>
-                        {getInitials(user.fullName || '')}
+                    >                      {/* Avatar */}
+                      <div className="flex-shrink-0">
+                        <UserAvatar 
+                          src={user.profilePictureUrl}
+                          name={user.fullName}
+                          size={48}
+                          fallbackBg={hoveredRow === user.id 
+                            ? "bg-blue-600" 
+                            : "bg-gray-200 dark:bg-gray-700"
+                          }
+                          textColor={hoveredRow === user.id 
+                            ? "text-white" 
+                            : "text-gray-700 dark:text-gray-200"
+                          }
+                          className={`transition-all duration-200 ${
+                            hoveredRow === user.id ? 'shadow-lg' : ''
+                          }`}
+                        />
                       </div>
                       
                       {/* User Info */}

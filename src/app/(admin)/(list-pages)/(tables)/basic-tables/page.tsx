@@ -1,6 +1,6 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import BasicTableOne from "@/components/tables/BasicTableOne";
+import ListEmployee from "@/components/employee/listEmployee";
 import { Metadata } from "next";
 import React from "react";
 
@@ -14,10 +14,10 @@ export default function BasicTables() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Table" />
-      <div className="space-y-6 pallet ">
+      <div className="space-y-6 ">
         <ComponentCard title="Table Employee">
-        <BasicTableOne />
-          </ComponentCard>
+          <ListEmployee />
+        </ComponentCard>
       </div>
     </div>
   );

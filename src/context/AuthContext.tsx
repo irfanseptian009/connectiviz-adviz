@@ -16,6 +16,7 @@ interface AuthCtx {
   user: User | null;
   login: (tok: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: User) => void;
   isInitialized: boolean;
 }
 
@@ -69,15 +70,18 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         logout();
       }
     })();
-  }, [token, isInitialized]);
-  const login = async (tok: string): Promise<void> => {
+  }, [token, isInitialized]);  const login = async (tok: string): Promise<void> => {
     console.log("AuthContext login called with token:", tok);
     persistToken(tok);
     setToken(tok);
     console.log("Token persisted and state updated");
   };
 
-  const value: AuthCtx = { token, user, login, logout, isInitialized };
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
+  const value: AuthCtx = { token, user, login, logout, updateUser, isInitialized };
 
   return (
     <AuthContext.Provider value={value}>
