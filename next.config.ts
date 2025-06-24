@@ -28,8 +28,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-  // Add build output configuration for Vercel
-  output: 'standalone',
 };
 
 export default nextConfig;
