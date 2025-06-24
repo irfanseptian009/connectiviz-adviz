@@ -47,6 +47,20 @@ import {
   Camera
 } from "lucide-react";
 
+import {
+  calculateWorkDuration,
+  exportEmployeeToCSV,
+  exportEmployeeToJSON,
+  exportEmployeeToPDF,
+  shareEmployee
+} from "@/utils/employeeUtils";
+import EditEmployeeModal from "@/components/employee/editEmployeeModal";
+import { editUser, fetchUsers } from "@/store/userSlice";
+import { employeeUpdateSchema } from "@/schemas/employeeUpdateSchema";
+import { normalizeEmployee } from "@/utils/normalizationEmployee";
+import { toast } from "react-hot-toast";
+
+
 // Tambahkan tipe props
 import { User } from "@/types/employee";
 
@@ -59,13 +73,81 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
   const router = useRouter();
   const id = searchParams.get("id");
   const [activeTab, setActiveTab] = useState("overview");
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState<User | null>(null);
+  const [formError, setFormError] = useState<Record<string, string>>({});
+  const [selectedTab, setSelectedTab] = useState(0);
 
   const dispatch = useDispatch<AppDispatch>();
   const userList = useSelector((state: RootState) => state.user.list);
   const status = useSelector((state: RootState) => state.user.status);
 
-  // Jika ada props.user, gunakan itu, jika tidak, fallback ke redux (untuk halaman detail karyawan)
-  const user = props.user || (id ? userList.find((u) => u.id === Number(id)) : undefined);
+  const user = props.user || (id ? userList.find((u) => u.id === Number(id)) : undefined);  // Handler functions
+  const handleEdit = () => {
+    if (!user) return;
+    setEditData({ ...user });
+    setFormError({});
+    setSelectedTab(0);
+    setEditOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!editData) return;
+
+    try {
+      const normalized = normalizeEmployee(editData);           
+      console.log('Normalized data being sent:', normalized);
+      const validated = employeeUpdateSchema.parse(normalized);
+      console.log('Validated data:', validated);
+        // Filter out fields that shouldn't be sent to the backend
+      const { id, ...updateFields } = validated;
+      
+      const payload = Object.fromEntries(
+        Object.entries(updateFields).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+      console.log('Final payload:', payload);
+
+      await dispatch(editUser({ id: validated.id, payload })).unwrap();
+      await dispatch(fetchUsers());       
+
+      toast.success("Data karyawan berhasil diperbarui");
+      setEditOpen(false);
+      
+      // Refresh the current user data
+      if (id) {
+        dispatch(fetchUserById(Number(id)));
+      }
+    } catch (err: unknown) {
+      console.error('Error in handleSave:', err);
+      if (err && typeof err === 'object' && 'errors' in err) {
+        const obj: Record<string,string> = {};
+        const zodErr = err as { errors: Array<{ path: string[], message: string }> };
+        zodErr.errors.forEach(e => obj[e.path[0]] = e.message);
+        setFormError(obj);                  
+      } else {
+        const apiErr = err as { response?: { data?: string } };
+        toast.error(apiErr?.response?.data ?? "Gagal menyimpan");
+      }
+    }
+  };
+  const handleExport = (format: 'csv' | 'json' | 'pdf') => {
+    if (!user) return;
+    
+    if (format === 'csv') {
+      exportEmployeeToCSV(user);
+    } else if (format === 'json') {
+      exportEmployeeToJSON(user);
+    } else if (format === 'pdf') {
+      exportEmployeeToPDF(user);
+    }
+    setShowExportModal(false);
+  };
+
+  const handleShare = async () => {
+    if (!user) return;
+    await shareEmployee(user);
+  };
 
   useEffect(() => {
     if (id && !props.user) {
@@ -73,7 +155,6 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
     }
   }, [dispatch, id, props.user]);
 
-  // Debug logging untuk memeriksa apakah data pendidikan sudah dimuat
   useEffect(() => {
     if (user) {
       console.log('User data:', user);
@@ -281,19 +362,32 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
                         <span>{user.phoneNumber}</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Quick Actions */}
+                  </div>                  {/* Quick Actions */}
                   <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                      onClick={handleEdit}
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
-                    <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                      onClick={handleShare}
+                    >
                       <Share className="h-4 w-4 mr-2" />
                       Share
                     </Button>
-                    <Button variant="secondary" size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                      onClick={() => setShowExportModal(true)}
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Export
                     </Button>
@@ -311,10 +405,9 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <Clock className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
+                </div>                <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Lama Bekerja</p>
-                  <p className="text-2xl font-bold">2.5 Tahun</p>
+                  <p className="text-2xl font-bold">{calculateWorkDuration(user.startDate || null)}</p>
                 </div>
               </div>
             </CardContent>
@@ -943,13 +1036,72 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
           )}
         </Tabs>
 
-        {/* Back Button */}
-        <div className="flex justify-center mt-8">
-          <Button onClick={() => router.back()} variant="outline" size="lg">
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Kembali ke Daftar Karyawan
-          </Button>
-        </div>
+        {/* Export Modal */}
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                Export Employee Data
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Choose the format to export {user.fullName || user.username}&apos;s data:
+              </p>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleExport('csv')}
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  <FileText className="h-4 w-4 mr-3" />
+                  Export as CSV
+                  <span className="text-xs text-gray-500 ml-auto">Spreadsheet format</span>
+                </Button>
+                
+                <Button
+                  onClick={() => handleExport('json')}
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  <FileText className="h-4 w-4 mr-3" />
+                  Export as JSON
+                  <span className="text-xs text-gray-500 ml-auto">Developer format</span>
+                </Button>
+                
+                <Button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  <FileText className="h-4 w-4 mr-3" />
+                  Export as PDF
+                  <span className="text-xs text-gray-500 ml-auto">Document format</span>
+                </Button>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setShowExportModal(false)}
+                  variant="ghost"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>          </div>
+        )}
+
+        {/* Edit Employee Modal */}
+        <EditEmployeeModal
+          isOpen={isEditOpen}
+          onClose={() => setEditOpen(false)}
+          editData={editData}
+          setEditData={setEditData}
+          formError={formError}
+          setFormError={setFormError}
+          handleSave={handleSave}
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
+        />
       </div>
     </div>
   );

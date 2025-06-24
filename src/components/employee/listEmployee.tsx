@@ -19,18 +19,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, UserPlus, Filter, Download, RefreshCw } from "lucide-react";
+import { exportEmployeeToCSV, exportEmployeeToJSON, exportEmployeeToPDF } from "@/utils/employeeUtils";
 
 function ListEmployee() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { list, status } = useSelector((state: RootState) => state.user);
-  const [search, setSearch] = useState("");
+  const { list, status } = useSelector((state: RootState) => state.user);  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isEditOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState<User | null>(null);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [selectedTab, setSelectedTab] = useState(0);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [divisionFilter, setDivisionFilter] = useState<string>("");
   const limit = 10;
 
   useEffect(() => {
@@ -116,18 +121,53 @@ const handleSave = async () => {
     }
     setDeleteId(null);
   };
-
   const getUserName = (id: number | null) =>
     list.find((u) => u.id === id)?.username || "Employee not found";
 
+  // Filter and Export Functions
+  const handleExport = (format: 'csv' | 'json' | 'pdf') => {
+    if (format === 'csv') {
+      // Export all filtered data to CSV
+      filtered.forEach(user => exportEmployeeToCSV(user));
+      toast.success("Employees exported to CSV!");
+    } else if (format === 'json') {
+      // Export all filtered data to JSON
+      filtered.forEach(user => exportEmployeeToJSON(user));
+      toast.success("Employees exported to JSON!");
+    } else if (format === 'pdf') {
+      // Export all filtered data to PDF
+      filtered.forEach(user => exportEmployeeToPDF(user));
+      toast.success("Employees exported to PDF!");
+    }
+    setShowExportModal(false);
+  };
+
+  const clearFilters = () => {
+    setRoleFilter("");
+    setStatusFilter("");
+    setDivisionFilter("");
+    toast.success("Filters cleared!");
+  };
+
   const filtered = useMemo(
     () =>
-      list.filter(
-        (u) =>
+      list.filter((u) => {
+        const matchesSearch = 
           u.username?.toLowerCase().includes(search.toLowerCase()) ||
-          u.email?.toLowerCase().includes(search.toLowerCase())
-      ),
-    [search, list]
+          u.email?.toLowerCase().includes(search.toLowerCase()) ||
+          u.fullName?.toLowerCase().includes(search.toLowerCase());
+        
+        const matchesRole = !roleFilter || u.role === roleFilter;
+        const matchesStatus = !statusFilter || 
+          (statusFilter === "active" && u.isActive) ||
+          (statusFilter === "inactive" && !u.isActive);
+        const matchesDivision = !divisionFilter || 
+          u.division?.name?.toLowerCase().includes(divisionFilter.toLowerCase()) ||
+          u.divisionId?.toString() === divisionFilter;
+
+        return matchesSearch && matchesRole && matchesStatus && matchesDivision;
+      }),
+    [search, list, roleFilter, statusFilter, divisionFilter]
   );
 
   const totalPages = Math.ceil(filtered.length / limit);
@@ -183,13 +223,22 @@ const handleSave = async () => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
               />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+            </div>            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setShowFilterModal(true)}
+              >
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setShowExportModal(true)}
+              >
                 <Download className="h-4 w-4" />
                 Export
               </Button>
@@ -307,14 +356,135 @@ const handleSave = async () => {
         handleSave={handleSave}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
-      />
-
-      <DeleteConfirmModal
+      />      <DeleteConfirmModal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}
         onConfirm={() => handleDelete(deleteId!)}
         userName={getUserName(deleteId)}
       />
+
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Filter Employees
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Role Filter */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                <select 
+                  value={roleFilter} 
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <option value="">All Roles</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="EMPLOYEE">Employee</option>
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <select 
+                  value={statusFilter} 
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              {/* Division Filter */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Division</label>
+                <Input
+                  type="text"
+                  placeholder="Search division..."
+                  value={divisionFilter}
+                  onChange={(e) => setDivisionFilter(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-6">
+              <Button onClick={clearFilters} variant="outline">
+                Clear Filters
+              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowFilterModal(false)} variant="ghost">
+                  Cancel
+                </Button>
+                <Button onClick={() => setShowFilterModal(false)}>
+                  Apply Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Export Employee Data
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Choose the format to export {filtered.length} employee records:
+            </p>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleExport('csv')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-3" />
+                Export as CSV
+                <span className="text-xs text-gray-500 ml-auto">Spreadsheet format</span>
+              </Button>
+              
+              <Button
+                onClick={() => handleExport('json')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-3" />
+                Export as JSON
+                <span className="text-xs text-gray-500 ml-auto">Developer format</span>
+              </Button>
+              
+              <Button
+                onClick={() => handleExport('pdf')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-3" />
+                Export as PDF
+                <span className="text-xs text-gray-500 ml-auto">Document format</span>
+              </Button>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <Button
+                onClick={() => setShowExportModal(false)}
+                variant="ghost"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
