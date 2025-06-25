@@ -7,7 +7,6 @@ interface OrgChartNode {
   children?: OrgChartNode[];
 }
 
-// Helper: group users by division
 export const buildOrgChartData = (users: User[]): OrgChartNode => {
   const divisionMap: Record<number, OrgChartNode> = {};
 

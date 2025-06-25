@@ -58,7 +58,6 @@ const EmployeeManagementCreateForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
 
-  // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBusinessUnit, setSelectedBusinessUnit] = useState<number | null>(null);
 
@@ -309,7 +308,7 @@ const EmployeeManagementCreateForm = () => {
         skills,
         interests,
         languages,
-      };      // Create user
+      };    
       const newUser = await dispatch(createUser(payload)).unwrap();
 
       // Assign to division if specified
@@ -437,7 +436,8 @@ const EmployeeManagementCreateForm = () => {
                 />
               </InputField>
 
-              <InputField label="Role" icon={Shield}>                <Select
+              <InputField label="Role" icon={Shield}>                
+              <Select
                   value={selectedRole}
                   onValueChange={(value) => {
                     const roleValue = value as Role;
@@ -592,7 +592,8 @@ const EmployeeManagementCreateForm = () => {
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                ))}                <Button
+                ))}                
+                <Button
                   type="button"
                   size="sm"
                   variant="outline"

@@ -6,7 +6,6 @@ import { AlertIcon, ArrowDownIcon, ArrowUpIcon, BoltIcon, ErrorIcon,  TimeIcon }
 export const Metrics = () => {
   return (
     <div className="grid grid-cols-1  gap-4 sm:grid-cols-4 md:gap-6">
-      {/* <!-- Metric Item Start --> */}
       <div className="rounded-2xl border shadow-2xl border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
    
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
@@ -29,9 +28,7 @@ export const Metrics = () => {
           </Badge>
         </div>
       </div>
-      {/* <!-- Metric Item End --> */}
 
-      {/* <!-- Metric Item Start --> */}
       <div className="rounded-2xl border shadow-2xl border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoltIcon className="text-gray-800 dark:text-white/90" />
@@ -76,8 +73,6 @@ export const Metrics = () => {
           </Badge>
         </div>
       </div>
-      {/* <!-- Metric Item End --> */}
-      {/* <!-- Metric Item Start --> */}
       <div className="rounded-2xl shadow-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <AlertIcon className="text-gray-800 dark:text-white/90" />
@@ -99,7 +94,6 @@ export const Metrics = () => {
           </Badge>
         </div>
       </div>
-      {/* <!-- Metric Item End --> */}
     </div>
   );
 };

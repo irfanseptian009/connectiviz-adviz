@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { User } from '@/types/employee';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export interface AdminUploadPhotoResponse {
   message: string;
@@ -43,7 +43,6 @@ export const adminPhotoService = {
     } catch (error: unknown) {
       console.error('[Admin Photo Service] Full error object:', error);
       
-      // Handle axios errors
       if (axios.isAxiosError(error)) {
         console.error('[Admin Photo Service] Axios error details:', {
           status: error.response?.status,
@@ -57,12 +56,10 @@ export const adminPhotoService = {
           }
         });
         
-        // Throw with specific error message
         const errorMessage = error.response?.data?.message || error.message || 'Upload failed';
         throw new Error(`Upload failed: ${errorMessage}`);
       }
       
-      // Handle other errors
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('[Admin Photo Service] Non-axios error:', errorMessage);
       throw new Error(`Upload failed: ${errorMessage}`);
@@ -89,7 +86,6 @@ export const adminPhotoService = {
     } catch (error: unknown) {
       console.error('[Admin Photo Service] Full delete error:', error);
       
-      // Handle axios errors
       if (axios.isAxiosError(error)) {
         console.error('[Admin Photo Service] Axios delete error details:', {
           status: error.response?.status,
@@ -103,12 +99,10 @@ export const adminPhotoService = {
           }
         });
         
-        // Throw with specific error message
         const errorMessage = error.response?.data?.message || error.message || 'Delete failed';
         throw new Error(`Delete failed: ${errorMessage}`);
       }
       
-      // Handle other errors
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('[Admin Photo Service] Non-axios delete error:', errorMessage);
       throw new Error(`Delete failed: ${errorMessage}`);

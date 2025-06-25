@@ -6,11 +6,11 @@ import { useCallback } from 'react';
 
 export function useAdaptiveNavigation() {
   const router = useRouter();
-  const { showLoading, hideLoading, getLoadingDuration, networkInfo } = useAdaptiveLoading();
+  const { showLoading, hideLoading, networkInfo } = useAdaptiveLoading();
 
   const navigateWithAdaptiveLoading = useCallback(
     (path: string, loadingText: string = 'Loading page...') => {
-      // Adapt loading text based on connection
+      // Show loading immediately without delay
       let adaptedText = loadingText;
       if (networkInfo.connectionType === 'slow') {
         adaptedText = `${loadingText} (This might take a moment)`;
@@ -18,67 +18,71 @@ export function useAdaptiveNavigation() {
         adaptedText = 'Connection lost. Trying to navigate...';
       }
 
+      // Show loading instantly
       showLoading(adaptedText);
       
-      // Adaptive delay based on connection speed
-      const baseDelay = networkInfo.connectionType === 'fast' ? 100 : 
-                       networkInfo.connectionType === 'slow' ? 300 : 500;
+      // Navigate immediately for instant feedback
+      router.push(path);
+      
+      // Adaptive hiding delay based on connection
+      const hideDelay = networkInfo.connectionType === 'fast' ? 500 : 
+                       networkInfo.connectionType === 'slow' ? 1200 : 800;
       
       setTimeout(() => {
-        router.push(path);
-        
-        // Adaptive hiding delay
-        const hideDelay = getLoadingDuration() * 0.3; // 30% of loading duration
-        setTimeout(() => {
-          hideLoading();
-        }, hideDelay);
-      }, baseDelay);
+        hideLoading();
+      }, hideDelay);
     },
-    [router, showLoading, hideLoading, getLoadingDuration, networkInfo]
+    [router, showLoading, hideLoading, networkInfo]
   );
 
   const replaceWithAdaptiveLoading = useCallback(
     (path: string, loadingText: string = 'Loading page...') => {
+      // Show loading immediately
       let adaptedText = loadingText;
       if (networkInfo.connectionType === 'slow') {
         adaptedText = `${loadingText} (Slow connection detected)`;
       }
 
+      // Show loading instantly
       showLoading(adaptedText);
       
-      const baseDelay = networkInfo.connectionType === 'fast' ? 100 : 
-                       networkInfo.connectionType === 'slow' ? 400 : 600;
+      // Navigate immediately
+      router.replace(path);
+      
+      // Adaptive hiding delay
+      const hideDelay = networkInfo.connectionType === 'fast' ? 500 : 
+                       networkInfo.connectionType === 'slow' ? 1200 : 800;
       
       setTimeout(() => {
-        router.replace(path);
-        setTimeout(() => {
-          hideLoading();
-        }, getLoadingDuration() * 0.4);
-      }, baseDelay);
+        hideLoading();
+      }, hideDelay);
     },
-    [router, showLoading, hideLoading, getLoadingDuration, networkInfo]
+    [router, showLoading, hideLoading, networkInfo]
   );
 
   const backWithAdaptiveLoading = useCallback(
     (loadingText: string = 'Going back...') => {
+      // Show loading immediately
       let adaptedText = loadingText;
       if (networkInfo.connectionType === 'slow') {
         adaptedText = `${loadingText} (Loading previous page)`;
       }
 
+      // Show loading instantly
       showLoading(adaptedText);
       
-      const baseDelay = networkInfo.connectionType === 'fast' ? 50 : 
-                       networkInfo.connectionType === 'slow' ? 200 : 300;
+      // Navigate back immediately
+      router.back();
+      
+      // Shorter delay for back navigation
+      const hideDelay = networkInfo.connectionType === 'fast' ? 300 : 
+                       networkInfo.connectionType === 'slow' ? 800 : 500;
       
       setTimeout(() => {
-        router.back();
-        setTimeout(() => {
-          hideLoading();
-        }, getLoadingDuration() * 0.2);
-      }, baseDelay);
+        hideLoading();
+      }, hideDelay);
     },
-    [router, showLoading, hideLoading, getLoadingDuration, networkInfo]
+    [router, showLoading, hideLoading, networkInfo]
   );
 
   // Preload route based on network conditions

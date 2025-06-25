@@ -17,10 +17,10 @@ export default function CardGate() {
        
         <div className="flex flex-row justify-center w-full  rounded-3xl shadow-xl bg-blue-500 dark:bg-gray-900/80 text-white">
         <div className="bg-gradient-to-bl from-orange-300 to-orange-800  border-1 border-orange-400 shadow-2xl mt-6 h-24 w-8 rounded-r-full "></div>
-        <div className="flex flex-col m-2">
-        <h2 className="text-2xl font-bold mt-8">Naruku</h2>
-          <p className="text-sm text-gray-200 opacity-80">
-            ini adalh description app
+        <div className="flex flex-col">
+        <h2 className="text-2xl font-bold mt-6 mb-3">Naruku</h2>
+          <p className="text-xs text-gray-200 opacity-80">
+           KPI Employee Performance Management
           </p>
         </div>
         

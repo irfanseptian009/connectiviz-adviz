@@ -12,10 +12,9 @@ export default function TopLoadingBar() {
     setIsLoading(true);
     setProgress(0);
 
-    // Simulate progress with fixed increment to avoid hydration issues
     let currentProgress = 0;
     const progressTimer = setInterval(() => {
-      currentProgress += 15; // Fixed increment instead of Math.random()
+      currentProgress += 15; 
       if (currentProgress >= 90) {
         clearInterval(progressTimer);
         setProgress(90);

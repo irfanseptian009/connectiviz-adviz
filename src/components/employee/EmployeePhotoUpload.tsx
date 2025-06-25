@@ -62,7 +62,7 @@ export default function EmployeePhotoUpload({
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp']
     },
-    maxSize: maxSize * 1024 * 1024, // Convert MB to bytes
+    maxSize: maxSize * 1024 * 1024,
     multiple: false,
     disabled
   });

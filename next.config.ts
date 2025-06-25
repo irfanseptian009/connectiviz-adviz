@@ -18,15 +18,28 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: false,
   },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"],
-    });
-    return config;
-  },
+  // Turbopack configuration
   experimental: {
+    turbo: {
+      rules: {
+        // Configure SVG handling for Turbopack
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  // Keep webpack config for build (production) - Turbopack is dev-only
+  webpack(config, { dev }) {
+    if (!dev) {
+      config.module.rules.push({
+        test: /\.svg$/,
+        use: ["@svgr/webpack"],
+      });
+    }
+    return config;
   },
 };
 

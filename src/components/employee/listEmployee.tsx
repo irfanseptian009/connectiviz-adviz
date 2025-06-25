@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, UserPlus, Filter, Download, RefreshCw } from "lucide-react";
-import { exportEmployeeToCSV, exportEmployeeToJSON, exportEmployeeToPDF } from "@/utils/employeeUtils";
+import { exportEmployeesTableToCSV, exportEmployeesTableToJSON, exportEmployeesTableToPDF } from "@/utils/employeeUtils";
 
 function ListEmployee() {
   const router = useRouter();
@@ -30,12 +30,12 @@ function ListEmployee() {
   const [editData, setEditData] = useState<User | null>(null);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [selectedTab, setSelectedTab] = useState(0);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);  const [showFilterModal, setShowFilterModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [divisionFilter, setDivisionFilter] = useState<string>("");
+  const [businessUnitFilter, setBusinessUnitFilter] = useState<string>("");
   const limit = 10;
 
   useEffect(() => {
@@ -123,31 +123,42 @@ const handleSave = async () => {
   };
   const getUserName = (id: number | null) =>
     list.find((u) => u.id === id)?.username || "Employee not found";
-
   // Filter and Export Functions
-  const handleExport = (format: 'csv' | 'json' | 'pdf') => {
-    if (format === 'csv') {
-      // Export all filtered data to CSV
-      filtered.forEach(user => exportEmployeeToCSV(user));
-      toast.success("Employees exported to CSV!");
-    } else if (format === 'json') {
-      // Export all filtered data to JSON
-      filtered.forEach(user => exportEmployeeToJSON(user));
-      toast.success("Employees exported to JSON!");
-    } else if (format === 'pdf') {
-      // Export all filtered data to PDF
-      filtered.forEach(user => exportEmployeeToPDF(user));
-      toast.success("Employees exported to PDF!");
+  const handleExport = async (format: 'csv' | 'json' | 'pdf') => {
+    try {
+      if (format === 'csv') {
+        exportEmployeesTableToCSV(filtered);
+        toast.success(`${filtered.length} employees exported to CSV!`);
+      } else if (format === 'json') {
+        exportEmployeesTableToJSON(filtered);
+        toast.success(`${filtered.length} employees exported to JSON!`);
+      } else if (format === 'pdf') {
+        await exportEmployeesTableToPDF(filtered);
+        toast.success(`${filtered.length} employees exported to PDF!`);
+      }
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data. Please try again.');
     }
-    setShowExportModal(false);
   };
-
   const clearFilters = () => {
     setRoleFilter("");
     setStatusFilter("");
     setDivisionFilter("");
+    setBusinessUnitFilter("");
     toast.success("Filters cleared!");
   };
+  // Get unique business units for filter dropdown
+  const businessUnits = useMemo(() => {
+    const units = new Set<string>();
+    list.forEach(user => {
+      if (user.division?.businessUnit?.name) {
+        units.add(user.division.businessUnit.name);
+      }
+    });
+    return Array.from(units).sort();
+  }, [list]);
 
   const filtered = useMemo(
     () =>
@@ -163,11 +174,12 @@ const handleSave = async () => {
           (statusFilter === "inactive" && !u.isActive);
         const matchesDivision = !divisionFilter || 
           u.division?.name?.toLowerCase().includes(divisionFilter.toLowerCase()) ||
-          u.divisionId?.toString() === divisionFilter;
+          u.divisionId?.toString() === divisionFilter;        const matchesBusinessUnit = !businessUnitFilter || 
+          u.division?.businessUnit?.name === businessUnitFilter;
 
-        return matchesSearch && matchesRole && matchesStatus && matchesDivision;
+        return matchesSearch && matchesRole && matchesStatus && matchesDivision && matchesBusinessUnit;
       }),
-    [search, list, roleFilter, statusFilter, divisionFilter]
+    [search, list, roleFilter, statusFilter, divisionFilter, businessUnitFilter]
   );
 
   const totalPages = Math.ceil(filtered.length / limit);
@@ -370,8 +382,22 @@ const handleSave = async () => {
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
               Filter Employees
             </h3>
-            
-            <div className="space-y-4">
+              <div className="space-y-4">
+              {/* Business Unit Filter */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Business Unit</label>
+                <select 
+                  value={businessUnitFilter} 
+                  onChange={(e) => setBusinessUnitFilter(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <option value="">All Business Units</option>
+                  {businessUnits.map(unit => (
+                    <option key={unit} value={unit}>{unit}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Role Filter */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
@@ -433,13 +459,12 @@ const handleSave = async () => {
 
       {/* Export Modal */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-              Export Employee Data
+              Export Employee Table
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Choose the format to export {filtered.length} employee records:
+              Export {filtered.length} employee records from the current table view:
             </p>
             
             <div className="space-y-3">
@@ -449,8 +474,8 @@ const handleSave = async () => {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-3" />
-                Export as CSV
-                <span className="text-xs text-gray-500 ml-auto">Spreadsheet format</span>
+                Export Table as CSV
+                <span className="text-xs text-gray-500 ml-auto">Excel compatible</span>
               </Button>
               
               <Button
@@ -459,8 +484,8 @@ const handleSave = async () => {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-3" />
-                Export as JSON
-                <span className="text-xs text-gray-500 ml-auto">Developer format</span>
+                Export Table as JSON
+                <span className="text-xs text-gray-500 ml-auto">Data format</span>
               </Button>
               
               <Button
@@ -469,8 +494,8 @@ const handleSave = async () => {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-3" />
-                Export as PDF
-                <span className="text-xs text-gray-500 ml-auto">Document format</span>
+                Export Table as PDF
+                <span className="text-xs text-gray-500 ml-auto">Print ready</span>
               </Button>
             </div>
             

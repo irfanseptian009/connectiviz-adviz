@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useHasMounted } from "../hooks/useClientOnly";
 import { useAdaptiveNavigation } from "../hooks/useAdaptiveNavigation";
+import { useAdaptiveLoading } from "../context/AdaptiveLoadingContext";
 import logo from "../../public/images/logo/logo1.png";
 import logo2 from "../../public/images/logo/logo-connectiviz.png";
 import {
@@ -97,15 +98,33 @@ const AppSidebar: React.FC = () => {
   const pathname = usePathname();
   const hasMounted = useHasMounted();
   const { navigateWithAdaptiveLoading, preloadRoute } = useAdaptiveNavigation();
+  const { isLoading } = useAdaptiveLoading();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
+  const [clickedItem, setClickedItem] = useState<string | null>(null);
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+
+  // Handle navigation with loading feedback
+  const handleNavigation = useCallback((path: string, itemName: string) => {
+    setClickedItem(path);
+    navigateWithAdaptiveLoading(path, `Loading ${itemName}...`);
+    
+    // Clear clicked state after a short delay
+    setTimeout(() => {
+      setClickedItem(null);
+    }, 800);
+  }, [navigateWithAdaptiveLoading]);
+
+  // Check if item is currently loading
+  const isItemLoading = useCallback((path: string) => {
+    return isLoading && clickedItem === path;
+  }, [isLoading, clickedItem]);
 
   useEffect(() => {
     // Check if the current path matches any submenu item
@@ -206,28 +225,39 @@ const AppSidebar: React.FC = () => {
             </button>
           ) : (            nav.path && (
               <button
-                onClick={() => navigateWithAdaptiveLoading(nav.path!, `Loading ${nav.name}...`)}
+                onClick={() => handleNavigation(nav.path!, nav.name)}
                 onMouseEnter={() => preloadRoute(nav.path!)}
-                className={`flex items-center rounded-lg px-1 py-2.5 w-full text-sm transition-all duration-200
+                disabled={isItemLoading(nav.path!)}
+                className={`flex items-center rounded-lg px-1 py-2.5 w-full text-sm transition-all duration-200 relative
                   ${
                     isActive(nav.path)
                       ? "bg-black/10 font-medium text-gray-600 dark:bg-gray-800/60 dark:text-white"
                       : "text-gray-800 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-gray-800/30"
                   }
+                  ${isItemLoading(nav.path!) ? "opacity-60 cursor-not-allowed" : ""}
                   ${!isExpanded && !isHovered ? "lg:justify-center" : ""}
                 `}
               >
                 <span
-                  className={`flex items-center  justify-center w-6 h-6 ${
+                  className={`flex items-center justify-center w-6 h-6 ${
                     isActive(nav.path)
                       ? "text-gray-600 dark:text-white"
                       : "text-gray-600 dark:text-gray-300"
                   }
                 `}
                 >
-                  {nav.icon}
+                  {isItemLoading(nav.path!) ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    nav.icon
+                  )}
                 </span>                {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="font-medium">{nav.name}</span>
+                  <span className={`font-medium ${isItemLoading(nav.path!) ? "opacity-70" : ""}`}>
+                    {nav.name}
+                    {isItemLoading(nav.path!) && (
+                      <span className="ml-2 text-xs opacity-60">Loading...</span>
+                    )}
+                  </span>
                 )}
               </button>
             )
@@ -248,17 +278,24 @@ const AppSidebar: React.FC = () => {
               <ul className="mt-1 space-y-1 ">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>                    <button
-                      onClick={() => navigateWithAdaptiveLoading(subItem.path, `Loading ${subItem.name}...`)}
+                      onClick={() => handleNavigation(subItem.path, subItem.name)}
                       onMouseEnter={() => preloadRoute(subItem.path)}
-                      className={`flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 w-full text-left
+                      disabled={isItemLoading(subItem.path)}
+                      className={`flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 w-full text-left relative
                         ${
                           isActive(subItem.path)
                             ? "bg-blue-500/10 font-medium text-black dark:bg-gray-100/10 dark:text-white "
                             : "text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-600/30"
                         }
+                        ${isItemLoading(subItem.path) ? "opacity-60 cursor-not-allowed" : ""}
                       `}
                     >
-                      <span>{subItem.name}</span>
+                      <span className="flex items-center gap-2">
+                        {isItemLoading(subItem.path) && (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {subItem.name}
+                      </span>
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
@@ -304,17 +341,27 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >      <div className={`py-5 m-2 mt-3  flex ${!isExpanded && !isHovered ? "justify-center" : "px-4"}`}>        <button 
-          onClick={() => navigateWithAdaptiveLoading('/', 'Loading Dashboard...')}
+          onClick={() => handleNavigation('/', 'Dashboard')}
           onMouseEnter={() => preloadRoute('/')}
-          className="flex items-center gap-3"
+          disabled={isItemLoading('/')}
+          className={`flex items-center gap-3 transition-all duration-200 ${
+            isItemLoading('/') ? "opacity-60 cursor-not-allowed" : "hover:opacity-80"
+          }`}
         >
-          <Image
-            src={logo}
-            alt="Logo"
-            width={isExpanded || isHovered || isMobileOpen ? 50 : 45}
-            height={isExpanded || isHovered || isMobileOpen ? 50 : 45}
-            className="transition-all duration-300 dark:brightness-200"
-          />
+          <div className="relative">
+            <Image
+              src={logo}
+              alt="Logo"
+              width={isExpanded || isHovered || isMobileOpen ? 50 : 45}
+              height={isExpanded || isHovered || isMobileOpen ? 50 : 45}
+              className="transition-all duration-300 dark:brightness-200"
+            />
+            {isItemLoading('/') && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/20 rounded-full">
+                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
           {(isExpanded || isHovered || isMobileOpen) && (
             <span className="text-xl font-extrablold text-gray-900 dark:text-gray-100 ">
                <Image

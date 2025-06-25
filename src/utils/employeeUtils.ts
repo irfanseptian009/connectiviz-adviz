@@ -258,13 +258,15 @@ export const exportEmployeeToPDF = async (user: User): Promise<void> => {
   try {
     // Dynamic import jsPDF untuk menghindari SSR issues
     const { jsPDF } = await import('jspdf');
-    const autoTable = (await import('jspdf-autotable')).default;
+    // Import autotable plugin
+    await import('jspdf-autotable');
     
     const pdf = new jsPDF('p', 'mm', 'a4');
-    
-    // Add autoTable method to pdf instance
+      // Check if autotable is available
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (pdf as any).autoTable = autoTable;
+    if (!(pdf as any).autoTable) {
+      throw new Error('AutoTable plugin not loaded');
+    }
     
     // Title
     pdf.setFontSize(20);
@@ -451,4 +453,193 @@ export const exportEmployeeToPDF = async (user: User): Promise<void> => {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF. Please try again.');
   }
+};
+
+/**
+ * Export multiple employees to CSV
+ */
+export const exportEmployeesTableToCSV = (employees: User[]): void => {
+  if (employees.length === 0) {
+    alert('No employees to export');
+    return;
+  }
+
+  const headers = [
+    'Full Name',
+    'Email',
+    'Phone Number',
+    'Position',
+    'Division',
+    'Role',
+    'Employment Type',
+    'Status',
+    'Start Date'
+  ];
+
+  const csvData = employees.map(emp => [
+    emp.fullName || '',
+    emp.email || '',
+    emp.phoneNumber || '',
+    emp.position || '',
+    emp.division?.name || '',
+    emp.role || '',
+    emp.employmentType || '',
+    emp.isActive ? 'Active' : 'Inactive',
+    emp.startDate ? formatDateIndonesia(emp.startDate) : ''
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `employees_table_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
+
+/**
+ * Export multiple employees to PDF table
+ */
+export const exportEmployeesTableToPDF = async (employees: User[]): Promise<void> => {
+  try {
+    if (employees.length === 0) {
+      throw new Error('No employees to export');
+    }
+
+    const { jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+    
+    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape orientation for better table layout
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(pdf as any).autoTable) {
+      throw new Error('AutoTable plugin not loaded');
+    }
+
+    // Title
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Employee Data Table', 20, 20);
+    
+    // Subtitle
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Generated on ${formatDateIndonesia(new Date().toISOString())}`, 20, 30);
+    pdf.text(`Total Employees: ${employees.length}`, 20, 38);
+
+    // Prepare table data
+    const headers = ['Name', 'Email', 'Phone', 'Position', 'Division', 'Role', 'Status'];
+    const tableData = employees.map(emp => [
+      emp.fullName || '-',
+      emp.email || '-',
+      emp.phoneNumber || '-',
+      emp.position || '-',
+      emp.division?.name || '-',
+      emp.role || '-',
+      emp.isActive ? 'Active' : 'Inactive'
+    ]);
+
+    // Generate table
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pdf as any).autoTable({
+      startY: 50,
+      head: [headers],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 9,
+        cellPadding: 3
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 35 }, // Name
+        1: { cellWidth: 45 }, // Email
+        2: { cellWidth: 30 }, // Phone
+        3: { cellWidth: 35 }, // Position
+        4: { cellWidth: 35 }, // Division
+        5: { cellWidth: 25 }, // Role
+        6: { cellWidth: 20 }  // Status
+      },
+      margin: { left: 20, right: 20 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      didDrawPage: function (data: any) {
+        // Footer
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(
+          `Page ${data.pageNumber} - ConnectiViz Employee Management System`,
+          20,
+          pdf.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Save the PDF
+    const fileName = `employees_table_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
+    
+  } catch (error) {
+    console.error('Error generating PDF table:', error);
+    throw new Error('Failed to generate PDF table. Please try again.');
+  }
+};
+
+/**
+ * Export multiple employees to JSON
+ */
+export const exportEmployeesTableToJSON = (employees: User[]): void => {
+  if (employees.length === 0) {
+    alert('No employees to export');
+    return;
+  }
+
+  const exportData = {
+    exportDate: new Date().toISOString(),
+    totalEmployees: employees.length,
+    employees: employees.map(emp => ({
+      id: emp.id,
+      fullName: emp.fullName,
+      email: emp.email,
+      phoneNumber: emp.phoneNumber,
+      position: emp.position,
+      division: emp.division?.name,
+      role: emp.role,
+      employmentType: emp.employmentType,
+      isActive: emp.isActive,
+      startDate: emp.startDate
+    }))
+  };
+
+  const dataStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `employees_table_${new Date().toISOString().split('T')[0]}.json`;
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
 };

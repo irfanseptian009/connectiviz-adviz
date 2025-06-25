@@ -100,7 +100,6 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
       console.log('Normalized data being sent:', normalized);
       const validated = employeeUpdateSchema.parse(normalized);
       console.log('Validated data:', validated);
-        // Filter out fields that shouldn't be sent to the backend
       const { id, ...updateFields } = validated;
       
       const payload = Object.fromEntries(
@@ -114,7 +113,6 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
       toast.success("Data karyawan berhasil diperbarui");
       setEditOpen(false);
       
-      // Refresh the current user data
       if (id) {
         dispatch(fetchUserById(Number(id)));
       }
@@ -274,7 +272,7 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
       };
       return employmentTypeMap[value as string] || String(value);
     }
-    
+
     // Handle role
     if (key === "role") {
       const roleMap: Record<string, string> = {

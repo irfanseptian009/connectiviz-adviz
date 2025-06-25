@@ -59,8 +59,8 @@ const ForgotPasswordPage = () => {
       <Image src={img} alt="background" className="w-full h-full object-cover absolute" />
 
       <div className="w-full max-w-[600px] h-[500px] bg-custom-gradient mt-16 rounded-4xl ml-24 shadow-xl overflow-hidden relative">
-        <div className="flex flex-col md:flex-row mt-4">
-          <div className="ml-10 mt-14">
+        <div className="flex flex-col md:flex-row justify-center mt-16">
+          <div className=" mt-14">
             <div>
               <h2 className="text-gray-800 w-full text-3xl font-extralight mb-2">
                 {isSuccess ? 'Check Your Email' : 'Forgot Password?'}
@@ -74,7 +74,7 @@ const ForgotPasswordPage = () => {
             </div>
 
             {!isSuccess ? (
-              <form onSubmit={handleSubmit} className="mt-2 w-80" suppressHydrationWarning>
+              <form onSubmit={handleSubmit} className="mt-2 w-full" suppressHydrationWarning>
                 <div className="mb-4">
                   <input
                     type="email"
@@ -135,12 +135,6 @@ const ForgotPasswordPage = () => {
             )}
           </div>
 
-          <div className="w-96 flex flex-col pr-52 bg-transparent items-center justify-center absolute -right-44 top-20 bottom-0">
-            <div className="text-center">
-              <h2 className="text-gray-800 text-xl font-light">Password Recovery</h2>
-            </div>
-            <Image src={logo} alt="logo" className="w-36 h-36" />
-          </div>
         </div>
       </div>
 

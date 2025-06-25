@@ -25,25 +25,23 @@ export default function SidebarLoadingItem({
   const handleClick = () => {
     setIsClicked(true);
     
-    // Reset animation after duration
     setTimeout(() => {
       setIsClicked(false);
     }, loadingDuration);
     
-    // Call the actual onClick after a small delay for visual feedback
     setTimeout(() => {
       onClick();
     }, 150);
   };
   const getLoadingStyle = () => {
     if (networkInfo.connectionType === 'slow') {
-      return 'sidebar-loading-slow animate-menu-item-load'; // Shimmer + pulse for slow connections
+      return 'sidebar-loading-slow animate-menu-item-load'; 
     } else if (networkInfo.connectionType === 'fast') {
-      return 'sidebar-loading-fast animate-sidebar-glow'; // Bounce + glow for fast connections
+      return 'sidebar-loading-fast animate-sidebar-glow';
     } else if (networkInfo.connectionType === 'offline') {
-      return 'sidebar-loading-offline animate-breathe'; // Ping + breathe for offline
+      return 'sidebar-loading-offline animate-breathe'; 
     }
-    return 'animate-pulse animate-sidebar-glow'; // Default with glow
+    return 'animate-pulse animate-sidebar-glow';
   };
 
   const getHoverEffects = () => {

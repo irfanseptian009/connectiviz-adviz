@@ -75,7 +75,6 @@ export default function EnhancedPageLoader({
     }
   };
 
-  // Network-aware styling
   const getNetworkColor = () => {
     switch (networkInfo.connectionType) {
       case 'fast': return 'text-green-600 dark:text-green-400';
