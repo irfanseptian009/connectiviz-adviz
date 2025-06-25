@@ -2,15 +2,7 @@
 
 This is a [Next.js](https://nextjs.org/) project for employee management with advanced features.
 
-## Features
 
-- 🌙 **Dark Mode Default**: Application starts with dark theme by default
-- 📝 **Employee Management**: Full CRUD operations for employee data
-- 🔄 **Edit Modal**: In-page employee editing functionality
-- 📄 **Export Features**: Export employee data to CSV, JSON, and PDF formats
-- 🔍 **Filter & Search**: Advanced filtering and search capabilities
-- 📊 **Rich UI**: Modern interface with charts and data visualization
-- 🔐 **Authentication**: Secure login and user management
 
 ## Getting Started
 
