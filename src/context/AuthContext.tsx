@@ -7,6 +7,7 @@ import {
   useState,
   PropsWithChildren,
 } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { getToken, setToken as persistToken } from "@/lib/token";
 import { User } from "@/types/employee";  
@@ -95,10 +96,19 @@ export const withAuth = <P extends object>(
 ) => {
   return function ProtectedPage(props: P) {
     const { token, user, isInitialized } = useAuth();
+    const router = useRouter();
 
     console.log("withAuth - isInitialized:", isInitialized);
     console.log("withAuth - token:", token);
     console.log("withAuth - user:", user);
+
+    // Handle redirect when no token
+    useEffect(() => {
+      if (isInitialized && !token) {
+        console.log("withAuth - no token, redirecting to signin...");
+        router.replace('/signin');
+      }
+    }, [isInitialized, token, router]);
 
     // Show loading until auth is initialized
     if (!isInitialized) {
@@ -107,11 +117,8 @@ export const withAuth = <P extends object>(
     }
 
     if (!token) {
-      console.log("withAuth - no token, redirecting to signin...");
-      if (typeof window !== "undefined") {
-        window.location.replace("/signin");
-      }
-      return null;
+      console.log("withAuth - no token, showing loading while redirecting...");
+      return <div>Redirecting to login...</div>;
     }
 
     console.log("withAuth - rendering protected component");

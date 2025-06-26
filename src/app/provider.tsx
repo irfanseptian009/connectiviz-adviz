@@ -6,6 +6,7 @@ import { store } from '@/store';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { SSOProvider } from '@/context/SSOContext';
 import { LoadingProvider } from '@/context/LoadingContext';
 import { AdaptiveLoadingProvider } from '@/context/AdaptiveLoadingContext';
 import { Toaster } from 'react-hot-toast';
@@ -18,16 +19,20 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ReduxProvider store={store}>
       <AuthErrorBoundary>
-        <AuthProvider>          <ThemeProvider>            <LoadingProvider>
-              <AdaptiveLoadingProvider>
-                <NavigationLoadingProvider />
-                <Toaster position="top-right" />
-                <GlobalLoading />
-                <NetworkStatusIndicator />
-                <SidebarProvider>{children}</SidebarProvider>
-              </AdaptiveLoadingProvider>
-            </LoadingProvider>
-          </ThemeProvider>
+        <AuthProvider>
+          <SSOProvider>
+            <ThemeProvider>
+              <LoadingProvider>
+                <AdaptiveLoadingProvider>
+                  <NavigationLoadingProvider />
+                  <Toaster position="top-right" />
+                  <GlobalLoading />
+                  <NetworkStatusIndicator />
+                  <SidebarProvider>{children}</SidebarProvider>
+                </AdaptiveLoadingProvider>
+              </LoadingProvider>
+            </ThemeProvider>
+          </SSOProvider>
         </AuthProvider>
       </AuthErrorBoundary>
     </ReduxProvider>

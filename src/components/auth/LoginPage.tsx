@@ -66,9 +66,9 @@ const LoginPage = () => {
      
       
       setTimeout(() => {
-        console.log("Navigating to dashboard...");
+        console.log("Navigating to admin dashboard...");
         router.push('/');
-      }, 4200);
+      }, 4300); 
     }
   }, [isReadyToNavigate, user, showProfileAnimation, router]);const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
@@ -807,9 +807,6 @@ const LoginPage = () => {
                   <h3 className="text-2xl font-semibold text-white/90 mb-2">
                     {user.fullName || user.username || 'User'}
                   </h3>
-                  <p className="text-white/70 text-sm">
-                    Preparing your workspace...
-                  </p>
                 </div>
               </>
             )}
