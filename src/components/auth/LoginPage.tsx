@@ -48,29 +48,27 @@ const LoginPage = () => {
         setShowProfileAnimation(true);
       }, 300);
       
-      // Set ready to navigate after user data is loaded and animation starts
       setTimeout(() => {
         setIsReadyToNavigate(true);
       }, 800);
     }
   }, [user, showProfileReveal, showProfileAnimation]);
 
-  // Effect untuk handle navigasi setelah semua loading selesai
   useEffect(() => {
     if (isReadyToNavigate && user && showProfileAnimation) {
       console.log("All data loaded, starting final navigation sequence...");
       
-      // Tunggu sebentar sebelum memulai gate animation
       setTimeout(() => {
         console.log("Starting gate animation...");
         setShowGateAnimation(true);
       }, 1500);
       
-      // Navigasi langsung setelah gate mulai membuka
+     
+      
       setTimeout(() => {
-        console.log("Gate opening, navigating to dashboard...");
+        console.log("Navigating to dashboard...");
         router.push('/');
-      }, 2000);
+      }, 4200);
     }
   }, [isReadyToNavigate, user, showProfileAnimation, router]);const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
@@ -290,15 +288,15 @@ const LoginPage = () => {
         }
         
         .gate-left {
-          animation: gateOpen 1.5s ease-out forwards, 
+          animation: gateOpen 1.8s ease-out forwards, 
                      gateGlow 2s ease-in-out infinite,
-                     gateSlideLeft 1.2s ease-in 1.5s forwards;
+                     gateSlideLeft 1.5s ease-in 1.8s forwards;
         }
         
         .gate-right {
-          animation: gateOpen 1.5s ease-out forwards, 
+          animation: gateOpen 1.8s ease-out forwards, 
                      gateGlow 2s ease-in-out infinite,
-                     gateSlideRight 1.2s ease-in 1.5s forwards;
+                     gateSlideRight 1.5s ease-in 1.8s forwards;
         }
         
         .profile-reveal {
@@ -497,6 +495,19 @@ const LoginPage = () => {
           animation: gateLetterRight 0.8s ease-out 0.5s forwards;
           opacity: 0;
         }
+        
+        @keyframes fadeToBlack {
+          0% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+        
+        .fade-to-black {
+          animation: fadeToBlack 0.5s ease-out 3.5s forwards;
+        }
       `}</style>
     <div className="min-h-screen bg-gradient-to-b from-blue-800 to-blue-400 flex items-center justify-between overflow-hidden relative">
       {/* Floating Background Particles */}
@@ -520,10 +531,11 @@ const LoginPage = () => {
       <Image src={img} alt="baground" className="w-full h-full object-cover absolute opacity-90" />
 
       {showGateAnimation && (
-        <div className="absolute inset-0 z-30 pointer-events-none">
+        <div className="absolute inset-0 z-30 pointer-events-none fade-to-black">
           {/* Gate Opening Text */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 text-center gate-text-reveal">
-         
+        
+          
 
             <div className="flex justify-center space-x-1 mt-4">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
@@ -539,9 +551,9 @@ const LoginPage = () => {
             
             {/* Left Gate Content */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white/70 text-8xl font-bold gate-letter-left">
+              {/* <div className="text-white/70 text-8xl font-bold gate-letter-left">
                 C
-              </div>
+              </div> */}
             </div>
           </div>
           
@@ -552,9 +564,9 @@ const LoginPage = () => {
             
             {/* Right Gate Content */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white/70 text-8xl font-bold gate-letter-right">
+              {/* <div className="text-white/70 text-8xl font-bold gate-letter-right">
                 V
-              </div>
+              </div> */}
             </div>
           </div>
           
@@ -795,11 +807,9 @@ const LoginPage = () => {
                   <h3 className="text-2xl font-semibold text-white/90 mb-2">
                     {user.fullName || user.username || 'User'}
                   </h3>
-                  
-             
-                
-                  
-                
+                  <p className="text-white/70 text-sm">
+                    Preparing your workspace...
+                  </p>
                 </div>
               </>
             )}
