@@ -13,6 +13,7 @@ interface SSOContextType {
   logout: () => void;
   openApplication: (application: Application) => Promise<void>;
   refreshApplications: () => Promise<void>;
+  canAccessApplication: (application: Application) => boolean;
 }
 
 const SSOContext = createContext<SSOContextType | null>(null);
@@ -84,6 +85,13 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
   };
 
   const openApplication = async (application: Application) => {
+    // Check if user has permission to access this application
+    if (!canAccessApplication(application)) {
+      console.warn('Access denied: User does not have permission to access this application');
+      alert('Anda tidak memiliki akses untuk membuka aplikasi ini. Hanya Super Admin yang dapat mengakses semua aplikasi.');
+      return;
+    }
+
     try {
       if (application.requiresAuth !== false && token) {
         // Get application-specific token for authenticated apps
@@ -95,8 +103,10 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to open application:', error);
-      // Fallback to direct access
-      ssoService.openApplication(application);
+      // Fallback to direct access only if user has permission
+      if (canAccessApplication(application)) {
+        ssoService.openApplication(application);
+      }
     }
   };
 
@@ -109,6 +119,31 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
+  // Helper function to check if user can access an application based on role
+  const checkApplicationAccess = (currentUser: SSOUser | null, application: Application): boolean => {
+    if (!currentUser) return false;
+    
+    // Super admin can access all applications
+    if (currentUser.role.toLowerCase() === 'superadmin' || currentUser.role.toLowerCase() === 'super_admin') {
+      return true;
+    }
+    
+    // Admin and employee can only access Naruku or non-auth applications
+    if (currentUser.role.toLowerCase() === 'admin' || currentUser.role.toLowerCase() === 'employee') {
+      // Allow access to Naruku (assuming it's identified by name or requiresAuth: false)
+      return application.name.toLowerCase() === 'naruku' || 
+             application.id.toLowerCase() === 'naruku' ||
+             application.requiresAuth === false;
+    }
+    
+    // Default: deny access for other roles
+    return false;
+  };
+
+  const canAccessApplication = (application: Application): boolean => {
+    return checkApplicationAccess(user, application);
+  };
+
   const value: SSOContextType = {
     user,
     token,
@@ -119,6 +154,7 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
     logout,
     openApplication,
     refreshApplications,
+    canAccessApplication,
   };
 
   return <SSOContext.Provider value={value}>{children}</SSOContext.Provider>;

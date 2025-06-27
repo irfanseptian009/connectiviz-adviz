@@ -46,9 +46,9 @@ export const userSchema = z.object({
   resignDate: z.string().optional(), // ISO date string
 
   // Status flags
-  isActive: z.boolean().default(true),
-  isOnProbation: z.boolean().default(false),
-  isResigned: z.boolean().default(false),
+  isActive: z.boolean().optional().default(true),
+  isOnProbation: z.boolean().optional().default(false),
+  isResigned: z.boolean().optional().default(false),
 
   // Division relationship
   divisionId: z.union([z.string(), z.number()]).optional(),

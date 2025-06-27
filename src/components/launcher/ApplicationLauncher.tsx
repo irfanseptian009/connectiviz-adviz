@@ -8,9 +8,10 @@ import { Target, BarChart3, ExternalLink } from "lucide-react";
 interface ApplicationCardProps {
   application: Application;
   onLaunch: (app: Application) => void;
+  isAccessible: boolean;
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onLaunch }) => {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onLaunch, isAccessible }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'Target':
@@ -43,8 +44,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onLaunch
         relative p-6 rounded-xl cursor-pointer transition-all duration-300 
         transform hover:-translate-y-2 hover:shadow-xl
         ${getColorClasses(application.color)}
+        ${!isAccessible ? 'opacity-50 cursor-not-allowed' : ''}
       `}
-      onClick={() => onLaunch(application)}
+      onClick={() => isAccessible && onLaunch(application)}
     >
       <div className="flex flex-col items-center text-center space-y-4">
         <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full">
@@ -63,6 +65,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onLaunch
             No Auth
           </span>
         )}
+        
+        {!isAccessible && (
+          <div className="absolute inset-0 bg-black/30 rounded-xl flex items-center justify-center">
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Access Denied
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -73,7 +83,7 @@ interface ApplicationLauncherProps {
 }
 
 export const ApplicationLauncher: React.FC<ApplicationLauncherProps> = ({ className = "" }) => {
-  const { applications, openApplication, refreshApplications, isAuthenticated } = useSSO();
+  const { applications, openApplication, refreshApplications, isAuthenticated, canAccessApplication } = useSSO();
 
   React.useEffect(() => {
     if (isAuthenticated && applications.length === 0) {
@@ -84,9 +94,7 @@ export const ApplicationLauncher: React.FC<ApplicationLauncherProps> = ({ classN
   if (!isAuthenticated) {
     return (
       <div className={`text-center p-8 ${className}`}>
-        <p className="text-gray-600 dark:text-gray-400">
-          Please log in to access applications.
-        </p>
+       
       </div>
     );
   }
@@ -118,6 +126,7 @@ export const ApplicationLauncher: React.FC<ApplicationLauncherProps> = ({ classN
             key={app.id}
             application={app}
             onLaunch={openApplication}
+            isAccessible={canAccessApplication(app)}
           />
         ))}
       </div>

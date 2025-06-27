@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
@@ -18,20 +17,17 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: false,
   },
-  // Turbopack configuration
-  experimental: {
-    turbo: {
-      rules: {
-        // Configure SVG handling for Turbopack
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
+  },
+  experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-  // Keep webpack config for build (production) - Turbopack is dev-only
   webpack(config, { dev }) {
     if (!dev) {
       config.module.rules.push({

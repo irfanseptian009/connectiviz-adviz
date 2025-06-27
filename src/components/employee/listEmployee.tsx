@@ -20,11 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, UserPlus, Filter, Download, RefreshCw } from "lucide-react";
 import { exportEmployeesTableToCSV, exportEmployeesTableToJSON, exportEmployeesTableToPDF } from "@/utils/employeeUtils";
+import { useRoleCheck } from "@/components/common/RoleGuard";
 
 function ListEmployee() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { list, status } = useSelector((state: RootState) => state.user);  const [search, setSearch] = useState("");
+  const { list, status } = useSelector((state: RootState) => state.user);
+  const { canEditEmployee, canDeleteEmployee, canCreateEmployee } = useRoleCheck();  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isEditOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState<User | null>(null);
@@ -55,7 +57,6 @@ function ListEmployee() {
   };
 
   const handleView = (id: number) => {
-    // Add a subtle visual feedback
     toast.success("Opening employee details...", { duration: 1000 });
     router.push(`/detail-employee?id=${id}`);
   };
@@ -149,7 +150,6 @@ const handleSave = async () => {
     setBusinessUnitFilter("");
     toast.success("Filters cleared!");
   };
-  // Get unique business units for filter dropdown
   const businessUnits = useMemo(() => {
     const units = new Set<string>();
     list.forEach(user => {
@@ -159,6 +159,19 @@ const handleSave = async () => {
     });
     return Array.from(units).sort();
   }, [list]);
+
+  const divisions = useMemo(() => {
+    const divs = new Set<string>();
+    list.forEach(user => {
+      if (
+        user.division?.name &&
+        (!businessUnitFilter || user.division.businessUnit?.name === businessUnitFilter)
+      ) {
+        divs.add(user.division.name);
+      }
+    });
+    return Array.from(divs).sort();
+  }, [list, businessUnitFilter]);
 
   const filtered = useMemo(
     () =>
@@ -235,7 +248,8 @@ const handleSave = async () => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
               />
-            </div>            <div className="flex gap-2">
+            </div>            
+            <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -254,15 +268,16 @@ const handleSave = async () => {
                 <Download className="h-4 w-4" />
                 Export
               </Button>
-              <Button
-                size="sm"
-                className="gap-2 bg-blue-600 hover:bg-blue-700"
-                onClick={() => router.push("/form-elements")}
-              >
-                <UserPlus className="h-4 w-4" />
-                Add Employee
-              </Button>
-
+              {canCreateEmployee() && (
+                <Button
+                  size="sm"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => router.push("/form-elements")}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add Employee
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -287,6 +302,8 @@ const handleSave = async () => {
                 onView={handleView}
                 onEdit={openEdit}
                 onDelete={(id) => setDeleteId(id)}
+                canEdit={canEditEmployee()}
+                canDelete={canDeleteEmployee()}
               />
             </CardContent>
           </Card>
@@ -382,13 +399,16 @@ const handleSave = async () => {
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
               Filter Employees
             </h3>
-              <div className="space-y-4">
+            <div className="space-y-4">
               {/* Business Unit Filter */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Business Unit</label>
                 <select 
                   value={businessUnitFilter} 
-                  onChange={(e) => setBusinessUnitFilter(e.target.value)}
+                  onChange={(e) => {
+                    setBusinessUnitFilter(e.target.value);
+                    setDivisionFilter(""); 
+                  }}
                   className="w-full mt-1 p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
                 >
                   <option value="">All Business Units</option>
@@ -430,13 +450,17 @@ const handleSave = async () => {
               {/* Division Filter */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Division</label>
-                <Input
-                  type="text"
-                  placeholder="Search division..."
+                <select
                   value={divisionFilter}
                   onChange={(e) => setDivisionFilter(e.target.value)}
-                  className="mt-1"
-                />
+                  className="w-full mt-1 p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                  disabled={divisions.length === 0}
+                >
+                  <option value="">All Divisions</option>
+                  {divisions.map(division => (
+                    <option key={division} value={division}>{division}</option>
+                  ))}
+                </select>
               </div>
             </div>
             

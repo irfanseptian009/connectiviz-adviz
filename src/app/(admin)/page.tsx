@@ -27,6 +27,7 @@ function Gate() {
     );
   }
 
+
   return (
     <div className="flex flex-row gap-4">
       <div className="flex flex-col w-full">
@@ -41,10 +42,10 @@ function Gate() {
             <SSOStatus />
           </div>
 
-          {/* Legacy CardGate for Naruku */}
+          {/* Legacy CardGate for Naruku - Always visible for authenticated users */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Quick Access
+              Quick Access - Applications
             </h3>
             <div className="w-30 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-3">
               <button onClick={() => navigateToNaruku('Loading Naruku...')}>

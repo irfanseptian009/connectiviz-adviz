@@ -6,6 +6,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { useHasMounted } from "../hooks/useClientOnly";
 import { useAdaptiveNavigation } from "../hooks/useAdaptiveNavigation";
 import { useAdaptiveLoading } from "../context/AdaptiveLoadingContext";
+import { useRoleCheck } from "@/components/common/RoleGuard";
 import logo from "../../public/images/logo/logo1.png";
 import logo2 from "../../public/images/logo/logo-connectiviz.png";
 import {
@@ -99,6 +100,45 @@ const AppSidebar: React.FC = () => {
   const hasMounted = useHasMounted();
   const { navigateWithAdaptiveLoading, preloadRoute } = useAdaptiveNavigation();
   const { isLoading } = useAdaptiveLoading();
+  const { canCreateEmployee, canViewEmployeeList, canAccessBusinessUnits } = useRoleCheck();
+
+  // Filter navigation items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    // Dashboard is accessible to all
+    if (item.name === "Dashboard") return true;
+    
+    // Forms (Create Employee) - only for SUPER_ADMIN and ADMIN
+    if (item.name === "Forms") {
+      return canCreateEmployee();
+    }
+    
+    // Tables (Employee Table) - only for SUPER_ADMIN and ADMIN
+    if (item.name === "Tables") {
+      return canViewEmployeeList();
+    }
+    
+    // Pages (Business Analytics, Organization, Business Unit) - only for SUPER_ADMIN and ADMIN
+    if (item.name === "Pages") {
+      return canAccessBusinessUnits();
+    }
+    
+    return true;
+  });
+
+  const filteredOthersItems = othersItems.filter(item => {
+    // Employee Monitoring - only for SUPER_ADMIN and ADMIN
+    if (item.name === "Employee") {
+      return canViewEmployeeList();
+    }
+    
+    // Article - accessible to all
+    if (item.name === "Article") return true;
+    
+    // Authentication - accessible to all
+    if (item.name === "Authentication") return true;
+    
+    return true;
+  });
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -385,7 +425,7 @@ const AppSidebar: React.FC = () => {
             >
               {isExpanded || isHovered || isMobileOpen ? "Menu" : "•••"}
             </h2>
-            {renderMenuItems(navItems, "main")}
+            {renderMenuItems(filteredNavItems, "main")}
           </div>
 
           <div>
@@ -396,7 +436,7 @@ const AppSidebar: React.FC = () => {
             >
               {isExpanded || isHovered || isMobileOpen ? "Others" : "•••"}
             </h2>
-            {renderMenuItems(othersItems, "others")}
+            {renderMenuItems(filteredOthersItems, "others")}
           </div>
         </nav>
 

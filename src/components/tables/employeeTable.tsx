@@ -20,9 +20,18 @@ type Props = {
   onView(id: number): void;
   onEdit(id: number): void;
   onDelete(id: number): void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 };
 
-export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: Props) {
+export default function EmployeeTable({ 
+  data = [], 
+  onView, 
+  onEdit, 
+  onDelete, 
+  canEdit = true, 
+  canDelete = true 
+}: Props) {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const getRoleColor = (role?: string) => {
@@ -89,7 +98,7 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                       onClick={() => onView(user.id)}
                       className={`
                         flex items-center gap-4 w-full text-left group
-                        transition-all duration-200 rounded-lg p-3 -m-3
+                        transition-all duration-200 rounded-lg p-3 border-2 dark:border-blue-600/20 border-orange-300/10 0   m-2
                         ${hoveredRow === user.id 
                           ? 'bg-white dark:bg-gray-800 shadow-md scale-[1.02]' 
                           : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm'
@@ -156,7 +165,6 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                           : 'opacity-0 group-hover:opacity-100'
                         }
                       `}>
-                        <Eye className="h-4 w-4 text-blue-500" />
                       </div>
                     </button>
                   </TableCell>
@@ -219,24 +227,30 @@ export default function EmployeeTable({ data = [], onView, onEdit, onDelete }: P
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(user.id)}
-                        className="h-8 w-8 p-0 text-orange-500 hover:bg-orange-50 hover:text-orange-700 dark:hover:bg-orange-900 dark:hover:text-orange-300"
-                        title="Edit Employee"
-                      >
-                        <RiEditLine className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(user.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:text-red-300"
-                        title="Delete Employee"
-                      >
-                        <RiDeleteBin5Line className="h-4 w-4" />
-                      </Button>
+                      
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(user.id)}
+                          className="h-8 w-8 p-0 text-orange-500 hover:bg-orange-50 hover:text-orange-700 dark:hover:bg-orange-900 dark:hover:text-orange-300"
+                          title="Edit Employee"
+                        >
+                          <RiEditLine className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(user.id)}
+                          className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900 dark:text-red-300"
+                          title="Delete Employee"
+                        >
+                          <RiDeleteBin5Line className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </tr>

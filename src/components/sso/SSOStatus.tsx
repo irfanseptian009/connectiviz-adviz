@@ -18,9 +18,9 @@ export const SSOStatus: React.FC = () => {
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="flex items-center space-x-2 text-orange-600">
+      <div className="flex  items-center space-x-2 text-gray-400">
         <Shield className="w-4 h-4" />
-        <span className="text-sm">Not authenticated for SSO</span>
+        <span className="text-sm">Single Sign-On</span>
       </div>
     );
   }

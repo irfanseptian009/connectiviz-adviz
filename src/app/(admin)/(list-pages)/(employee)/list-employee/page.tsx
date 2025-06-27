@@ -15,13 +15,15 @@ import ListEmployee from "@/components/employee/listEmployee";
 import BusinessUnitList from "@/components/employeeMonitoring/BusinessUnitList";
 import BusinessAnalyticsDashboard from "@/components/employeeMonitoring/BusinessAnalyticsDashboard.tsx";
 import EmployeeOrganization from "@/components/employeeMonitoring/EmployeeOrganization";
+import { AdminOnly } from "@/components/common/RoleGuard";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function EmployeePage() {
   const { list: employees, loading: loadingEmp } = useEmployee();
   const { list: businessUnits, loading: loadingBU } = useBusinessUnit();
   const { list: divisions, loading: loadingDiv } = useDivision();
 
-  const [showComponent, setShowComponent] = useState<"employee" | "businessUnit" | "Analitycs" | "organization">("employee");
+  const [showComponent, setShowComponent] = useState<"employee" | "businessUnit" | "Analitycs" | "organization" | null>(null);
 
   const stats = useMemo(() => ({
     totalEmployee: employees.length,
@@ -41,7 +43,21 @@ export default function EmployeePage() {
     );
 
   return (
-    <div className="overflow-hidden shadow-2xl p-10 rounded-xl border border-gray-200 bg-cyan-100 dark:bg-[#1D2247] dark:border-white/[0.05]">
+    <AdminOnly 
+      fallback={
+        <div className="overflow-hidden shadow-2xl p-10 rounded-xl border border-gray-200 bg-cyan-100 dark:bg-[#1D2247] dark:border-white/[0.05]">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                You don&apos;t have permission to view employee monitoring. This feature is only available for administrators.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <div className="overflow-hidden shadow-2xl p-10 rounded-xl border border-gray-200 bg-cyan-100 dark:bg-[#1D2247] dark:border-white/[0.05]">
       <section className="space-y-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -54,7 +70,6 @@ export default function EmployeePage() {
           </div>
         </div>
 
-        {/* === STAT CARDS === */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total Employee */}
           <div
@@ -140,5 +155,6 @@ export default function EmployeePage() {
         </div>
       </section>
     </div>
+    </AdminOnly>
   );
 }

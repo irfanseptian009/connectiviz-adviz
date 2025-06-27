@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchUserById } from "@/store/userSlice";
-import { withAuth } from "@/context/AuthContext";
+import { withAuth, useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +82,7 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
   const dispatch = useDispatch<AppDispatch>();
   const userList = useSelector((state: RootState) => state.user.list);
   const status = useSelector((state: RootState) => state.user.status);
+  const { user: currentUser, isAdmin, isSuperAdmin, isEmployee } = useAuth();
 
   const user = props.user || (id ? userList.find((u) => u.id === Number(id)) : undefined);  // Handler functions
   const handleEdit = () => {
@@ -160,6 +161,42 @@ function DetailKaryawanPage(props: EmployeeDetailClientProps) {
       console.log('Non-formal educations:', user.nonFormalEducations);
     }
   }, [user]);
+
+  // Role-based access control
+  const canAccessEmployeeDetail = (targetUserId?: number) => {
+    // Admins and Super Admins can access any employee detail
+    if (isAdmin() || isSuperAdmin()) return true;
+    
+    // Employees can only access their own detail
+    if (isEmployee() && currentUser && targetUserId) {
+      return currentUser.id === targetUserId;
+    }
+    
+    return false;
+  };
+
+  // Check access permission
+  const hasAccess = canAccessEmployeeDetail(user?.id);
+
+  if (!hasAccess) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto text-center py-12">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Access Restricted
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            You don&apos;t have permission to view this employee&apos;s details.
+          </p>
+          <Button onClick={() => router.back()} variant="outline">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const formatFieldName = (key: string) => {
     const fieldMappings: Record<string, string> = {

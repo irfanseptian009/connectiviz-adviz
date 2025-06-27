@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import UserMetaCard from "../user-profile/UserMetaCard";
 import UserAvatar from "@/components/common/UserAvatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +28,19 @@ export default function UserDropdown() {
     router.push("/signin");
   }
 
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'ADMIN':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'EMPLOYEE':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -40,9 +54,19 @@ export default function UserDropdown() {
             className="border-2 border-white/20"
           />
         </span>
-        <span className="block mr-1 font-medium text-theme-sm">
-          {user?.fullName || user?.username || "User"}
-        </span>
+        <div className="flex flex-col items-start">
+          <span className="block mr-1 font-medium text-theme-sm">
+            {user?.fullName || user?.username || "User"}
+          </span>
+          {user?.role && (
+            <Badge 
+              variant="secondary" 
+              className={`text-xs mt-1 ${getRoleColor(user.role)}`}
+            >
+              {user.role.replace('_', ' ')}
+            </Badge>
+          )}
+        </div>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           width="18"

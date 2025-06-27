@@ -19,6 +19,12 @@ interface AuthCtx {
   logout: () => void;
   updateUser: (updatedUser: User) => void;
   isInitialized: boolean;
+  // Role-based helper functions
+  isSuperAdmin: () => boolean;
+  isAdmin: () => boolean;
+  isEmployee: () => boolean;
+  hasRole: (roles: string[]) => boolean;
+  canAccess: (requiredRoles: string[]) => boolean;
 }
 
 export const AuthContext = createContext<AuthCtx | null>(null);
@@ -82,7 +88,45 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     setUser(updatedUser);
   };
 
-  const value: AuthCtx = { token, user, login, logout, updateUser, isInitialized };
+  // Role-based helper functions
+  const isSuperAdmin = (): boolean => {
+    return user?.role === 'SUPER_ADMIN';
+  };
+
+  const isAdmin = (): boolean => {
+    return user?.role === 'ADMIN';
+  };
+
+  const isEmployee = (): boolean => {
+    return user?.role === 'EMPLOYEE';
+  };
+
+  const hasRole = (roles: string[]): boolean => {
+    if (!user?.role) return false;
+    return roles.includes(user.role);
+  };
+
+  const canAccess = (requiredRoles: string[]): boolean => {
+    if (!user?.role) return false;
+    // Super admin can access everything
+    if (user.role === 'SUPER_ADMIN') return true;
+    // Check if user has any of the required roles
+    return requiredRoles.includes(user.role);
+  };
+
+  const value: AuthCtx = { 
+    token, 
+    user, 
+    login, 
+    logout, 
+    updateUser, 
+    isInitialized,
+    isSuperAdmin,
+    isAdmin,
+    isEmployee,
+    hasRole,
+    canAccess
+  };
 
   return (
     <AuthContext.Provider value={value}>
