@@ -4,6 +4,7 @@ import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 import { useAdaptiveNavigation } from "@/hooks/useAdaptiveNavigation";
+import { useWindowSize, useHasMounted } from "@/hooks/useClientOnly";
 import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import logo from "../../public/images/logo/logo1.png";
@@ -12,10 +13,12 @@ const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const { navigateWithAdaptiveLoading, preloadRoute } = useAdaptiveNavigation();
+  const { width } = useWindowSize();
+  const hasMounted = useHasMounted();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleToggle = () => {
-    if (window.innerWidth >= 991) {
+    if (hasMounted && width >= 991) {
       toggleSidebar();
     } else {
       toggleMobileSidebar();
@@ -50,6 +53,7 @@ const AppHeader: React.FC = () => {
             className="flex items-center justify-center w-10 h-10 text-white bg-blue-600/30 hover:bg-blue-600/40 rounded-lg transition-colors duration-150 dark:bg-gray-800/60 dark:hover:bg-gray-800/80 dark:text-gray-300"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
+            suppressHydrationWarning={true}
           >
             {isMobileOpen ? (
               <svg

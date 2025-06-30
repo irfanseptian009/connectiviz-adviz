@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useWindowSize, useHasMounted } from "@/hooks/useClientOnly";
 
 type SidebarContextType = {
   isExpanded: boolean;
@@ -33,23 +34,19 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  
+  const { width } = useWindowSize();
+  const hasMounted = useHasMounted();
 
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
+    if (hasMounted) {
+      const mobile = width < 768;
       setIsMobile(mobile);
       if (!mobile) {
         setIsMobileOpen(false);
       }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    }
+  }, [width, hasMounted]);
 
   const toggleSidebar = () => {
     setIsExpanded((prev) => !prev);

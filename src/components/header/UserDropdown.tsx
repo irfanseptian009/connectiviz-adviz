@@ -8,11 +8,13 @@ import { useRouter } from "next/navigation";
 import UserMetaCard from "../user-profile/UserMetaCard";
 import UserAvatar from "@/components/common/UserAvatar";
 import { Badge } from "@/components/ui/badge";
+import { useHasMounted } from "@/hooks/useClientOnly";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { logout, user } = useAuth();
   const router = useRouter();
+  const hasMounted = useHasMounted();
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -41,11 +43,27 @@ export default function UserDropdown() {
     }
   };
 
+  // Don't render until mounted to prevent hydration mismatch
+  if (!hasMounted) {
+    return (
+      <div className="relative">
+        <button className="flex items-center dropdown-toggle">
+          <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-gray-200 dark:bg-gray-700"></span>
+          <div className="flex flex-col items-start">
+            <span className="block mr-1 font-medium text-theme-sm">Loading...</span>
+          </div>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="flex items-center  dropdown-toggle"
+        className="flex items-center dropdown-toggle"
+        suppressHydrationWarning={true}
+        key="user-dropdown-button"
       >        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
           <UserAvatar 
             src={user?.profilePictureUrl}

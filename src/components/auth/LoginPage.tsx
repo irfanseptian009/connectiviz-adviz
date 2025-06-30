@@ -27,11 +27,18 @@ const LoginPage = () => {
   const { login, user } = useAuth(); 
   useEffect(() => {
     const message = searchParams.get('message');
+    const redirect = searchParams.get('redirect');
+    
     if (message) {
       setSuccessMessage(message);
       const url = new URL(window.location.href);
       url.searchParams.delete('message');
       window.history.replaceState({}, '', url.toString());
+    }
+    
+    // Store redirect parameter for post-login navigation
+    if (redirect) {
+      sessionStorage.setItem('postLoginRedirect', redirect);
     }
   }, [searchParams]);
 
@@ -63,10 +70,26 @@ const LoginPage = () => {
         setShowGateAnimation(true);
       }, 1500);
       
-     
-      
       setTimeout(() => {
-        console.log("Navigating to admin dashboard...");
+        console.log("Navigating...");
+        
+        // Check for post-login redirect
+        const postLoginRedirect = sessionStorage.getItem('postLoginRedirect');
+        
+        if (postLoginRedirect === 'naruku') {
+          sessionStorage.removeItem('postLoginRedirect');
+          console.log("Redirecting to Naruku with SSO...");
+          
+          // Generate SSO token and redirect to Naruku
+          const token = localStorage.getItem('token');
+          if (token) {
+            const narukyUrl = process.env.NEXT_PUBLIC_NARUKU_URL || 'http://localhost:3002';
+            window.location.href = `${narukyUrl}?ssoToken=${encodeURIComponent(token)}`;
+            return;
+          }
+        }
+        
+        // Default navigation to admin dashboard
         router.push('/');
       }, 4300); 
     }

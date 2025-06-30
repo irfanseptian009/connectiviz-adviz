@@ -85,6 +85,15 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
   };
 
   const openApplication = async (application: Application) => {
+    console.log('🚀 [ConnectiViz] Opening application:', {
+      id: application.id,
+      name: application.name,
+      requiresAuth: application.requiresAuth,
+      url: application.url,
+      hasToken: !!token,
+      userRole: user?.role
+    });
+
     // Check if user has permission to access this application
     if (!canAccessApplication(application)) {
       console.warn('Access denied: User does not have permission to access this application');
@@ -94,17 +103,32 @@ export const SSOProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
     try {
       if (application.requiresAuth !== false && token) {
+        console.log('🔑 [ConnectiViz] Getting application-specific token for:', application.id);
         // Get application-specific token for authenticated apps
         const appTokenResponse = await ssoService.getApplicationToken(application.id);
+        console.log('✅ [ConnectiViz] Got app token:', { 
+          hasAccessToken: !!appTokenResponse.accessToken,
+          tokenLength: appTokenResponse.accessToken?.length
+        });
+        
+        const finalUrl = `${application.url}?ssoToken=${appTokenResponse.accessToken}`;
+        console.log('🌐 [ConnectiViz] Opening URL with SSO token:', finalUrl);
         ssoService.openApplication(application, appTokenResponse.accessToken);
       } else {
+        console.log('🌐 [ConnectiViz] Direct access (no auth required)');
         // Direct access for non-authenticated apps like Naruku
         ssoService.openApplication(application);
       }
-    } catch (error) {
-      console.error('Failed to open application:', error);
+    } catch (error: any) {
+      console.error('❌ [ConnectiViz] Failed to open application:', error);
+      console.error('❌ [ConnectiViz] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        application: application.id
+      });
       // Fallback to direct access only if user has permission
       if (canAccessApplication(application)) {
+        console.log('🔄 [ConnectiViz] Fallback to direct access');
         ssoService.openApplication(application);
       }
     }

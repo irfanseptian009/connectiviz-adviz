@@ -13,14 +13,32 @@ export const useNavigationWithSSO = () => {
       setIsNavigating(true);
       setLoadingMessage(customMessage || 'Loading Naruku...');
 
-      // Find Naruku application
-      const narukyApp = applications.find(app => app.id === 'naruku');
+      // Get current session token
+      const token = localStorage.getItem('token');
+      const narukyUrl = process.env.NEXT_PUBLIC_NARUKU_URL || 'http://localhost:3002';
       
-      if (narukyApp) {
-        await openApplication(narukyApp);
+      if (token) {
+        // Use current token as SSO token for authentication
+        const urlWithToken = `${narukyUrl}?ssoToken=${encodeURIComponent(token)}`;
+        
+        // Test if the token is valid by making a quick validation call
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (!response.ok) {
+            console.warn('Token validation failed');
+          }
+        } catch (validateError) {
+          console.warn('Token validation error:', validateError);
+        }
+        
+        window.open(urlWithToken, '_blank');
       } else {
-        // Fallback: direct navigation to Naruku
-        const narukyUrl = process.env.NEXT_PUBLIC_NARUKU_URL || 'http://localhost:3002';
+        // Fallback: direct navigation (user will be redirected to login)
         window.open(narukyUrl, '_blank');
       }
     } catch (error) {

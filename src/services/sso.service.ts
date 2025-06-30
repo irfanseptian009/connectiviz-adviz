@@ -24,7 +24,7 @@ export interface Application {
 }
 
 class SSOService {
-  private readonly BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  private readonly BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   async login(email: string, password: string): Promise<SSOLoginResponse> {
     const response = await fetch(`${this.BASE_URL}/sso/login`, {
