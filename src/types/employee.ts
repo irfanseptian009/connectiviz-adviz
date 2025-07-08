@@ -57,6 +57,11 @@ export interface User {
   contractEndDate?: string;
   resignDate?: string;
 
+  // Career Tracking
+  promotionDate?: string;
+  demotionDate?: string;
+  rehireDate?: string;
+
   isActive?: boolean;
   isOnProbation?: boolean;
   isResigned?: boolean;
@@ -87,6 +92,7 @@ export interface User {
   bpjsEmployment?: string;
   insuranceCompany?: string;
   insuranceNumber?: string;
+  insuranceEndDate?: string;
   policyNumber?: string;
   ptkpStatus?: string;
 

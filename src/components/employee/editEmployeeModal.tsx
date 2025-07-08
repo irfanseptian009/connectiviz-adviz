@@ -197,7 +197,20 @@ export default function EditEmployeeModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Edit Employee</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Edit Employee: {editData?.fullName || editData?.username}
+            <div className="flex gap-2 text-sm">
+              {editData?.isActive && (
+                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+              )}
+              {editData?.isOnProbation && (
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Probation</span>
+              )}
+              {editData?.isResigned && (
+                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Resigned</span>
+              )}
+            </div>
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs
@@ -208,15 +221,15 @@ export default function EditEmployeeModal({
           }}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-4 w-full h-full gap-2">
-            <TabsTrigger value="biodata">Biodata</TabsTrigger>
-            <TabsTrigger value="employment">Employment</TabsTrigger>
-            <TabsTrigger value="family">Family</TabsTrigger>
-            <TabsTrigger value="education">Education</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="health">Health</TabsTrigger>
+          <TabsList className="grid grid-cols-4 w-full h-full gap-2 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+            <TabsTrigger value="biodata" className="text-xs sm:text-sm font-medium">📋 Biodata</TabsTrigger>
+            <TabsTrigger value="employment" className="text-xs sm:text-sm font-medium">💼 Employment</TabsTrigger>
+            <TabsTrigger value="family" className="text-xs sm:text-sm font-medium">👨‍👩‍👧‍👦 Family</TabsTrigger>
+            <TabsTrigger value="education" className="text-xs sm:text-sm font-medium">🎓 Education</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs sm:text-sm font-medium">📄 Documents</TabsTrigger>
+            <TabsTrigger value="contact" className="text-xs sm:text-sm font-medium">📞 Contact</TabsTrigger>
+            <TabsTrigger value="social" className="text-xs sm:text-sm font-medium">🌐 Social</TabsTrigger>
+            <TabsTrigger value="health" className="text-xs sm:text-sm font-medium">🏥 Health</TabsTrigger>
           </TabsList>
           {/* Data Diri Tab */}
           <TabsContent value="biodata" className="space-y-4">
@@ -276,102 +289,192 @@ export default function EditEmployeeModal({
           </TabsContent>
 
           {/* Employment Tab */}
-          <TabsContent value="employment" className="space-y-4">
+          <TabsContent value="employment" className="space-y-6">
             <h3 className="text-lg font-semibold">Employment Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {renderInputWithError("position", "Position", "text", editData.position, (e) => handleChange("position", e.target.value))}
-              {renderInputWithError("jobTitle", "Job Title", "text", editData.jobTitle, (e) => handleChange("jobTitle", e.target.value))}
-              {renderInputWithError("jobLevel", "Job Level", "number", editData.jobLevel, (e) => handleChange("jobLevel", Number(e.target.value)))}
-              <select
-                className="w-full dark:bg-gray-800 px-3 py-2 border rounded-md"
-                value={editData.employmentType || ""}
-                onChange={(e) => handleChange("employmentType", e.target.value as EmploymentType)}
-              >
-                <option value="">Select Employment Type</option>
-                <option value="INTERNSHIP">Internship</option>
-                <option value="PROBATION">Probation</option>
-                <option value="CONTRACT">Contract</option>
-                <option value="PERMANENT">Permanent</option>
-              </select>
+
+            {/* Job Details */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Job Details</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {renderInputWithError("position", "Position", "text", editData.position, (e) => handleChange("position", e.target.value))}
+                {renderInputWithError("jobTitle", "Job Title", "text", editData.jobTitle, (e) => handleChange("jobTitle", e.target.value))}
+                {renderInputWithError("jobLevel", "Job Level", "number", editData.jobLevel, (e) => handleChange("jobLevel", Number(e.target.value)))}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Employment Type</label>
+                  <select
+                    className="w-full dark:bg-gray-800 px-3 py-2 border rounded-md"
+                    value={editData.employmentType || ""}
+                    onChange={(e) => handleChange("employmentType", e.target.value as EmploymentType)}
+                  >
+                    <option value="">Select Employment Type</option>
+                    <option value="INTERNSHIP">Internship</option>
+                    <option value="PROBATION">Probation</option>
+                    <option value="CONTRACT">Contract</option>
+                    <option value="PERMANENT">Permanent</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="date"
-                value={editData.startDate ? new Date(editData.startDate).toISOString().split("T")[0] : ""}
-                onChange={(e) => handleChange("startDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
-                placeholder="Start Date"
-              />
-              <Input
-                type="date"
-                value={editData.probationEndDate ? new Date(editData.probationEndDate).toISOString().split("T")[0] : ""}
-                onChange={(e) => handleChange("probationEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
-                placeholder="Probation End Date"
-              />
-              <Input
-                type="date"
-                value={editData.contractEndDate ? new Date(editData.contractEndDate).toISOString().split("T")[0] : ""}
-                onChange={(e) => handleChange("contractEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
-                placeholder="Contract End Date"
-              />
-              <Input
-                type="date"
-                value={editData.resignDate ? new Date(editData.resignDate).toISOString().split("T")[0] : ""}
-                onChange={(e) => handleChange("resignDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
-                placeholder="Resign Date"
-              />
+            {/* Employment Dates */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Employment Dates</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Input
+                    type="date"
+                    value={editData.startDate ? new Date(editData.startDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("startDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Probation End Date</label>
+                  <Input
+                    type="date"
+                    value={editData.probationEndDate ? new Date(editData.probationEndDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("probationEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Contract End Date</label>
+                  <Input
+                    type="date"
+                    value={editData.contractEndDate ? new Date(editData.contractEndDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("contractEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Resign Date</label>
+                  <Input
+                    type="date"
+                    value={editData.resignDate ? new Date(editData.resignDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("resignDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={editData.isActive || false}
-                  onChange={(e) => handleChange("isActive", e.target.checked)}
-                />
-                <span>Active</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={editData.isOnProbation || false}
-                  onChange={(e) => handleChange("isOnProbation", e.target.checked)}
-                />
-                <span>On Probation</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={editData.isResigned || false}
-                  onChange={(e) => handleChange("isResigned", e.target.checked)}
-                />
-                <span>Resigned</span>
-              </label>
+            {/* Career Tracking */}
+            <div>
+              <h4 className="text-md font-semibold mb-2 text-blue-600">Career Tracking</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Promotion Date</label>
+                  <Input
+                    type="date"
+                    value={editData.promotionDate ? new Date(editData.promotionDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("promotionDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Demotion Date</label>
+                  <Input
+                    type="date"
+                    value={editData.demotionDate ? new Date(editData.demotionDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("demotionDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Rehire Date</label>
+                  <Input
+                    type="date"
+                    value={editData.rehireDate ? new Date(editData.rehireDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("rehireDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+              
+              {/* Career Summary */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 mt-4">
+                <h5 className="text-sm font-semibold mb-2 text-blue-700 dark:text-blue-300">Career Summary</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Last Promotion:</span> {editData.promotionDate ? new Date(editData.promotionDate).toLocaleDateString() : 'Not set'}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Last Demotion:</span> {editData.demotionDate ? new Date(editData.demotionDate).toLocaleDateString() : 'Not set'}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Resignation Date:</span> {editData.resignDate ? new Date(editData.resignDate).toLocaleDateString() : 'Not set'}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Rehire Date:</span> {editData.rehireDate ? new Date(editData.rehireDate).toLocaleDateString() : 'Not set'}
+                  </div>
+                </div>
+              </div>
+
+            {/* Employee Status */}
+            <div>
+              <h4 className="text-md font-semibold mb-2 text-blue-600">Employee Status</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editData.isActive || false}
+                    onChange={(e) => handleChange("isActive", e.target.checked)}
+                  />
+                  <span>Active</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editData.isOnProbation || false}
+                    onChange={(e) => handleChange("isOnProbation", e.target.checked)}
+                  />
+                  <span>On Probation</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editData.isResigned || false}
+                    onChange={(e) => handleChange("isResigned", e.target.checked)}
+                  />
+                  <span>Resigned</span>
+                </label>
+              </div>
             </div>
 
-            {/* Business Unit & Division Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <select
-                className="w-full px-3 dark:bg-gray-800 py-2 border rounded-md"
-                value={selectedBUId || ""}
-                onChange={(e) => handleBusinessUnitChange(e.target.value)}
-              >
-                <option value="">Select Business Unit</option>
-                {businessUnits.map((bu) => (
-                  <option key={bu.id} value={bu.id}>{bu.name}</option>
-                ))}
-              </select>
-              <select
-                className="w-full px-3 dark:bg-gray-800 py-2 border rounded-md"
-                value={editData.divisionId || ""}
-                onChange={(e) => handleChange("divisionId", Number(e.target.value))}
-                disabled={!selectedBUId}
-              >
-                <option value="">Select Division</option>
-                {currentDivisions.map((div) => (
-                  <option key={div.id} value={div.id}>{div.name}</option>
-                ))}
-              </select>
+            {/* Organization Placement */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Organization Placement</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Business Unit</label>
+                  <select
+                    className="w-full px-3 dark:bg-gray-800 py-2 border rounded-md"
+                    value={selectedBUId || ""}
+                    onChange={(e) => handleBusinessUnitChange(e.target.value)}
+                  >
+                    <option value="">Select Business Unit</option>
+                    {businessUnits.map((bu) => (
+                      <option key={bu.id} value={bu.id}>{bu.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Division</label>
+                  <select
+                    className="w-full px-3 dark:bg-gray-800 py-2 border rounded-md"
+                    value={editData.divisionId || ""}
+                    onChange={(e) => handleChange("divisionId", Number(e.target.value))}
+                    disabled={!selectedBUId}
+                  >
+                    <option value="">Select Division</option>
+                    {currentDivisions.map((div) => (
+                      <option key={div.id} value={div.id}>{div.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -570,24 +673,56 @@ export default function EditEmployeeModal({
           </TabsContent>
 
           {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {renderInputWithError("identityCard", "Identity Card", "text", editData.identityCard, (e) => handleChange("identityCard", e.target.value))}
-              {renderInputWithError("taxNumber", "Tax Number", "text", editData.taxNumber, (e) => handleChange("taxNumber", e.target.value))}
-              {renderInputWithError("drivingLicense", "Driving License", "text", editData.drivingLicense, (e) => handleChange("drivingLicense", e.target.value))}
-              {renderInputWithError("bpjsHealth", "BPJS Health", "text", editData.bpjsHealth, (e) => handleChange("bpjsHealth", e.target.value))}
-              {renderInputWithError("bpjsEmployment", "BPJS Employment", "text", editData.bpjsEmployment, (e) => handleChange("bpjsEmployment", e.target.value))}
-              {renderInputWithError("insuranceCompany", "Insurance Company", "text", editData.insuranceCompany, (e) => handleChange("insuranceCompany", e.target.value))}
-              {renderInputWithError("insuranceNumber", "Insurance Number", "text", editData.insuranceNumber, (e) => handleChange("insuranceNumber", e.target.value))}
-              {renderInputWithError("policyNumber", "Policy Number", "text", editData.policyNumber, (e) => handleChange("policyNumber", e.target.value))}
-              {renderInputWithError("ptkpStatus", "PTKP Status", "text", editData.ptkpStatus, (e) => handleChange("ptkpStatus", e.target.value))}
+          <TabsContent value="documents" className="space-y-6">
+            <h3 className="text-lg font-semibold">Documents & Finance Information</h3>
+
+            {/* Identity Documents */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Identity Documents</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {renderInputWithError("identityCard", "Identity Card", "text", editData.identityCard, (e) => handleChange("identityCard", e.target.value))}
+                {renderInputWithError("taxNumber", "Tax Number", "text", editData.taxNumber, (e) => handleChange("taxNumber", e.target.value))}
+                {renderInputWithError("drivingLicense", "Driving License", "text", editData.drivingLicense, (e) => handleChange("drivingLicense", e.target.value))}
+                {renderInputWithError("ptkpStatus", "PTKP Status", "text", editData.ptkpStatus, (e) => handleChange("ptkpStatus", e.target.value))}
+              </div>
             </div>
 
-            <h4 className="text-lg font-semibold">Bank Information</h4>
-            <div className="grid grid-cols-3 gap-4">
-              {renderInputWithError("bankName", "Bank Name", "text", editData.bankName, (e) => handleChange("bankName", e.target.value))}
-              {renderInputWithError("bankAccountNumber", "Bank Account Number", "text", editData.bankAccountNumber, (e) => handleChange("bankAccountNumber", e.target.value))}
-              {renderInputWithError("bankAccountName", "Account Holder Name", "text", editData.bankAccountName, (e) => handleChange("bankAccountName", e.target.value))}
+            {/* BPJS Information */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">BPJS Information</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {renderInputWithError("bpjsHealth", "BPJS Health", "text", editData.bpjsHealth, (e) => handleChange("bpjsHealth", e.target.value))}
+                {renderInputWithError("bpjsEmployment", "BPJS Employment", "text", editData.bpjsEmployment, (e) => handleChange("bpjsEmployment", e.target.value))}
+              </div>
+            </div>
+
+            {/* Insurance Information */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Insurance Information</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {renderInputWithError("insuranceCompany", "Insurance Company", "text", editData.insuranceCompany, (e) => handleChange("insuranceCompany", e.target.value))}
+                {renderInputWithError("insuranceNumber", "Insurance Number", "text", editData.insuranceNumber, (e) => handleChange("insuranceNumber", e.target.value))}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Insurance End Date</label>
+                  <Input
+                    type="date"
+                    value={editData.insuranceEndDate ? new Date(editData.insuranceEndDate).toISOString().split("T")[0] : ""}
+                    onChange={(e) => handleChange("insuranceEndDate", e.target.value ? `${e.target.value}T00:00:00.000Z` : null)}
+                    className="w-full"
+                  />
+                </div>
+                {renderInputWithError("policyNumber", "Policy Number", "text", editData.policyNumber, (e) => handleChange("policyNumber", e.target.value))}
+              </div>
+            </div>
+
+            {/* Bank Information */}
+            <div>
+              <h4 className="text-md font-semibold mb-3 text-blue-600">Bank Information</h4>
+              <div className="grid grid-cols-3 gap-4">
+                {renderInputWithError("bankName", "Bank Name", "text", editData.bankName, (e) => handleChange("bankName", e.target.value))}
+                {renderInputWithError("bankAccountNumber", "Bank Account Number", "text", editData.bankAccountNumber, (e) => handleChange("bankAccountNumber", e.target.value))}
+                {renderInputWithError("bankAccountName", "Account Holder Name", "text", editData.bankAccountName, (e) => handleChange("bankAccountName", e.target.value))}
+              </div>
             </div>
           </TabsContent>
 

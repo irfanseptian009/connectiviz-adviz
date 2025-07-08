@@ -4,11 +4,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch, } from "@/store";
-import { fetchUsers, editUser, deleteUser } from "@/store/userSlice";
+import { fetchUsers, editUser, deleteUser, createUser } from "@/store/userSlice";
 import { toast } from "react-hot-toast";
 import { withAuth } from "@/context/AuthContext";
 import EmployeeTable from "@/components/tables/employeeTable";
 import EditEmployeeModal from "@/components/employee/editEmployeeModal";
+import CreateEmployeeModal from "@/components/employee/createEmployeeModal";
 import DeleteConfirmModal from "@/components/employee/deleteConfirmModal";
 import TableLoadingSkeleton from "@/components/common/TableLoadingSkeleton";
 import { employeeUpdateSchema } from "@/schemas/employeeUpdateSchema";
@@ -29,6 +30,7 @@ function ListEmployee() {
   const { canEditEmployee, canDeleteEmployee, canCreateEmployee } = useRoleCheck();  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isEditOpen, setEditOpen] = useState(false);
+  const [isCreateOpen, setCreateOpen] = useState(false);
   const [editData, setEditData] = useState<User | null>(null);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [selectedTab, setSelectedTab] = useState(0);
@@ -121,6 +123,19 @@ const handleSave = async () => {
       toast.error(`Failed to delete employee: ${errorMessage}`);
     }
     setDeleteId(null);
+  };
+
+  const handleCreateEmployee = async (data: Partial<User>) => {
+    try {
+      await dispatch(createUser(data)).unwrap();
+      await dispatch(fetchUsers());
+      toast.success("Employee created successfully!");
+      setCreateOpen(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to create employee: ${errorMessage}`);
+      throw error; // Re-throw to let the modal handle the error state
+    }
   };
   const getUserName = (id: number | null) =>
     list.find((u) => u.id === id)?.username || "Employee not found";
@@ -272,7 +287,7 @@ const handleSave = async () => {
                 <Button
                   size="sm"
                   className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => router.push("/form-elements")}
+                  onClick={() => setCreateOpen(true)}
                 >
                   <UserPlus className="h-4 w-4" />
                   Add Employee
@@ -534,6 +549,13 @@ const handleSave = async () => {
           </div>
         </div>
       )}
+
+      {/* Create Employee Modal */}
+      <CreateEmployeeModal
+        isOpen={isCreateOpen}
+        onClose={() => setCreateOpen(false)}
+        onSave={handleCreateEmployee}
+      />
     </div>
   );
 }

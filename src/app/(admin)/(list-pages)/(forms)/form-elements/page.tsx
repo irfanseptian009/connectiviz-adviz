@@ -60,7 +60,7 @@ const EmployeeManagementCreateForm = () => {
   const businessUnits = useSelector((state: RootState) => state.businessUnit.list);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Start with false so inputs are not disabled initially
+  const [isLoading, setIsLoading] = useState(false); 
   const [selectedBusinessUnit, setSelectedBusinessUnit] = useState<number | null>(null);
 
   const divisionTree = useSelector((state: RootState) =>
@@ -117,6 +117,10 @@ const EmployeeManagementCreateForm = () => {
     startDate: string;
     probationEndDate: string;
     contractEndDate: string;
+    resignDate: string;
+    promotionDate: string;
+    demotionDate: string;
+    rehireDate: string;
     divisionId: string;
     motherName: string;
     fatherName: string;
@@ -134,6 +138,7 @@ const EmployeeManagementCreateForm = () => {
     bpjsEmployment: string;
     insuranceCompany: string;
     insuranceNumber: string;
+    insuranceEndDate: string;
     policyNumber: string;
     bloodType: string;
     height: number;
@@ -180,6 +185,10 @@ const EmployeeManagementCreateForm = () => {
       startDate: "",
       probationEndDate: "",
       contractEndDate: "",
+      resignDate: "",
+      promotionDate: "",
+      demotionDate: "",
+      rehireDate: "",
       divisionId: "",
       motherName: "",
       fatherName: "",
@@ -197,6 +206,7 @@ const EmployeeManagementCreateForm = () => {
       bpjsEmployment: "",
       insuranceCompany: "",
       insuranceNumber: "",
+      insuranceEndDate: "",
       policyNumber: "",
       bloodType: "",
       height: 0,
@@ -404,6 +414,41 @@ const EmployeeManagementCreateForm = () => {
           : data.contractEndDate;
       }
 
+      let resignDateISO: string | undefined;
+      if (data.resignDate) {
+        resignDateISO = data.resignDate.length === 10
+          ? data.resignDate + "T00:00:00.000Z"
+          : data.resignDate;
+      }
+
+      let promotionDateISO: string | undefined;
+      if (data.promotionDate) {
+        promotionDateISO = data.promotionDate.length === 10
+          ? data.promotionDate + "T00:00:00.000Z"
+          : data.promotionDate;
+      }
+
+      let demotionDateISO: string | undefined;
+      if (data.demotionDate) {
+        demotionDateISO = data.demotionDate.length === 10
+          ? data.demotionDate + "T00:00:00.000Z"
+          : data.demotionDate;
+      }
+
+      let rehireDateISO: string | undefined;
+      if (data.rehireDate) {
+        rehireDateISO = data.rehireDate.length === 10
+          ? data.rehireDate + "T00:00:00.000Z"
+          : data.rehireDate;
+      }
+
+      let insuranceEndDateISO: string | undefined;
+      if (data.insuranceEndDate) {
+        insuranceEndDateISO = data.insuranceEndDate.length === 10
+          ? data.insuranceEndDate + "T00:00:00.000Z"
+          : data.insuranceEndDate;
+      }
+
       // Prepare payload
       const payload: Partial<UserType> = {
         ...data,
@@ -411,6 +456,11 @@ const EmployeeManagementCreateForm = () => {
         startDate: startDateISO,
         probationEndDate: probationEndDateISO,
         contractEndDate: contractEndDateISO,
+        resignDate: resignDateISO,
+        promotionDate: promotionDateISO,
+        demotionDate: demotionDateISO,
+        rehireDate: rehireDateISO,
+        insuranceEndDate: insuranceEndDateISO,
         divisionId: data.divisionId ? parseInt(String(data.divisionId)) : undefined,
         jobLevel: data.jobLevel ? parseInt(String(data.jobLevel)) : undefined,
         formalEducations,
@@ -991,7 +1041,58 @@ const EmployeeManagementCreateForm = () => {
                     className="focus:border-blue-500 transition-colors"
                   />
                 </InputField>
+                
+                <InputField label="Resign Date" icon={Calendar}>
+                  <Input 
+                    name="resignDate"
+                    type="date"
+                    value={watch("resignDate") || ""}
+                    onChange={(e) => setValue("resignDate", e.target.value)}
+                    onBlur={register("resignDate").onBlur}
+                    ref={register("resignDate").ref}
+                    className="focus:border-blue-500 transition-colors"
+                  />
+                </InputField>
+                      <InputField label="Promotion Date" icon={Calendar}>
+                    <Input 
+                      name="promotionDate"
+                      type="date"
+                      value={watch("promotionDate") || ""}
+                      onChange={(e) => setValue("promotionDate", e.target.value)}
+                      onBlur={register("promotionDate").onBlur}
+                      ref={register("promotionDate").ref}
+                      className="focus:border-blue-500 transition-colors"
+                    />
+                  </InputField>
+                  
+                  <InputField label="Demotion Date" icon={Calendar}>
+                    <Input 
+                      name="demotionDate"
+                      type="date"
+                      value={watch("demotionDate") || ""}
+                      onChange={(e) => setValue("demotionDate", e.target.value)}
+                      onBlur={register("demotionDate").onBlur}
+                      ref={register("demotionDate").ref}
+                      className="focus:border-blue-500 transition-colors"
+                    />
+                  </InputField>
+                  
+                  <InputField label="Rehire Date" icon={Calendar}>
+                    <Input 
+                      name="rehireDate"
+                      type="date"
+                      value={watch("rehireDate") || ""}
+                      onChange={(e) => setValue("rehireDate", e.target.value)}
+                      onBlur={register("rehireDate").onBlur}
+                      ref={register("rehireDate").ref}
+                      className="focus:border-blue-500 transition-colors"
+                    />
+                  </InputField>
               </div>
+   
+            
+           
+         
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InputField label="Business Unit" icon={Building2}>
@@ -1219,15 +1320,26 @@ const EmployeeManagementCreateForm = () => {
                   className="focus:border-blue-500 transition-colors"
                 />
               </InputField>
-              
+
               <InputField label="Policy Number" icon={FileText}>
-                <Input 
+                <Input
                   name="policyNumber"
                   placeholder="Policy Number"
                   value={watch("policyNumber") || ""}
                   onChange={(e) => setValue("policyNumber", e.target.value)}
                   onBlur={register("policyNumber").onBlur}
                   ref={register("policyNumber").ref}
+                  className="focus:border-blue-500 transition-colors"
+                />
+              </InputField>
+                  <InputField label="Insurance End Date" icon={Calendar}>
+                <Input 
+                  name="insuranceEndDate"
+                  type="date"
+                  value={watch("insuranceEndDate") || ""}
+                  onChange={(e) => setValue("insuranceEndDate", e.target.value)}
+                  onBlur={register("insuranceEndDate").onBlur}
+                  ref={register("insuranceEndDate").ref}
                   className="focus:border-blue-500 transition-colors"
                 />
               </InputField>

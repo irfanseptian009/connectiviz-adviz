@@ -55,6 +55,36 @@ export const employeeUpdateSchema = z.object({
     })
     .optional()
     .or(z.null()),
+  // Career tracking fields
+  promotionDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  demotionDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  rehireDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
+  // Insurance end date
+  insuranceEndDate: z
+    .string()
+    .refine((val) => /^\d{4}-\d{2}-\d{2}T.*$/.test(val), {
+      message: 'Format tanggal tidak valid',
+    })
+    .optional()
+    .or(z.null()),
   isActive: z.boolean().optional().nullable(),
   isOnProbation: z.boolean().optional().nullable(),
   isResigned: z.boolean().optional().nullable(),

@@ -47,6 +47,10 @@ export const normalizeEmployee = (d: User): NormalizedUser => {
         probationEndDate: normalizeDate(d.probationEndDate),
         contractEndDate: normalizeDate(d.contractEndDate),
         resignDate: normalizeDate(d.resignDate),
+        promotionDate: normalizeDate(d.promotionDate) ?? undefined,
+        demotionDate: normalizeDate(d.demotionDate) ?? undefined,
+        rehireDate: normalizeDate(d.rehireDate) ?? undefined,
+        insuranceEndDate: normalizeDate(d.insuranceEndDate) ?? undefined,
         formalEducations: d.formalEducations?.map(edu => ({
             ...edu,
             yearGraduate: (edu.yearGraduate !== null && edu.yearGraduate !== undefined) 
@@ -89,6 +93,20 @@ export const normalizeEmployee = (d: User): NormalizedUser => {
     stringFields.forEach(field => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((normalized as any)[field] === null || (normalized as any)[field] === '') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (normalized as any)[field] = undefined;
+        }
+    });
+
+    // Convert null values to undefined for date fields
+    const dateFields = [
+        'dateOfBirth', 'startDate', 'probationEndDate', 'contractEndDate', 'resignDate',
+        'promotionDate', 'demotionDate', 'rehireDate', 'insuranceEndDate'
+    ] as const;
+
+    dateFields.forEach(field => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((normalized as any)[field] === null) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (normalized as any)[field] = undefined;
         }
