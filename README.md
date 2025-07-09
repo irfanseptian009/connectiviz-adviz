@@ -1,4 +1,4 @@
-# ConnectiViz Dashboard
+# Connectiviz Dashboard
 
 <p align="center">
   <img src="https://nextjs.org/static/favicon/android-chrome-192x192.png" width="120" alt="Next.js Logo" />
